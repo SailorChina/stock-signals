@@ -51,10 +51,10 @@ def score_trend(ind) -> Tuple[float, str]:
         reasons.append("均线空头排列，弱势")
     elif ind.ma5 > ind.ma20 > ind.ma60:
         score += 10
-        reasons.append("短期均线在中期均线之上")
+        reasons.append("短期均线在中长期均线之上")
     elif ind.ma5 < ind.ma20 < ind.ma60:
         score -= 10
-        reasons.append("短期均线在中期均线之下")
+        reasons.append("短期均线在中长期均线之下")
 
     # 价格在均线上方/下方
     if ind.ma60 > 0:
@@ -134,10 +134,10 @@ def score_volume(ind) -> Tuple[float, str]:
     # OBV趋势
     if ind.obv_trend == "up":
         score += 15
-        reasons.append("OBV上升趋势，资金持续流入")
+        reasons.append("OBV上升，资金持续流入")
     elif ind.obv_trend == "down":
         score -= 15
-        reasons.append("OBV下降趋势，资金持续流出")
+        reasons.append("OBV下降，资金持续流出")
     else:
         reasons.append("OBV横盘，资金方向不明")
 

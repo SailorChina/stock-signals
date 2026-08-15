@@ -66,19 +66,19 @@ def print_text_report(result, code):
 
     print()
     print("=" * 64)
-    print(f"  {_color(code, 'cyan', True)}  Technical Analysis and Signals")
-    print(f"  Time: {result.get('timestamp', 'N/A')}")
+    print(f"  {_color(code, 'cyan', True)}  技术分析 & 买卖信号")
+    print(f"  时间: {result.get('timestamp', 'N/A')}")
     print("=" * 64)
     print()
-    print(f"  {_color(f'Rating: {rating}', rc, True)}")
-    print(f"  Score: {_color(f'{score:.1f}/100', rc)}")
-    print(f"  Confidence: {_color(confidence, 'cyan')}")
+    print(f"  {_color(f'评级: {rating}', rc, True)}")
+    print(f"  综合得分: {_color(f'{score:.1f}/100', rc)}")
+    print(f"  置信度: {_color(confidence, 'cyan')}")
     print()
 
-    print("  Dimension Scores")
+    print("  各维度评分")
     dims = result.get("dimensions", {})
     dim_order = ["trend", "momentum", "volume", "volatility", "capital"]
-    dim_labels = {"trend":"Trend","momentum":"Momentum","volume":"Volume","volatility":"Volatility","capital":"Capital"}
+    dim_labels = {"trend":"趋势","momentum":"动量","volume":"量能","volatility":"波动率","capital":"资金面"}
     for dim in dim_order:
         d = dims.get(dim, {})
         ds = d.get("score", 50)
@@ -92,13 +92,13 @@ def print_text_report(result, code):
     print()
 
     ta = result.get("technical_analysis", {})
-    print("  Technical Indicators")
-    print(f"    Price: {ta.get('last_close',0):.2f}  MA5={ta.get('ma5',0):.2f} MA10={ta.get('ma10',0):.2f} MA20={ta.get('ma20',0):.2f} MA60={ta.get('ma60',0):.2f}")
+    print("  技术指标")
+    print(f"    最新价: {ta.get('last_close',0):.2f}  MA5={ta.get('ma5',0):.2f} MA10={ta.get('ma10',0):.2f} MA20={ta.get('ma20',0):.2f} MA60={ta.get('ma60',0):.2f}")
     print(f"    MACD: DIF={ta.get('macd_dif',0):.4f} DEA={ta.get('macd_dea',0):.4f} Hist={ta.get('macd_hist',0):.4f}")
     print(f"    RSI:  6={ta.get('rsi_6',0):.1f} 12={ta.get('rsi_12',0):.1f} 14={ta.get('rsi_14',0):.1f}")
     print(f"    KDJ:  K={ta.get('kdj_k',0):.1f} D={ta.get('kdj_d',0):.1f} J={ta.get('kdj_j',0):.1f}")
-    print(f"    BOLL: U={ta.get('boll_upper',0):.2f} M={ta.get('boll_mid',0):.2f} L={ta.get('boll_lower',0):.2f} W={ta.get('boll_width',0):.1f}%")
-    print(f"    ATR:  {ta.get('atr_14',0):.2f}  VolRatio={ta.get('vol_ratio',0):.2f}  OBV={ta.get('obv_trend','?')}")
+    print(f"    BOLL: 上={ta.get('boll_upper',0):.2f} 中={ta.get('boll_mid',0):.2f} 下={ta.get('boll_lower',0):.2f} 宽={ta.get('boll_width',0):.1f}%")
+    print(f"    ATR:  {ta.get('atr_14',0):.2f}  量比={ta.get('vol_ratio',0):.2f}  OBV={ta.get('obv_trend','?')}")
     print()
 
     signals = result.get("signals", [])
@@ -107,46 +107,47 @@ def print_text_report(result, code):
         bearish = [s for s in signals if s["side"]=="bearish"]
         neutral = [s for s in signals if s["side"]=="neutral"]
         if bullish:
-            print(f"    {_color(f'BUY signals ({len(bullish)}):', 'green')}")
+            print(f"    {_color(f'BUY 信号 ({len(bullish)}个):', 'green')}")
             for s in bullish:
                 print(f"      + {s['desc']}")
         if bearish:
-            print(f"    {_color(f'SELL signals ({len(bearish)}):', 'red')}")
+            print(f"    {_color(f'SELL 信号 ({len(bearish)}个):', 'red')}")
             for s in bearish:
                 print(f"      - {s['desc']}")
         if neutral:
-            print(f"    {_color(f'Neutral ({len(neutral)}):', 'yellow')}")
+            print(f"    {_color(f'中性信号 ({len(neutral)}个):', 'yellow')}")
             for s in neutral:
                 print(f"      ~ {s['desc']}")
         print()
 
     summary = result.get("summary", [])
     if summary:
-        print("  Signal Summary:")
+        print("  信号摘要:")
         for dim, desc in summary:
             print(f"    [{dim}] {desc}")
         print()
 
     res = result.get("resonance")
     if res:
-        print("  Multi-Timeframe Resonance")
+        print("  多时间框架共振")
         align_colors = {"strong_up":"green","aligned":"green","mixed":"yellow","aligned_down":"magenta","strong_down":"red","none":"white"}
         ac = align_colors.get(res["alignment"], "white")
-        print(f"    Daily: {res['daily_rating']} ({res['daily_score']:.1f})  Weekly: {res['weekly_rating']} ({res['weekly_score']:.1f})  Monthly: {res['monthly_rating']} ({res['monthly_score']:.1f})")
-        print(f"    Alignment: {_color(res['alignment'], ac)}  Confidence boost: { '+' if res['confidence_boost']>=0 else ''}{res['confidence_boost']:.0f}")
+        print(f"    日线: {res['daily_rating']} ({res['daily_score']:.1f})  周线: {res['weekly_rating']} ({res['weekly_score']:.1f})  月线: {res['monthly_rating']} ({res['monthly_score']:.1f})")
+        boost = res["confidence_boost"]
+        print(f"    共振: {_color(res['alignment'], ac)}  置信度调整: { '+' if boost>=0 else ''}{boost:.0f}")
         if res.get("details"):
             print(f"    {_color(res['details'], 'dim')}")
         print()
 
     sr = result.get("support_resistance")
     if sr:
-        print("  Support / Resistance")
-        print(f"    R1: {sr['resistance_1']:.2f}  R2: {sr['resistance_2']:.2f}")
-        print(f"    S1: {sr['support_1']:.2f}  S2: {sr['support_2']:.2f}")
+        print("  支撑 / 阻力位")
+        print(f"    阻力1: {sr['resistance_1']:.2f}  阻力2: {sr['resistance_2']:.2f}")
+        print(f"    支撑1: {sr['support_1']:.2f}  支撑2: {sr['support_2']:.2f}")
         print(f"    VWAP(20): {sr.get('vwap',0):.2f}")
         cur = result.get("last_close", 0)
         if cur > 0:
-            for label, val in [("R1","resistance_1"),("R2","resistance_2"),("S1","support_1"),("S2","support_2"),("VWAP","vwap")]:
+            for label, val in [("阻力1","resistance_1"),("阻力2","resistance_2"),("支撑1","support_1"),("支撑2","support_2"),("VWAP","vwap")]:
                 if val in sr and sr[val] > 0:
                     dist = (sr[val] - cur) / cur * 100
                     print(f"      {label}: {dist:+.1f}%")
@@ -154,46 +155,47 @@ def print_text_report(result, code):
 
     tp = result.get("trade_plan")
     if tp and tp.get("entry_zone", 0) > 0:
-        print("  Trade Plan")
-        print(f"    Entry:    {tp['entry_zone']:.2f}")
-        print(f"    Stop:     {tp['stop_loss']:.2f}")
-        print(f"    Target1:  {tp['target_1']:.2f}")
-        print(f"    Target2:  {tp['target_2']:.2f}")
+        print("  交易计划")
+        print(f"    建议入场: {tp['entry_zone']:.2f}")
+        print(f"    止损位:   {tp['stop_loss']:.2f}")
+        print(f"    第一目标: {tp['target_1']:.2f}")
+        print(f"    第二目标: {tp['target_2']:.2f}")
         rr = tp.get("risk_reward_ratio", 0)
         rr_c = "green" if rr >= 2 else ("yellow" if rr >= 1 else "red")
-        print(f"    R:R ratio: {_color(f'{rr:.2f}:1', rr_c)}")
-        print(f"    Position:  {tp['position_size_pct']:.1f}%")
+        print(f"    风险收益比: {_color(f'{rr:.2f}:1', rr_c)}")
+        print(f"    建议仓位:   {tp['position_size_pct']:.1f}%")
         print()
 
     trend = result.get("trend_phase")
     if trend:
         phase_colors = {"accumulation":"yellow","early_rally":"green","rally":"green","distribution":"magenta","decline":"red"}
         pc = phase_colors.get(trend, "white")
-        print(f"  Trend Phase: {_color(trend, pc)}")
+        phase_labels = {"accumulation":"吸筹阶段","early_rally":"上涨早期","rally":"上涨","distribution":"派发","decline":"下跌"}
+        print(f"  趋势阶段: {_color(phase_labels.get(trend, trend), pc)}")
         print()
     print("=" * 64)
     print()
 
 
 def analyze(code, timeframe="1d", output_json=False):
-    logger.info(f"Analyzing {code} {timeframe}...")
+    logger.info(f"分析 {code} {timeframe}...")
     df = fetch_kline(code, timeframe, num=300)
     if df.empty:
-        result = {"error": f"Cannot fetch K-line data: {code}", "code": code}
+        result = {"error": f"无法获取 K 线数据: {code}", "code": code}
         if output_json:
             print(json.dumps(result, ensure_ascii=False, indent=2))
         else:
-            logger.error(f"Cannot get K-line data for {code}")
+            logger.error(f"无法获取 {code}")
         return result
 
-    logger.info("Computing indicators...")
+    logger.info("计算技术指标...")
     ind = compute_indicators(df, code, timeframe)
 
-    logger.info("Fetching capital/short data...")
+    logger.info("获取资金/卖空数据...")
     capital = get_capital_data(code)
     short_pct = get_short_data(code) if code.startswith(("US.", "HK.")) else None
 
-    logger.info("Computing rating and signals...")
+    logger.info("计算评级 & 生成信号...")
     rating_result = compute_rating(ind, capital, short_pct)
     signals = generate_signals(ind, rating_result["rating"], capital, short_pct)
     summary = signal_summary(ind)
@@ -268,13 +270,13 @@ def batch_analyze(codes, timeframe="1d", output_csv=None, output_json=False):
     for code in codes:
         code = code.strip()
         if not code or "." not in code:
-            logger.warning(f"Skipping invalid code: {code}")
+            logger.warning(f"跳过无效代码: {code}")
             continue
         try:
             r = analyze(code, timeframe, output_json=False)
             results.append(r)
         except Exception as e:
-            logger.error(f"Analysis failed for {code}: {e}")
+            logger.error(f"分析失败: {code}: {e}")
             results.append({"error": str(e), "code": code})
     if output_csv:
         _export_csv(results, output_csv)
@@ -317,33 +319,33 @@ def _export_csv(results, path):
                 "support_1": r.get("support_resistance", {}).get("support_1", ""),
             }
             writer.writerow(row)
-    logger.info(f"CSV exported: {path} ({len(results)} rows)")
+    logger.info(f"CSV 已导出: {path} ({len(results)} rows)")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Stock Technical Analysis and Signal Generator (US/A/HK)")
-    parser.add_argument("codes", nargs="+", help="Stock codes, e.g. US.NVDA / SH.600519 / HK.00700")
+    parser = argparse.ArgumentParser(description="股票技术分析 & 买卖信号生成器 (美股/A股/港股)")
+    parser.add_argument("codes", nargs="+", help="股票代码，如 US.NVDA / SH.600519 / HK.00700")
     parser.add_argument("--timeframe", "-t", default="1d", choices=["1d", "1w", "1m"])
     parser.add_argument("--json", "-j", action="store_true", help="JSON output")
-    parser.add_argument("--num", "-n", type=int, default=300, help="K-line count (default 300)")
-    parser.add_argument("--csv", "-c", type=str, help="Export results to CSV")
+    parser.add_argument("--num", "-n", type=int, default=300, help="K 线根数（默认 300）")
+    parser.add_argument("--csv", "-c", type=str, help="导出 CSV 结果")
     parser.add_argument("--log-level", default="INFO", choices=["DEBUG","INFO","WARNING","ERROR"])
-    parser.add_argument("--log-file", type=str, help="Log file path")
-    parser.add_argument("--config", type=str, help="Config file path (JSON)")
+    parser.add_argument("--log-file", type=str, help="日志文件路径")
+    parser.add_argument("--config", type=str, help="配置文件路径（JSON）")
     args = parser.parse_args()
 
     setup_logging(args.log_level, args.log_file)
-    logger.info("stock-signals v2.1.0 started")
+    logger.info("stock-signals v2.1.0 启动")
 
     for code in args.codes:
         code = code.strip()
         if "." not in code:
-            logger.error(f"Invalid code format: {code}, expected e.g. US.NVDA / SH.600519 / HK.00700")
+            logger.error(f"股票代码格式错误: {code}, expected e.g. US.NVDA / SH.600519 / HK.00700")
             sys.exit(1)
         analyze(code, args.timeframe, args.json)
 
     if args.csv:
-        logger.warning("--csv requires batch mode with multiple codes")
+        logger.warning("--csv 需要多只股票批量模式")
 
 
 if __name__ == "__main__":
