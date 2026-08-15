@@ -151,6 +151,7 @@ class ScanResult:
     last_close: float = 0.0
     reasons: List[str] = field(default_factory=list)
     trade_plan: Optional[dict] = None
+    pullback_score: int = 0
 
 
 def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
@@ -175,7 +176,28 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
             phase = "unknown"
         sr = compute_support_resistance(df)
         tp = generate_trade_plan(ind, sr, phase)
+        # v2.4: 扩展度过滤 - 距高点太近则跳过
+        dist_to_high = getattr(ind, 'price_to_high_pct', 0)
+        if dist_to_high > -2:
+            logger.warning(f"  {code} 距高点仅{abs(dist_to_high):.1f}%，跳过(追高风险)")
+            return None
+        # v2.4: MA5与MA20过度延伸检查
+        ma_gap = getattr(ind, 'ma5_ma20_gap', 0)
+        if ma_gap > 8:
+            logger.warning(f"  {code} MA5偏离MA20 {ma_gap:.1f}%，过度延伸，跳过")
+            return None
         reasons = []
+        pullback_score = 0
+        # v2.4: RSI极端超买硬过滤
+        if getattr(ind, "rsi_14", 50) > 75:
+            logger.warning(f"  {code} RSI={ind.rsi_14:.1f} 极端超买，跳过")
+            return None
+        if -15 <= dist_to_high <= -5 and ind.rsi_14 < 65:
+            pullback_score = 5  # 回调到位 + RSI不超买
+        elif -30 <= dist_to_high <= -15 and ind.rsi_14 < 55:
+            pullback_score = 10  # 健康回调 + RSI中性
+        if pullback_score > 0:
+            reasons.append(f"回调入场机会(距高点{dist_to_high:.1f}%)")
         if ind.ma5_ma10_cross == "golden":
             reasons.append("MA5/MA10 \u91d1\u53c9")
         if ind.macd_dif_dea_cross == "golden":
@@ -311,7 +333,9 @@ def _sort_results(results):
         "accumulation": 3, "early_rally": 4, "rally": 5,
         "distribution": 1, "decline": 0, "unknown": 2,
     }
+    # v2.4: 排序优先拉回入场机会(pullback_score) + 评分 + 共振
     return sorted(results, key=lambda r: (
+        r.pullback_score,
         r.score,
         alignment_score.get(r.alignment, 0),
         phase_score.get(r.trend_phase, 0),
@@ -323,6 +347,7 @@ def _serialize(obj):
     if isinstance(obj, ScanResult):
         return {
             "code": obj.code, "score": obj.score, "rating": obj.rating,
+            "pullback_score": obj.pullback_score,
             "alignment": obj.alignment, "trend_phase": obj.trend_phase,
             "last_close": obj.last_close, "entry": obj.entry,
             "stop_loss": obj.stop_loss, "target_1": obj.target_1,

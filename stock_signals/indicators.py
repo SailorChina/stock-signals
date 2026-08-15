@@ -1024,6 +1024,42 @@ def compute_indicators(df: pd.DataFrame, code: str = "", ktype: str = "1d") -> I
                 if close[-1] < close[-5]:
                     ind.td_turn = "sell_turn"
 
+    
+    # ── v2.4: 扩展度 & 回调检测 ────────────────────────────────────────
+    # 距N日高/低点
+    lookback = min(252, len(df))  # 最多看一年
+    df_look = df.tail(lookback)
+    high_n = df_look['high'].max()
+    low_n = df_look['low'].min()
+    last_close = ind.last_close
+    if high_n > 0:
+        ind.price_to_high_pct = (last_close - high_n) / high_n * 100  # 负值=低于高点
+    if low_n > 0:
+        ind.price_to_low_pct = (last_close - low_n) / low_n * 100     # 正值=高于低点
+
+    # MA5与MA20偏离度（衡量短期是否过度延伸）
+    if ind.ma20 > 0:
+        ind.ma5_ma20_gap = (ind.ma5 - ind.ma20) / ind.ma20 * 100
+
+    # MACD金叉距今几根K线
+    if ind.macd_dif_dea_cross == 'golden':
+        # 找金叉发生在第几根
+        df_calc = df.tail(40)
+        dif_arr = df_calc['macd_dif'].values if 'macd_dif' in df_calc.columns else []
+        if len(dif_arr) > 2:
+            for i in range(1, len(dif_arr)):
+                if dif_arr[i-1] <= df_calc['macd_dea'].values[i-1] and dif_arr[i] > df_calc['macd_dea'].values[i]:
+                    ind.macd_cross_bar = len(dif_arr) - 1 - i
+                    break
+    elif ind.macd_dif_dea_cross == 'death':
+        df_calc = df.tail(40)
+        dif_arr = df_calc['macd_dif'].values if 'macd_dif' in df_calc.columns else []
+        if len(dif_arr) > 2:
+            for i in range(1, len(dif_arr)):
+                if dif_arr[i-1] >= df_calc['macd_dea'].values[i-1] and dif_arr[i] < df_calc['macd_dea'].values[i]:
+                    ind.macd_cross_bar = len(dif_arr) - 1 - i
+                    break
+
     return ind
 
 

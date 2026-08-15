@@ -78,12 +78,24 @@ def score_trend(ind) -> Tuple[float, str]:
     # 价格在均线上方/下方
     if ind.ma60 > 0:
         price_vs_ma60 = (ind.last_close - ind.ma60) / ind.ma60 * 100
-        if price_vs_ma60 > 5:
-            score += 8
-            reasons.append(f"价格高于MA60 {price_vs_ma60:.1f}%")
+        if price_vs_ma60 > 15:
+            score -= 15
+            reasons.append(f"价格远超MA60 +{price_vs_ma60:.1f}%，严重超买")
+        elif price_vs_ma60 > 10:
+            score -= 8
+            reasons.append(f"价格高于MA60 +{price_vs_ma60:.1f}%，过度延伸")
+        elif price_vs_ma60 > 5:
+            score += 3
+            reasons.append(f"价格高于MA60 +{price_vs_ma60:.1f}%，偏强")
+        elif price_vs_ma60 < -10:
+            score -= 5
+            reasons.append(f"价格低于MA60 {price_vs_ma60:.1f}%，偏弱")
         elif price_vs_ma60 < -5:
             score -= 8
-            reasons.append(f"价格低于MA60 {abs(price_vs_ma60):.1f}%")
+            reasons.append(f"价格低于MA60 {abs(price_vs_ma60):.1f}%，深度回调")
+        elif -5 <= price_vs_ma60 <= 5:
+            score += 5
+            reasons.append(f"价格贴近MA60 ({price_vs_ma60:.1f}%)，健康位置")
 
     # MA金叉/死叉
     if ind.ma5_ma10_cross == 'golden':
@@ -123,9 +135,17 @@ def score_momentum(ind) -> Tuple[float, str]:
         reasons.append(f"RSI(14)={rsi:.1f}，严重超卖")
     elif rsi < 30:
         score += 10
-        reasons.append(f"RSI(14)={rsi:.1f}，超卖")
-    elif 45 <= rsi <= 55:
-        reasons.append(f"RSI(14)={rsi:.1f}，中性")
+    if ind.macd_dif_dea_cross == 'golden':
+        cross_bar = getattr(ind, "macd_cross_bar", 0)
+        if cross_bar <= 2:
+            score += 5
+            reasons.append(f"MACD金叉(刚发生{cross_bar}根前)，谨慎追高")
+        elif cross_bar <= 10:
+            score += 8
+            reasons.append(f"MACD金叉(已确认{cross_bar}根)，趋势稳健")
+        else:
+            score += 3
+            reasons.append(f"MACD金叉(已过{cross_bar}根)，动能衰减")
 
     # MACD
     if ind.macd_hist > 0:

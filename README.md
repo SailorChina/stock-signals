@@ -1,4 +1,4 @@
-﻿# stock-signals v2.3.3 — 股票技术分析 & 买卖信号生成器
+﻿# stock-signals v2.4.0 — 股票技术分析 & 买卖信号生成器
 
 支持美股 / A股 / 港股的多时间框架技术分析 skill，基于富途 OpenAPI 获取实时行情数据。
 
@@ -207,7 +207,7 @@ python -m stock_signals.cli scan --markets A,US,HK
 
 ```
 stock-signals/
-  pyproject.toml           # Python 包配置 (v2.3.3)
+  pyproject.toml           # Python 包配置 (v2.4.0)
   README.md                # 项目说明文档
   SKILL.md                 # Codex skill 定义
   .gitignore
@@ -235,7 +235,7 @@ stock-signals/
 
 ## 版本历史
 
-### v2.3.3 (2026-08-15)
+### v2.4.0 (2026-08-15)
 - **修复**: 版本不一致 (__init__.py/pyproject.toml/cli.py 统一为 2.3.3)
 - **修复**: cli.py 模块导入警告 (改用绝对导入)
 - **修复**: __init__.py 循环导入 (移除 from .cli import main)

@@ -4,7 +4,7 @@ description: >-
   多市场股票技术分析 & 买卖信号生成器。支持美股(US.XXXX)、A股(SH.600519/SZ.000001)、港股(HK.00700)。
   生成5级评级(Buy/Overweight/Hold/Underweight/Sell)及置信度分数，基于确定性技术指标计算(无LLM)。
 
-  功能(v2.3.3):
+  功能(v2.4.0):
   - 多时间框架共振分析(日线/周线/月线联动)
   - 支撑阻力位检测(swing点聚类+BOLL+均线)
   - 趋势阶段分类(吸筹/上涨早期/上涨/派发/下跌)
@@ -33,7 +33,7 @@ metadata:
 allowed-tools: Bash
 ---
 
-# Stock Signals v2.3.3 — 股票技术分析 & 买卖信号生成
+# Stock Signals v2.4.0 — 股票技术分析 & 买卖信号生成
 
 ## 使用方法
 
