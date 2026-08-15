@@ -726,7 +726,7 @@ def compute_indicators(df: pd.DataFrame, code: str = "", ktype: str = "1d") -> I
     # ---- Support/Resistance ----
 
 
-    from _sr import compute_support_resistance
+    from ._sr import compute_support_resistance
 
 
     sr = compute_support_resistance(df)
@@ -762,7 +762,10 @@ def compute_indicators(df: pd.DataFrame, code: str = "", ktype: str = "1d") -> I
     # ---- Trend Phase ----
 
 
-    from _sr import compute_trend_phase
+    try:
+        from stock_signals._sr import compute_trend_phase
+    except ImportError:
+        from _sr import compute_trend_phase
 
 
     ind.trend_phase = compute_trend_phase(df, ind)
