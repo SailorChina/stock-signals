@@ -19,6 +19,8 @@ try:
     )
     from stock_signals._resonance import compute_timeframe_resonance
     from stock_signals._sr import compute_support_resistance, generate_trade_plan
+    from .screener import scan, ScanConfig
+    from .reporter import print_scan_report
 except ImportError:
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     from indicators import fetch_kline, compute_indicators, signal_summary
@@ -393,19 +395,54 @@ def _export_csv(results, path):
 
 def main():
     parser = argparse.ArgumentParser(description="股票技术分析 & 买卖信号生成器 (美股/A股/港股)")
-    parser.add_argument("codes", nargs="+", help="股票代码，如 US.NVDA / SH.600519 / HK.00700")
-    parser.add_argument("--timeframe", "-t", default="1d", choices=["1d", "1w", "1m"])
-    parser.add_argument("--json", "-j", action="store_true", help="JSON output")
-    parser.add_argument("--num", "-n", type=int, default=300, help="K 线根数（默认 300）")
-    parser.add_argument("--csv", "-c", type=str, help="导出 CSV 结果")
-    parser.add_argument("--log-level", default="INFO", choices=["DEBUG","INFO","WARNING","ERROR"])
-    parser.add_argument("--log-file", type=str, help="日志文件路径")
-    parser.add_argument("--config", type=str, help="配置文件路径（JSON）")
+
+    # Subcommands
+    sub = parser.add_subparsers(dest="cmd")
+
+    # --- analyze subcommand ---
+    p_analyze = sub.add_parser("analyze", help="分析单只/多只股票")
+    p_analyze.add_argument("codes", nargs="+", help="股票代码，如 US.NVDA / SH.600519 / HK.00700")
+    p_analyze.add_argument("--timeframe", "-t", default="1d", choices=["1d", "1w", "1m"])
+    p_analyze.add_argument("--json", "-j", action="store_true", help="JSON output")
+    p_analyze.add_argument("--num", "-n", type=int, default=300, help="K线根数")
+    p_analyze.add_argument("--csv", "-c", type=str, help="导出 CSV")
+    p_analyze.add_argument("--log-level", default="INFO", choices=["DEBUG","INFO","WARNING","ERROR"])
+    p_analyze.add_argument("--log-file", type=str, help="日志文件路径")
+    p_analyze.add_argument("--config", type=str, help="配置文件路径(JSON)")
+
+    # --- scan subcommand ---
+    p_scan = sub.add_parser("scan", help="扫描多市场推荐股票")
+    p_scan.add_argument("--markets", "-m", default="A,US,HK", help="市场: A,US,HK")
+    p_scan.add_argument("--min-score", type=float, default=60.0, help="最低评分门槛")
+    p_scan.add_argument("--max-picks", type=int, default=3, help="每市场最多推荐数")
+    p_scan.add_argument("--delay", type=float, default=0.5, help="请求间隔(秒)")
+    p_scan.add_argument("--json", "-j", action="store_true", help="JSON output")
+    p_scan.add_argument("--output", "-o", type=str, help="保存结果到文件")
+    p_scan.add_argument("--log-level", default="INFO", choices=["DEBUG","INFO","WARNING","ERROR"])
+    p_scan.add_argument("--log-file", type=str, help="日志文件路径")
+
     args = parser.parse_args()
 
-    setup_logging(args.log_level, args.log_file)
-    logger.info("stock-signals v2.3.1 启动")
+    if not args.cmd:
+        parser.print_help()
+        sys.exit(0)
 
+    setup_logging(getattr(args, "log_level", "INFO"), getattr(args, "log_file", ""))
+    logger.info("stock-signals v2.3.2 启动")
+
+    if args.cmd == "scan":
+        markets = [m.strip() for m in args.markets.split(",")]
+        cfg = ScanConfig(
+            min_score=args.min_score,
+            max_per_market=args.max_picks,
+            max_delay=args.delay,
+        )
+        result = scan(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
+        if not args.json:
+            print_scan_report(result)
+        sys.exit(0)
+
+    # analyze mode
     for code in args.codes:
         code = code.strip()
         if "." not in code:
@@ -413,9 +450,8 @@ def main():
             sys.exit(1)
         analyze(code, args.timeframe, args.json)
 
-    if args.csv:
+    if getattr(args, "csv", None):
         logger.warning("--csv 需要多只股票批量模式")
-
 
 if __name__ == "__main__":
     main()
