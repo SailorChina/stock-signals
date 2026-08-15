@@ -6,7 +6,7 @@ description: >-
   Produces a 5-tier rating (Buy / Overweight / Hold / Underweight / Sell) with
   confidence score, based on deterministic technical indicator calculations (no LLM).
 
-  Features (v2.1):
+  Features (v2.2):
   - Multi-timeframe resonance analysis (daily/weekly/monthly alignment)
   - Support/resistance level detection (swing points + BOLL + MA clusters)
   - Trend phase classification (accumulation/early_rally/rally/distribution/decline)
@@ -14,6 +14,7 @@ description: >-
   - 5-dimension scoring (trend/momentum/volume/volatility/capital)
   - Buy/sell signal generation with confidence levels
   - K-line caching and API retry
+  - 全中文文本输出
   - Batch analysis and CSV export
 
   Use when the user asks for: 买卖信号, 技术分析, 技术指标, 趋势判断, 买入卖出建议,
@@ -23,7 +24,7 @@ description: >-
   Trigger keywords: analyze, signals, technical analysis, 买卖信号, 技术分析,
   股票分析, 信号, MACD, RSI, KDJ, 布林带, 趋势, 买入, 卖出, 持仓建议.
 metadata:
-  version: 2.1.0
+  version: 2.2.0
   author: SailorChina
 allowed-tools: Bash
 ---
