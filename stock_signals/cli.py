@@ -43,6 +43,25 @@ def setup_logging(log_level="INFO", log_file=""):
 
 logger = logging.getLogger("stock-signals")
 
+# ── Rating color & Chinese label maps ──────────────────────────────
+RC_COLOR = {"Buy": "green", "Overweight": "green", "Hold": "yellow",
+            "Underweight": "magenta", "Sell": "red"}
+RATING_CN = {"Buy": "买入", "Overweight": "偏多", "Hold": "观望",
+             "Underweight": "偏空", "Sell": "卖出"}
+
+# ── Confidence Chinese labels ──────────────────────────────────────
+CONF_CN = {"high": "高", "medium": "中", "low": "低"}
+
+# ── OBV trend Chinese labels ───────────────────────────────────────
+OBV_CN = {"up": "上升", "down": "下降"}
+
+# ── Resonance alignment colors & Chinese labels ────────────────────
+ALIGN_COLOR = {"strong_up": "green", "aligned": "green", "mixed": "yellow",
+               "aligned_down": "magenta", "strong_down": "red", "none": "white"}
+ALIGN_CN = {"strong_up": "强共振看多", "aligned": "共振看多", "mixed": "分歧",
+            "aligned_down": "共振看空", "strong_down": "强共振看空", "none": "无"}
+
+
 
 def _color(text, color, bold=False):
     codes = {"red":31,"green":32,"yellow":33,"blue":34,"magenta":35,"cyan":36,"white":37}
@@ -61,10 +80,8 @@ def print_text_report(result, code):
     rating = result["rating"]
     score = result["score"]
     confidence = result["confidence"]
-    rc_map = {"Buy":"green","Overweight":"green","Hold":"yellow","Underweight":"magenta","Sell":"red"}
-    rating_cn = {"Buy":"买入","Overweight":"偏多","Hold":"观望","Underweight":"偏空","Sell":"卖出"}
-    rating_cn_label = rating_cn.get(rating, "")
-    rc = rc_map.get(rating, "white")
+    rating_cn_label = RATING_CN.get(rating, "")
+    rc = RC_COLOR.get(rating, "white")
 
     print()
     print("=" * 64)
@@ -74,7 +91,7 @@ def print_text_report(result, code):
     print()
     print(f"  {_color(f'评级: {rating}' + (f' ({rating_cn_label})' if rating_cn_label else ''), rc, True)}")
     print(f"  综合得分: {_color(f'{score:.1f}/100', rc)}")
-    conf_cn = {"high":"高","medium":"中","low":"低"}.get(confidence, "")
+    conf_cn = CONF_CN.get(confidence, "")
     print(f"  置信度: {_color(confidence + (f' ({conf_cn})' if conf_cn else ''), 'cyan')}")
     print()
 
@@ -101,7 +118,7 @@ def print_text_report(result, code):
     print(f"    RSI:  6={ta.get('rsi_6',0):.1f} 12={ta.get('rsi_12',0):.1f} 14={ta.get('rsi_14',0):.1f}")
     print(f"    KDJ:  K={ta.get('kdj_k',0):.1f} D={ta.get('kdj_d',0):.1f} J={ta.get('kdj_j',0):.1f}")
     print(f"    BOLL: 上={ta.get('boll_upper',0):.2f} 中={ta.get('boll_mid',0):.2f} 下={ta.get('boll_lower',0):.2f} 宽={ta.get('boll_width',0):.1f}%")
-    obv_v = ta.get('obv_trend','?'); obv_cn = {'up':'上升','down':'下降'}.get(obv_v, obv_v)
+    obv_v = ta.get('obv_trend','?'); obv_cn = OBV_CN.get(obv_v, obv_v)
     print(f"    ATR:  {ta.get('atr_14',0):.2f}  量比={ta.get('vol_ratio',0):.2f}  OBV={obv_cn}")
     print()
 
@@ -134,15 +151,14 @@ def print_text_report(result, code):
     res = result.get("resonance")
     if res:
         print("  多时间框架共振")
-        align_colors = {"strong_up":"green","aligned":"green","mixed":"yellow","aligned_down":"magenta","strong_down":"red","none":"white"}
-        ac = align_colors.get(res["alignment"], "white")
-        _rcm = {"Buy":"买入","Overweight":"偏多","Hold":"观望","Underweight":"偏空","Sell":"卖出"}
+        ac = ALIGN_COLOR.get(res["alignment"], "white")
+
         _dr=res["daily_rating"]; _wr=res["weekly_rating"]; _mr=res["monthly_rating"]
-        _dc=_rcm.get(_dr,""); _wc=_rcm.get(_wr,""); _mc=_rcm.get(_mr,"")
+        _dc=RATING_CN.get(_dr,""); _wc=RATING_CN.get(_wr,""); _mc=RATING_CN.get(_mr,"")
         _ds=res["daily_score"]; _ws=res["weekly_score"]; _ms=res["monthly_score"]
         print(f"    日线: {_dr}" + (f" ({_dc})" if _dc else "") + f" ({_ds:.1f})  周线: {_wr}" + (f" ({_wc})" if _wc else "") + f" ({_ws:.1f})  月线: {_mr}" + (f" ({_mc})" if _mc else "") + f" ({_ms:.1f})")
         boost = res["confidence_boost"]
-        align_cn = {'strong_up':'强共振看多','aligned':'共振看多','mixed':'分歧','aligned_down':'共振看空','strong_down':'强共振看空','none':'无'}.get(res['alignment'], '')
+        align_cn = ALIGN_CN.get(res['alignment'], '')
         print(f"    共振: {_color(res['alignment'] + (f' ({align_cn})' if align_cn else ''), ac)}  置信度调整: { '+' if boost>=0 else ''}{boost:.0f}")
         if res.get("details"):
             print(f"    {_color(res['details'], 'dim')}")
@@ -344,12 +360,12 @@ def main():
     args = parser.parse_args()
 
     setup_logging(args.log_level, args.log_file)
-    logger.info("stock-signals v2.1.0 启动")
+    logger.info("stock-signals v2.2.1 启动")
 
     for code in args.codes:
         code = code.strip()
         if "." not in code:
-            logger.error(f"股票代码格式错误: {code}, expected e.g. US.NVDA / SH.600519 / HK.00700")
+            logger.error(f"股票代码格式错误: {code}，示例: US.NVDA / SH.600519 / HK.00700")
             sys.exit(1)
         analyze(code, args.timeframe, args.json)
 
