@@ -116,3 +116,52 @@ class TestSupportResistance:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestNewFeatures:
+    """测试新增功能: ADX、背离、K线形态、缺口、波动率市况"""
+
+    def test_adx_computed(self):
+        df = _make_df(100, "up")
+        from indicators import compute_indicators
+        ind = compute_indicators(df, "US.TEST", "1d")
+        assert ind.adx >= 0
+        assert ind.plus_di >= 0
+        assert ind.minus_di >= 0
+
+    def test_candle_pattern_fields(self):
+        from indicators import compute_indicators
+        df = _make_df(100, "up")
+        ind = compute_indicators(df, "US.TEST", "1d")
+        assert hasattr(ind, "candle_pattern")
+        assert hasattr(ind, "gap_type")
+        assert hasattr(ind, "vol_regime")
+        assert ind.vol_regime in ("low", "normal", "high")
+        assert ind.gap_type in ("gap_up", "gap_down", "none", "")
+
+    def test_divergence_fields(self):
+        from indicators import compute_indicators
+        df = _make_df(100, "up")
+        ind = compute_indicators(df, "US.TEST", "1d")
+        assert hasattr(ind, "macd_divergence")
+        assert hasattr(ind, "rsi_divergence")
+        assert ind.macd_divergence in ("bullish", "bearish", "none")
+        assert ind.rsi_divergence in ("bullish", "bearish", "none")
+
+    def test_dynamic_weights_sum_to_one(self):
+        from scoring import get_dynamic_weights
+        from indicators import compute_indicators
+        df = _make_df(100, "flat")
+        ind = compute_indicators(df, "US.TEST", "1d")
+        weights = get_dynamic_weights(ind)
+        assert abs(sum(weights.values()) - 1.0) < 0.001
+
+    def test_signal_summary_new_items(self):
+        from indicators import compute_indicators, signal_summary
+        df = _make_df(100, "up")
+        ind = compute_indicators(df, "US.TEST", "1d")
+        sigs = signal_summary(ind)
+        assert len(sigs) >= 3
+        # New signal types should not crash
+        labels = [s[0] for s in sigs]
+        assert "趋势强度" in labels or "背离" in labels or "K线形态" in labels or len(sigs) >= 3

@@ -223,6 +223,28 @@ class Indicators:
 
     price_vs_ma200: float = 0.0
 
+    # ── ADX trend strength ─────────────────────────────────────────
+    adx: float = 0.0
+    plus_di: float = 0.0
+    minus_di: float = 0.0
+
+    # ── Divergence detection ───────────────────────────────────────
+    macd_divergence: str = "none"
+    rsi_divergence: str = "none"
+
+    # ── Candlestick patterns ───────────────────────────────────────
+    candle_pattern: str = "none"
+    candle_pattern_name: str = ""
+
+    # ── Gap analysis ───────────────────────────────────────────────
+    gap_pct: float = 0.0
+    gap_type: str = "none"
+    gap_filled: bool = False
+
+    # ── Volatility regime ──────────────────────────────────────────
+    vol_regime: str = "normal"
+    vol_regime_score: float = 50.0
+
 
 
 
@@ -828,6 +850,139 @@ def compute_indicators(df: pd.DataFrame, code: str = "", ktype: str = "1d") -> I
 
 
 
+
+    # ═══════════════════════════════════════════════════════════════
+    # ADX (Average Directional Index)
+    # ═══════════════════════════════════════════════════════════════
+    if n >= 28:
+        tr_arr = np.zeros(n)
+        plus_dm = np.zeros(n)
+        minus_dm = np.zeros(n)
+        tr_arr[0] = high[0] - low[0]
+        for i in range(1, n):
+            hp = high[i] - high[i - 1]
+            lm = low[i - 1] - low[i]
+            tr_arr[i] = max(high[i] - low[i], abs(high[i] - close[i - 1]), abs(low[i] - close[i - 1]))
+            if hp > lm and hp > 0:
+                plus_dm[i] = hp
+            elif lm > hp and lm > 0:
+                minus_dm[i] = lm
+        tr_exp = _ema(tr_arr, 14)
+        pdi_exp = _ema(plus_dm, 14)
+        mdi_exp = _ema(minus_dm, 14)
+        dx_arr = np.zeros(n)
+        for i in range(14, n):
+            denom = pdi_exp[i] + mdi_exp[i]
+            dx_arr[i] = 100.0 * abs(pdi_exp[i] - mdi_exp[i]) / denom if denom > 0 else 0.0
+        adx_arr = _ema(dx_arr, 14)
+        ind.adx = float(adx_arr[-1]) if len(adx_arr) > 0 else 0.0
+        ind.plus_di = float(pdi_exp[-1]) if len(pdi_exp) > 0 else 0.0
+        ind.minus_di = float(mdi_exp[-1]) if len(mdi_exp) > 0 else 0.0
+    else:
+        ind.adx, ind.plus_di, ind.minus_di = 0.0, 0.0, 0.0
+
+    # ═══════════════════════════════════════════════════════════════
+    # MACD & RSI Divergence Detection
+    # ═══════════════════════════════════════════════════════════════
+    if n >= 30:
+        ema12 = _ema(close, 12)
+        ema26 = _ema(close, 26)
+        dif_s = ema12 - ema26
+        dea_s = _ema(dif_s, 9)
+        hist_s = 2.0 * (dif_s - dea_s)
+        # MACD histogram divergence (5-bar lookback)
+        if hist_s[-1] < hist_s[-2] and close[-1] > close[-2] and hist_s[-2] > 0:
+            if hist_s[-1] < hist_s[-5] * 0.95:
+                ind.macd_divergence = "bearish"
+        elif hist_s[-1] > hist_s[-2] and close[-1] < close[-2] and hist_s[-2] < 0:
+            if hist_s[-1] > hist_s[-5] * 1.05:
+                ind.macd_divergence = "bullish"
+        # RSI divergence
+        deltas = np.diff(close)
+        if len(deltas) >= 14:
+            gains = np.where(deltas[-14:] > 0, deltas[-14:], 0.0)
+            losses = np.where(deltas[-14:] < 0, -deltas[-14:], 0.0)
+            ag = float(np.mean(gains))
+            al = float(np.mean(losses))
+            rsi_last = 100.0 - 100.0 / (1.0 + ag / al) if al > 0 else (100.0 if ag > 0 else 50.0)
+            # Simple RSI divergence check
+            if close[-1] > close[-5] and rsi_last < ind.rsi_14 * 0.97 and ind.rsi_14 > 50:
+                ind.rsi_divergence = "bearish"
+            elif close[-1] < close[-5] and rsi_last > ind.rsi_14 * 1.03 and ind.rsi_14 < 50:
+                ind.rsi_divergence = "bullish"
+
+    # ═══════════════════════════════════════════════════════════════
+    # K-line Pattern Recognition
+    # ═══════════════════════════════════════════════════════════════
+    if n >= 3:
+        for i in range(max(0, n - 5), n):
+            o = float(df["open"].iloc[i])
+            h = float(df["high"].iloc[i])
+            l = float(df["low"].iloc[i])
+            c = float(df["close"].iloc[i])
+            body = abs(c - o)
+            rng = h - l
+            upper_w = h - max(o, c)
+            lower_w = min(o, c) - l
+            if rng > 0:
+                # Hammer / Inverted Hammer
+                if lower_w >= body * 2 and upper_w <= body * 0.5 and body / rng > 0.2:
+                    if c > o:
+                        ind.candle_pattern, ind.candle_pattern_name = "bullish_hammer", "锤子线(看涨)"
+                    else:
+                        ind.candle_pattern, ind.candle_pattern_name = "inverted_hammer", "倒锤子线"
+                # Shooting Star
+                if upper_w >= body * 2 and lower_w <= body * 0.5 and body / rng > 0.2:
+                    ind.candle_pattern, ind.candle_pattern_name = "shooting_star", "流星线(看跌)"
+                # Engulfing
+                if i > 0:
+                    po = float(df["open"].iloc[i - 1])
+                    pc = float(df["close"].iloc[i - 1])
+                    pb = pc - po
+                    cb = c - o
+                    if pb < 0 and cb > 0 and o <= pc and c >= po:
+                        ind.candle_pattern, ind.candle_pattern_name = "bullish_engulfing", "阳包阴(看涨)"
+                    elif pb > 0 and cb < 0 and o >= pc and c <= po:
+                        ind.candle_pattern, ind.candle_pattern_name = "bearish_engulfing", "阴包阳(看跌)"
+
+    # ═══════════════════════════════════════════════════════════════
+    # Gap Analysis
+    # ═══════════════════════════════════════════════════════════════
+    if n >= 2:
+        prev_close_val = float(close[-2])
+        curr_open = float(df["open"].iloc[-1])
+        if prev_close_val > 0:
+            gap = (curr_open - prev_close_val) / prev_close_val * 100
+            ind.gap_pct = gap
+            if gap > 1.5:
+                ind.gap_type = "gap_up"
+            elif gap < -1.5:
+                ind.gap_type = "gap_down"
+            else:
+                ind.gap_type = "none"
+            if ind.gap_type != "none":
+                recent = close[-min(10, n):]
+                if ind.gap_type == "gap_up" and float(np.min(recent)) <= prev_close_val * 1.005:
+                    ind.gap_filled = True
+                elif ind.gap_type == "gap_down" and float(np.max(recent)) >= prev_close_val * 0.995:
+                    ind.gap_filled = True
+
+    # ═══════════════════════════════════════════════════════════════
+    # Volatility Regime Classification
+    # ═══════════════════════════════════════════════════════════════
+    if n >= 60:
+        atr_pct = ind.atr_14 / ind.last_close * 100 if ind.last_close > 0 else 0
+        ind.vol_regime_score = atr_pct
+        if atr_pct > 5.0:
+            ind.vol_regime = "high"
+        elif atr_pct < 1.5:
+            ind.vol_regime = "low"
+        else:
+            ind.vol_regime = "normal"
+    else:
+        ind.vol_regime = "normal"
+        ind.vol_regime_score = ind.atr_14 / ind.last_close * 100 if ind.last_close > 0 else 0
+
     return ind
 
 
@@ -1082,6 +1237,38 @@ def signal_summary(ind: Indicators) -> List[tuple]:
 
         signals.append(("波动", f"布林幅度={ind.boll_width:.1f}%，窄幅敲合，突破在即"))
 
+
+
+    # ADX trend strength
+    if ind.adx > 0:
+        if ind.adx > 40:
+            signals.append(("趋势强度", f"ADX={ind.adx:.1f}，强趋势，适合趋势跟踪"))
+        elif ind.adx > 25:
+            signals.append(("趋势强度", f"ADX={ind.adx:.1f}，中等趋势，可跟踪"))
+        else:
+            signals.append(("趋势强度", f"ADX={ind.adx:.1f}，低趋势，震荡市，慎用趋势策略"))
+        if ind.plus_di > ind.minus_di * 1.5:
+            signals.append(("ADX方向", f"+DI={ind.plus_di:.1f} > -DI={ind.minus_di:.1f}，多头占优"))
+        elif ind.minus_di > ind.plus_di * 1.5:
+            signals.append(("ADX方向", f"-DI={ind.minus_di:.1f} > +DI={ind.plus_di:.1f}，空头占优"))
+
+    # Divergence
+    if ind.macd_divergence != "none":
+        side = "看跌" if ind.macd_divergence == "bearish" else "看涨"
+        signals.append(("背离", f"MACD{side}背离，价格与动量分歧"))
+    if ind.rsi_divergence != "none":
+        side = "看跌" if ind.rsi_divergence == "bearish" else "看涨"
+        signals.append(("背离", f"RSI{side}背离，短期回调风险"))
+
+    # K-line patterns
+    if ind.candle_pattern != "none" and ind.candle_pattern_name:
+        signals.append(("K线形态", ind.candle_pattern_name))
+
+    # Gaps
+    if ind.gap_type != "none" and abs(ind.gap_pct) > 0.01:
+        direction = "向上" if ind.gap_type == "gap_up" else "向下"
+        filled = "已回补" if ind.gap_filled else "未回补"
+        signals.append(("缺口", f"缺口{direction}{ind.gap_pct:+.1f}%，{filled}"))
 
     return signals
 

@@ -120,6 +120,33 @@ def print_text_report(result, code):
     print(f"    BOLL: 上={ta.get('boll_upper',0):.2f} 中={ta.get('boll_mid',0):.2f} 下={ta.get('boll_lower',0):.2f} 宽={ta.get('boll_width',0):.1f}%")
     obv_v = ta.get('obv_trend','?'); obv_cn = OBV_CN.get(obv_v, obv_v)
     print(f"    ATR:  {ta.get('atr_14',0):.2f}  量比={ta.get('vol_ratio',0):.2f}  OBV={obv_cn}")
+    # ADX
+    adx = ta.get("adx", 0)
+    pdi = ta.get("plus_di", 0)
+    mdi = ta.get("minus_di", 0)
+    if adx > 0:
+        adx_c = "green" if adx > 40 else ("yellow" if adx > 25 else "dim")
+        trend_dir = "多" if pdi > mdi else "空"
+        print(f"    ADX:  {_color(f"{adx:.1f}", adx_c)}  +DI={pdi:.1f} -DI={mdi:.1f} ({trend_dir})")
+    # Divergence
+    macd_div = ta.get("macd_divergence", "none")
+    rsi_div = ta.get("rsi_divergence", "none")
+    if macd_div != "none":
+        div_c = "red" if macd_div == "bearish" else "green"
+        print(f"    MACD背离: {_color("顶背离" if macd_div == "bearish" else "底背离", div_c)}")
+    if rsi_div != "none":
+        div_c = "red" if rsi_div == "bearish" else "green"
+        print(f"    RSI背离:  {_color("顶背离" if rsi_div == "bearish" else "底背离", div_c)}")
+    # Candle pattern
+    cp = ta.get("candle_pattern", "none")
+    if cp != "none":
+        print(f"    K线形态: {ta.get("candle_pattern_name", "")}")
+    # Gap
+    gap = ta.get("gap_pct", 0)
+    if gap != 0 and abs(gap) > 0.01:
+        gap_c = "green" if gap > 0 else "red"
+        filled_str = "已回补" if ta.get("gap_filled", False) else "未回补"
+        print(f"    缺口: {_color(f"{gap:+.1f}%", gap_c)} ({filled_str})")
     print()
 
     signals = result.get("signals", [])
@@ -190,6 +217,14 @@ def print_text_report(result, code):
         print(f"    风险收益比: {_color(f'{rr:.2f}:1', rr_c)}")
         print(f"    建议仓位:   {tp['position_size_pct']:.1f}%")
         print()
+
+    # 波动率市况
+    vol_regime = ta.get("vol_regime", "normal")
+    regime_labels = {"low": "低波震荡市", "normal": "正常市况", "high": "高波趋势市"}
+    regime_colors = {"low": "yellow", "normal": "cyan", "high": "magenta"}
+    rc = regime_colors.get(vol_regime, "white")
+    print(f"  市况分类: {_color(regime_labels.get(vol_regime, vol_regime), rc)}  (ATR%={ta.get("atr_14_pct", 0):.2f}%)")
+    print()
 
     trend = result.get("trend_phase")
     if trend:
@@ -274,8 +309,17 @@ def analyze(code, timeframe="1d", output_json=False):
             "kdj_k": ind.kdj_k, "kdj_d": ind.kdj_d, "kdj_j": ind.kdj_j,
             "boll_mid": ind.boll_mid, "boll_upper": ind.boll_upper,
             "boll_lower": ind.boll_lower, "boll_width": ind.boll_width,
-            "atr_14": ind.atr_14,
+            "atr_14": ind.atr_14, "atr_14_pct": ind.atr_14_pct,
             "obv_trend": ind.obv_trend, "vol_ratio": ind.vol_ratio, "vwma_20": ind.vwma_20,
+            "adx": ind.adx, "plus_di": ind.plus_di, "minus_di": ind.minus_di,
+            "macd_divergence": ind.macd_divergence,
+            "rsi_divergence": ind.rsi_divergence,
+            "candle_pattern": ind.candle_pattern,
+            "candle_pattern_name": ind.candle_pattern_name,
+            "gap_pct": ind.gap_pct,
+            "gap_type": ind.gap_type,
+            "gap_filled": ind.gap_filled,
+            "vol_regime": ind.vol_regime,
             "ma5_ma10_cross": ind.ma5_ma10_cross == "golden",
             "macd_dif_dea_cross": ind.macd_dif_dea_cross == "golden",
         },
@@ -360,7 +404,7 @@ def main():
     args = parser.parse_args()
 
     setup_logging(args.log_level, args.log_file)
-    logger.info("stock-signals v2.2.1 启动")
+    logger.info("stock-signals v2.3.0 启动")
 
     for code in args.codes:
         code = code.strip()

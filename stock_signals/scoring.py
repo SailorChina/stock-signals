@@ -33,6 +33,25 @@ DIM_WEIGHTS = {
 }
 
 
+
+def get_dynamic_weights(ind):
+    """根据波动率市况动态调整维度权重"""
+    weights = dict(DIM_WEIGHTS)
+    if ind.vol_regime == "low":
+        weights["trend"] = 0.20
+        weights["momentum"] = 0.35
+        weights["volume"] = 0.30
+        weights["volatility"] = 0.10
+        weights["capital"] = 0.05
+    elif ind.vol_regime == "high":
+        weights["trend"] = 0.40
+        weights["momentum"] = 0.30
+        weights["volume"] = 0.15
+        weights["volatility"] = 0.10
+        weights["capital"] = 0.05
+    return weights
+
+
 # ---------------------------------------------------------------------------
 # 各维度评分
 # ---------------------------------------------------------------------------
@@ -73,6 +92,15 @@ def score_trend(ind) -> Tuple[float, str]:
     elif ind.ma5_ma10_cross == 'death':
         score -= 10
         reasons.append("MA5/MA10 死叉")
+
+    # ADX trend strength adjustment
+    if ind.adx > 0:
+        if ind.adx < 20:
+            score -= 5
+            reasons.append("ADX<20，趋势极弱，均线信号可信度下降")
+        elif ind.adx > 50:
+            score += 5
+            reasons.append(f"ADX={ind.adx:.1f}，趋势强劲，均线信号可信度高")
 
     return min(100, max(0, score)), "; ".join(reasons) if reasons else "均线震荡，方向不明"
 
@@ -122,6 +150,20 @@ def score_momentum(ind) -> Tuple[float, str]:
     elif k < 20:
         score += 8
         reasons.append(f"KDJ K={k:.1f}，超卖")
+
+    # MACD/RSI divergence adjustment
+    if ind.macd_divergence == "bearish":
+        score -= 12
+        reasons.append("MACD顶背离，动量衰竭警告")
+    elif ind.macd_divergence == "bullish":
+        score += 12
+        reasons.append("MACD底背离，动量复苏信号")
+    if ind.rsi_divergence == "bearish":
+        score -= 8
+        reasons.append("RSI顶背离，短期回调风险")
+    elif ind.rsi_divergence == "bullish":
+        score += 8
+        reasons.append("RSI底背离，短期反弹机会")
 
     return min(100, max(0, score)), "; ".join(reasons) if reasons else "动量中性"
 
@@ -268,7 +310,8 @@ def compute_rating(ind, capital=None, short_pct=None) -> dict:
     ]
 
     for name, (score, reason) in dim_scores:
-        weight = DIM_WEIGHTS.get(name, 0.20)
+        dyn_weights = get_dynamic_weights(ind)
+        weight = dyn_weights.get(name, 0.20)
         dims[name] = {"score": score, "reason": reason, "weight": weight}
         weighted_sum += score * weight
         total += weight
