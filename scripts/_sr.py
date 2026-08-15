@@ -26,9 +26,9 @@ def compute_support_resistance(df, n=20):
         wh = high[i-pn:i+pn+1]
         wl = low[i-pn:i+pn+1]
         # 使用 >= 允许略低于极值点，避免精确匹配遗漏
-        if close[i] >= wh.max() * 0.999 and close[i] >= high[i] * 0.999:
+        if high[i] >= wh.max() * 0.95:
             swings_high.append(close[i])
-        if close[i] <= wl.max() * 1.001 and close[i] <= low[i] * 1.001:
+        if low[i] <= wl.min() * 1.10:
             swings_low.append(close[i])
     def _cluster(vals, tol=0.02):
         if not vals: return []
@@ -60,13 +60,22 @@ def compute_support_resistance(df, n=20):
         vwap = tv / vs if vs > 0 else ma20
     else:
         vwap = ma20
+    cur = float(close[-1])
+    resists_above = [v for v in resists if v > cur]
+    supports_below = [v for v in supports if v < cur]
+    # ???????????????/??????????????
+    if not resists_above:
+        resists_above = [v for v in resists if v > cur] or [recent_high]
+    if not supports_below:
+        supports_below = [v for v in supports if v < cur] or [recent_low]
+
     return {
-        "resistance_1": resists[0] if resists else recent_high,
-        "resistance_2": resists[1] if len(resists) > 1 else boll_up,
-        "support_1": supports[0] if supports else recent_low,
-        "support_2": supports[1] if len(supports) > 1 else boll_lo,
-        "swing_resistances": resists[:3],
-        "swing_supports": supports[:3],
+        "resistance_1": resists_above[0],
+        "resistance_2": resists_above[1] if len(resists_above) > 1 else (resists_above[0] * 1.02),
+        "support_2": supports_below[1] if len(supports_below) > 1 else (supports_below[0] * 0.98),
+        "support_1": supports_below[0],
+        "swing_resistances": resists_above[:3],
+        "swing_supports": supports_below[:3],
         "boll_upper": boll_up, "boll_lower": boll_lo,
         "ma_levels": ma_clusters, "vwap": vwap,
     }
