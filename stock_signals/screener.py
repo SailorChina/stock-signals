@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """股票筛选引擎 — 多市场扫描 + 智能选股"""
 from __future__ import annotations
 
@@ -130,7 +130,7 @@ class ScanConfig:
     require_macd_cross: bool = False
     allow_td_buy: bool = True
     allow_oversold: bool = False
-    max_delay: float = 0.3
+    max_delay: float = 1.0
     max_per_market: int = 5
 
 
@@ -153,18 +153,21 @@ class ScanResult:
     trade_plan: Optional[dict] = None
 
 
-def _analyze_one(code, capital=None, short_pct=None, delay=0.3):
+def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
 
     try:
-        time.sleep(0.5)
+        time.sleep(delay)
         df = fetch_kline(code, "1d", num=300)
+        time.sleep(0.8)
         if df is None or df.empty or len(df) < 60:
             return None
         ind = compute_indicators(df, code, "1d")
         rating = compute_rating(ind, capital, short_pct)
+        time.sleep(0.8)
         score = rating["score"]
         r_name = rating["rating"]
         resonance = compute_timeframe_resonance(code, ind, capital, short_pct)
+        time.sleep(0.8)
         from ._sr import compute_trend_phase
         try:
             phase = compute_trend_phase(ind, df)
@@ -209,7 +212,13 @@ def _analyze_one(code, capital=None, short_pct=None, delay=0.3):
             } if tp else None,
         )
     except Exception as e:
-        logger.warning(f"  \u5206\u6790 {code} \u5931\u8d25: {e}")
+        err_str = str(e)
+        if "频率" in err_str or "rate" in err_str.lower() or "limit" in err_str.lower():
+            wait = delay * 2
+            logger.warning(f"  {code} 触发API限流，等待 {wait:.1f}s 后重试...")
+            time.sleep(wait)
+            return _analyze_one(code, delay=delay * 1.5)
+        logger.warning(f"  分析 {code} 失败: {e}")
         return None
 
 

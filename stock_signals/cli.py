@@ -19,17 +19,10 @@ try:
     )
     from stock_signals._resonance import compute_timeframe_resonance
     from stock_signals._sr import compute_support_resistance, generate_trade_plan
-    from .screener import scan, ScanConfig
-    from .reporter import print_scan_report
+    from stock_signals.screener import scan, ScanConfig
+    from stock_signals.reporter import print_scan_report
 except ImportError:
-    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-    from indicators import fetch_kline, compute_indicators, signal_summary
-    from scoring import (
-        compute_rating, generate_signals,
-        get_capital_data, get_short_data,
-    )
-    from _resonance import compute_timeframe_resonance
-    from _sr import compute_support_resistance, generate_trade_plan
+    pass
 
 
 def setup_logging(log_level="INFO", log_file=""):
@@ -428,7 +421,7 @@ def main():
         sys.exit(0)
 
     setup_logging(getattr(args, "log_level", "INFO"), getattr(args, "log_file", ""))
-    logger.info("stock-signals v2.3.2 启动")
+    logger.info("stock-signals v2.3.3 启动")
 
     if args.cmd == "scan":
         # Interactive market selection
