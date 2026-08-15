@@ -62,6 +62,8 @@ def print_text_report(result, code):
     score = result["score"]
     confidence = result["confidence"]
     rc_map = {"Buy":"green","Overweight":"green","Hold":"yellow","Underweight":"magenta","Sell":"red"}
+    rating_cn = {"Buy":"买入","Overweight":"偏多","Hold":"观望","Underweight":"偏空","Sell":"卖出"}
+    rating_cn_label = rating_cn.get(rating, "")
     rc = rc_map.get(rating, "white")
 
     print()
@@ -70,9 +72,10 @@ def print_text_report(result, code):
     print(f"  时间: {result.get('timestamp', 'N/A')}")
     print("=" * 64)
     print()
-    print(f"  {_color(f'评级: {rating}', rc, True)}")
+    print(f"  {_color(f'评级: {rating}' + (f' ({rating_cn_label})' if rating_cn_label else ''), rc, True)}")
     print(f"  综合得分: {_color(f'{score:.1f}/100', rc)}")
-    print(f"  置信度: {_color(confidence, 'cyan')}")
+    conf_cn = {"high":"高","medium":"中","low":"低"}.get(confidence, "")
+    print(f"  置信度: {_color(confidence + (f' ({conf_cn})' if conf_cn else ''), 'cyan')}")
     print()
 
     print("  各维度评分")
@@ -98,7 +101,8 @@ def print_text_report(result, code):
     print(f"    RSI:  6={ta.get('rsi_6',0):.1f} 12={ta.get('rsi_12',0):.1f} 14={ta.get('rsi_14',0):.1f}")
     print(f"    KDJ:  K={ta.get('kdj_k',0):.1f} D={ta.get('kdj_d',0):.1f} J={ta.get('kdj_j',0):.1f}")
     print(f"    BOLL: 上={ta.get('boll_upper',0):.2f} 中={ta.get('boll_mid',0):.2f} 下={ta.get('boll_lower',0):.2f} 宽={ta.get('boll_width',0):.1f}%")
-    print(f"    ATR:  {ta.get('atr_14',0):.2f}  量比={ta.get('vol_ratio',0):.2f}  OBV={ta.get('obv_trend','?')}")
+    obv_v = ta.get('obv_trend','?'); obv_cn = {'up':'上升','down':'下降'}.get(obv_v, obv_v)
+    print(f"    ATR:  {ta.get('atr_14',0):.2f}  量比={ta.get('vol_ratio',0):.2f}  OBV={obv_cn}")
     print()
 
     signals = result.get("signals", [])
@@ -132,9 +136,14 @@ def print_text_report(result, code):
         print("  多时间框架共振")
         align_colors = {"strong_up":"green","aligned":"green","mixed":"yellow","aligned_down":"magenta","strong_down":"red","none":"white"}
         ac = align_colors.get(res["alignment"], "white")
-        print(f"    日线: {res['daily_rating']} ({res['daily_score']:.1f})  周线: {res['weekly_rating']} ({res['weekly_score']:.1f})  月线: {res['monthly_rating']} ({res['monthly_score']:.1f})")
+        _rcm = {"Buy":"买入","Overweight":"偏多","Hold":"观望","Underweight":"偏空","Sell":"卖出"}
+        _dr=res["daily_rating"]; _wr=res["weekly_rating"]; _mr=res["monthly_rating"]
+        _dc=_rcm.get(_dr,""); _wc=_rcm.get(_wr,""); _mc=_rcm.get(_mr,"")
+        _ds=res["daily_score"]; _ws=res["weekly_score"]; _ms=res["monthly_score"]
+        print(f"    日线: {_dr}" + (f" ({_dc})" if _dc else "") + f" ({_ds:.1f})  周线: {_wr}" + (f" ({_wc})" if _wc else "") + f" ({_ws:.1f})  月线: {_mr}" + (f" ({_mc})" if _mc else "") + f" ({_ms:.1f})")
         boost = res["confidence_boost"]
-        print(f"    共振: {_color(res['alignment'], ac)}  置信度调整: { '+' if boost>=0 else ''}{boost:.0f}")
+        align_cn = {'strong_up':'强共振看多','aligned':'共振看多','mixed':'分歧','aligned_down':'共振看空','strong_down':'强共振看空','none':'无'}.get(res['alignment'], '')
+        print(f"    共振: {_color(res['alignment'] + (f' ({align_cn})' if align_cn else ''), ac)}  置信度调整: { '+' if boost>=0 else ''}{boost:.0f}")
         if res.get("details"):
             print(f"    {_color(res['details'], 'dim')}")
         print()
