@@ -245,6 +245,13 @@ class Indicators:
     vol_regime: str = "normal"
     vol_regime_score: float = 50.0
 
+    # ── TD Sequential (9转信号) ────────────────────────────────────
+    td_buy_setup: bool = False       # TD买入序列完成(9连阴)
+    td_sell_setup: bool = False      # TD卖出序列完成(9连阳)
+    td_buy_count: int = 0            # 当前买入计数 1-9
+    td_sell_count: int = 0           # 当前卖出计数 1-9
+    td_turn: str = "none"            # turn信号: buy_turn / sell_turn / none
+
 
 
 
@@ -983,6 +990,40 @@ def compute_indicators(df: pd.DataFrame, code: str = "", ktype: str = "1d") -> I
         ind.vol_regime = "normal"
         ind.vol_regime_score = ind.atr_14 / ind.last_close * 100 if ind.last_close > 0 else 0
 
+
+    # ═══════════════════════════════════════════════════════════════
+    # TD Sequential (9转信号)
+    # ═══════════════════════════════════════════════════════════════
+    if n >= 9:
+        td_buy_count = 0
+        td_sell_count = 0
+        for i in range(4, n):
+            if close[i] < close[i - 4]:
+                td_buy_count += 1
+                td_sell_count = 0
+            elif close[i] > close[i - 4]:
+                td_sell_count += 1
+                td_buy_count = 0
+            else:
+                td_buy_count = 0
+                td_sell_count = 0
+            if td_buy_count >= 9:
+                ind.td_buy_count = min(td_buy_count, 9)
+                if td_buy_count == 9:
+                    ind.td_buy_setup = True
+            if td_sell_count >= 9:
+                ind.td_sell_count = min(td_sell_count, 9)
+                if td_sell_count == 9:
+                    ind.td_sell_setup = True
+        # TD Turn: 10th bar breaks setup direction
+        if n >= 10:
+            if ind.td_buy_setup:
+                if close[-1] > close[-5]:
+                    ind.td_turn = "buy_turn"
+            if ind.td_sell_setup:
+                if close[-1] < close[-5]:
+                    ind.td_turn = "sell_turn"
+
     return ind
 
 
@@ -1269,6 +1310,21 @@ def signal_summary(ind: Indicators) -> List[tuple]:
         direction = "向上" if ind.gap_type == "gap_up" else "向下"
         filled = "已回补" if ind.gap_filled else "未回补"
         signals.append(("缺口", f"缺口{direction}{ind.gap_pct:+.1f}%，{filled}"))
+
+
+    # TD Sequential (9转信号)
+    if ind.td_buy_setup:
+        signals.append(("9转信号", f"TD买入序列完成(第9根)，当前计数={ind.td_buy_count}"))
+    elif ind.td_buy_count > 0:
+        signals.append(("9转信号", f"TD买入序列进行中({ind.td_buy_count}/9)，关注回调"))
+    if ind.td_sell_setup:
+        signals.append(("9转信号", f"TD卖出序列完成(第9根)，当前计数={ind.td_sell_count}"))
+    elif ind.td_sell_count > 0:
+        signals.append(("9转信号", f"TD卖出序列进行中({ind.td_sell_count}/9)，关注反弹"))
+    if ind.td_turn == "buy_turn":
+        signals.append(("9转信号", "TD买入Turn确认，反转看涨信号"))
+    elif ind.td_turn == "sell_turn":
+        signals.append(("9转信号", "TD卖出Turn确认，反转看跌信号"))
 
     return signals
 

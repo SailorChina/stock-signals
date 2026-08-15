@@ -165,3 +165,43 @@ class TestNewFeatures:
         # New signal types should not crash
         labels = [s[0] for s in sigs]
         assert "趋势强度" in labels or "背离" in labels or "K线形态" in labels or len(sigs) >= 3
+
+    def test_td_sequential_bullish(self):
+        """测试TD买入序列：连续9根收盘价低于4根前"""
+        import numpy as np
+        import pandas as pd
+        from indicators import compute_indicators
+        np.random.seed(99)
+        n = 20
+        # 构造连续下跌：每根close都比4根前低
+        close = np.array([100., 98., 96., 94., 92., 90., 88., 86., 84., 82.,
+                          80., 78., 76., 74., 72., 70., 68., 66., 64., 62.])
+        open_arr = close + 0.5
+        high = close + 1.0
+        low = close - 0.5
+        volume = np.ones(n) * 100000
+        times = pd.date_range("2024-01-01", periods=n, freq="D").astype(str)
+        df = pd.DataFrame({"time": times, "open": open_arr, "high": high,
+                           "low": low, "close": close, "volume": volume})
+        ind = compute_indicators(df, "US.TEST", "1d")
+        # 应该有买入序列
+        assert ind.td_buy_setup or ind.td_buy_count > 0
+
+    def test_td_sequential_sell(self):
+        """测试TD卖出序列：连续9根收盘价高于4根前"""
+        import numpy as np
+        import pandas as pd
+        from indicators import compute_indicators
+        np.random.seed(99)
+        n = 20
+        close = np.array([62., 64., 66., 68., 70., 72., 74., 76., 78., 80.,
+                          82., 84., 86., 88., 90., 92., 94., 96., 98., 100.])
+        open_arr = close - 0.5
+        high = close + 1.0
+        low = close - 0.5
+        volume = np.ones(n) * 100000
+        times = pd.date_range("2024-01-01", periods=n, freq="D").astype(str)
+        df = pd.DataFrame({"time": times, "open": open_arr, "high": high,
+                           "low": low, "close": close, "volume": volume})
+        ind = compute_indicators(df, "US.TEST", "1d")
+        assert ind.td_sell_setup or ind.td_sell_count > 0

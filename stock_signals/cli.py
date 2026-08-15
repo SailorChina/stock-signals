@@ -404,7 +404,7 @@ def main():
     args = parser.parse_args()
 
     setup_logging(args.log_level, args.log_file)
-    logger.info("stock-signals v2.3.0 启动")
+    logger.info("stock-signals v2.3.1 启动")
 
     for code in args.codes:
         code = code.strip()
