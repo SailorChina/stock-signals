@@ -2,13 +2,10 @@
 import sys, os as _os
 from dataclasses import dataclass
 
-sys.path.insert(0, _os.path.normpath(
-    _os.path.join(_os.path.dirname(_os.path.abspath(__file__)),
-                  '..', '..', 'futuapi', 'scripts')))
-from common import create_quote_context, check_ret, safe_close, KLType, AuType
+sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
 
-from indicators import fetch_kline, compute_indicators
-from scoring import compute_rating, RATINGS
+from .indicators import fetch_kline, compute_indicators
+from .scoring import compute_rating, RATINGS
 
 
 @dataclass

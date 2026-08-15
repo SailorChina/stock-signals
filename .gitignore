@@ -1,13 +1,29 @@
+﻿# Python
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
-*_debug_*.txt
-*_fix*.py
-*_test*.py
-*_check*.py
-*_show*.py
-*_find*.py
-*_run_test*.py
-*_err_test*.py
-*_final*.py
-*_full_test*.py
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.venv/
+envs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Config & cache
+config/*.json
+~/.stock-signals/

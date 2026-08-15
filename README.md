@@ -1,18 +1,21 @@
-# stock-signals — 股票技术分析 & 买卖信号生成器
+﻿# stock-signals v2.1.0 — 股票技术分析 & 买卖信号生成器
 
-> 支持美股 / A股 / 港股的多时间框架技术分析 skill，基于富途 OpenAPI 获取实时行情数据。
+支持美股 / A股 / 港股的多时间框架技术分析 skill，基于富途 OpenAPI 获取实时行情数据。
 
 ## 功能概览
 
-- **5 级买卖评级**：Buy / Overweight / Hold / Underweight / Sell
-- **多时间框架共振**：日线 + 周线 + 月线联动分析
-- **支撑阻力位**：基于 swing point 聚类 + 布林带 + 均线检测
-- **趋势阶段判断**：吸筹 / 上涨早期 / 上涨 / 派发 / 下跌
-- **交易计划生成**：建议买入区间、止损位、目标位、风险收益比
-- **五维评分引擎**：趋势(30%) + 动量(25%) + 量能(20%) + 波动率(15%) + 资金面(10%)
-- **纯确定性计算**：不依赖 LLM，结果可复现
+- **5 级买卖评级**: Buy / Overweight / Hold / Underweight / Sell
+- **多时间框架共振**: 日线 + 周线 + 月线联动分析
+- **支撑阻力位**: 基于 swing point 聚类 + 布林带 + 均线检测
+- **趋势阶段判断**: 吸筹 / 上涨早期 / 上涨 / 派发 / 下跌
+- **交易计划生成**: 建议买入区间、止损位、目标位、风险收益比
+- **五维评分引擎**: 趋势(30%) + 动量(25%) + 量能(20%) + 波动率(15%) + 资金面(10%)
+- **纯确定性计算**: 不依赖 LLM，结果可复现
+- **API 重试 & K线缓存**: 网络不稳定时自动重试，本地缓存加速
+- **批量分析 & CSV 导出**: 一次分析多只股票
+- **完善日志系统**: 结构化日志输出
 
-## 支持的股票市场
+## 支持的市场
 
 | 市场 | 前缀 | 示例 |
 |------|------|------|
@@ -35,7 +38,7 @@ pip install futu-api>=10.4.6408
 ### 3. 安装本 Skill
 
 `ash
-# 将 skill 复制到 Codex skills 目录
+# 复制 skill 到 Codex skills 目录
 cp -r stock-signals ~/.codex/skills/
 `
 
@@ -50,26 +53,42 @@ cp -r stock-signals ~/.codex/skills/
 
 `ash
 # 美股分析
-python analyze_signals.py US.NVDA
+python -m stock_signals.cli US.NVDA
 
-# 带 JSON 输出
-python analyze_signals.py US.NVDA --json
+# JSON 输出
+python -m stock_signals.cli US.NVDA --json
 
 # 周线分析
-python analyze_signals.py US.NVDA --timeframe 1w
+python -m stock_signals.cli US.NVDA --timeframe 1w
 
 # A股
-python analyze_signals.py SH.600519
+python -m stock_signals.cli SH.600519
 
 # 港股
-python analyze_signals.py HK.00700
+python -m stock_signals.cli HK.00700
+
+# 批量分析
+python -m stock_signals.cli US.NVDA US.AAPL SH.600519 --json
+
+# 导出 CSV
+python -m stock_signals.cli US.NVDA US.AAPL --csv results.csv
 `
 
-### Codex Skill 调用
+### Python 库调用
 
-直接在 Codex 中输入：
-`
-/stock-signals:analyze US.DRAM
+`python
+from stock_signals import fetch_kline, compute_indicators, compute_rating
+from stock_signals import compute_timeframe_resonance, compute_support_resistance, generate_trade_plan
+
+# 获取 K 线
+df = fetch_kline("US.NVDA", "1d", num=300)
+
+# 计算指标
+ind = compute_indicators(df, "US.NVDA", "1d")
+
+# 计算评级
+rating = compute_rating(ind, {}, None)
+print(rating["rating"])  # "Buy" / "Overweight" / "Hold" / "Underweight" / "Sell"
 `
 
 ## 输出说明
@@ -90,7 +109,7 @@ python analyze_signals.py HK.00700
 |------|------|----------|
 | 趋势 | 30% | MA5/10/20/60/120/200 排列，金叉/死叉，价格偏离度 |
 | 动量 | 25% | RSI(6/12/14/24), MACD(DIF/DEA/Hist), KDJ(K/D/J) |
-| 量能 | 20% | OBV 趋势, 量比, 价量配合度 |
+| 量能 | 20% | OBV 趋势, 量比, 量价配合度 |
 | 波动率 | 15% | BOLL 上下轨 + 带宽, ATR |
 | 资金面 | 10% | 特大单/大单/中单/小单净流入, 卖空比例 |
 
@@ -106,9 +125,9 @@ python analyze_signals.py HK.00700
 
 ### 支撑/阻力位
 
-- **resistance_1/2**：近期 swing 高点聚类 + 布林带上轨
-- **support_1/2**：近期 swing 低点聚类 + 布林带下轨
-- **vwap**：20 日成交量加权平均价
+- **resistance_1/2**: 近期 swing 高点聚类 + 布林带上轨
+- **support_1/2**: 近期 swing 低点聚类 + 布林带下轨
+- **vwap**: 20 日成交量加权平均价
 - 显示当前价格距各关键位的百分比距离
 
 ### 趋势阶段
@@ -119,7 +138,7 @@ python analyze_signals.py HK.00700
 | early_rally | 价格 > MA200 + MA20 > MA60 | 上涨早期，趋势启动 |
 | rally | MA20 > MA60 > MA200 | 上涨阶段，趋势明确 |
 | distribution | RSI 高 + 波动率高 + OBV 见顶 | 派发阶段，顶部警示 |
-| decline | 价格 << MA200 或 OBV 持续下降 | 下跌阶段，趋势弱势 |
+| decline | 价格 << MA200 或 OBV 持续下降 | 下跌阶段，趋势走弱 |
 
 ### 交易计划
 
@@ -136,15 +155,21 @@ python analyze_signals.py HK.00700
 
 `
 stock-signals/
-* SKILL.md              # Codex skill 定义
-* README.md             # 项目说明文档
+* pyproject.toml          # Python 包配置 (v2.1.0)
+* README.md               # 项目说明文档
+* SKILL.md                # Codex skill 定义
 * .gitignore
-* scripts/
-    * analyze_signals.py   # 主分析脚本（入口）
-    * indicators.py        # 技术指标计算
-    * scoring.py           # 五维评分引擎
-    * _sr.py               # 支撑阻力 + 交易计划
-    * _resonance.py        # 多时间框架共振
+* stock_signals/
+    * __init__.py         # 包入口，公开 API
+    * config.py           # 配置系统 (v2.1.0)
+    * indicators.py       # 技术指标计算 + K线获取 + 缓存 (v2.1.0)
+    * scoring.py          # 五维评分引擎
+    * _resonance.py       # 多时间框架共振
+    * _sr.py              # 支撑阻力 + 交易计划
+    * cli.py              # 命令行入口 + 批量分析 + CSV 导出 (v2.1.0)
+* tests/
+    * __init__.py
+    * test_stock_signals.py  # 单元测试 (v2.1.0)
 `
 
 ## 依赖
@@ -155,16 +180,24 @@ stock-signals/
 - futu-api >= 10.4.6408
 - 富途 OpenD 服务运行中（默认 127.0.0.1:11111）
 
-## 免责声明
+## 版本历史
 
-> 本工具仅供技术参考，不构成任何投资建议。股票市场存在风险，投资需谨慎。请结合自身风险承受能力，结合基本面、消息面综合判断。
-
-## 更新日志
+### v2.1.0 (2026-08-15)
+- **新增**: Python 包结构重构 (stock_signals/)
+- **新增**: 配置系统 (config.py)
+- **新增**: K线数据缓存 (本地 pickle 缓存，5 分钟 TTL)
+- **新增**: API 自动重试 (最多 3 次，指数退避)
+- **新增**: 结构化日志系统 (logging)
+- **新增**: 批量分析模式 (支持多股票代码)
+- **新增**: CSV 导出功能 (--csv 参数)
+- **新增**: 单元测试 (pytest)
+- **新增**: pyproject.toml 标准化打包
+- **改进**: 代码类型注解完善
+- **改进**: 错误处理优化
 
 ### v2.0.0 (2026-08-14)
-
 - 新增：多时间框架共振分析（日/周/月线）
-- 新增：支撑/阻力位检测（swing point 聚类）
+- 新增：支撑阻力位检测（swing point 聚类）
 - 新增：趋势阶段分类（5 阶段）
 - 新增：交易计划生成（入场/止损/目标位）
 - 修复：KDJ 金叉/死叉检测逻辑
@@ -172,5 +205,8 @@ stock-signals/
 - 优化：trade plan 入场点选择逻辑
 
 ### v1.1.0
-
 - 初始版本：五维评分 + 买卖信号生成
+
+## 免责声明
+
+> 本工具仅供技术参考，不构成任何投资建议。股票市场存在风险，投资需审慎。请结合自身风险承受能力，结合基本面、消息面综合判断。

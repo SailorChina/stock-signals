@@ -11,7 +11,8 @@ import os as _os
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-sys.path.insert(0, _os.path.normpath(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "..", "futuapi", "scripts")))
+sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
+
 from common import create_quote_context, check_ret, safe_close
 
 

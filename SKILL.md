@@ -1,4 +1,4 @@
----
+﻿---
 name: stock-signals
 description: >-
   Multi-market stock technical analysis and buy/sell signal generator.
@@ -6,13 +6,15 @@ description: >-
   Produces a 5-tier rating (Buy / Overweight / Hold / Underweight / Sell) with
   confidence score, based on deterministic technical indicator calculations (no LLM).
 
-  Features (v2.0):
+  Features (v2.1):
   - Multi-timeframe resonance analysis (daily/weekly/monthly alignment)
   - Support/resistance level detection (swing points + BOLL + MA clusters)
   - Trend phase classification (accumulation/early_rally/rally/distribution/decline)
   - Trade plan generation (entry zone, stop loss, targets, risk-reward ratio)
   - 5-dimension scoring (trend/momentum/volume/volatility/capital)
   - Buy/sell signal generation with confidence levels
+  - K-line caching and API retry
+  - Batch analysis and CSV export
 
   Use when the user asks for: 买卖信号, 技术分析, 技术指标, 趋势判断, 买入卖出建议,
   股票分析, 信号生成, 技术面分析, MACD/RSI/KDJ/BOLL分析, or any request for
@@ -21,28 +23,29 @@ description: >-
   Trigger keywords: analyze, signals, technical analysis, 买卖信号, 技术分析,
   股票分析, 信号, MACD, RSI, KDJ, 布林带, 趋势, 买入, 卖出, 持仓建议.
 metadata:
-  version: 2.0.0
-  author: local
+  version: 2.1.0
+  author: SailorChina
 allowed-tools: Bash
 ---
 
-# Stock Signals v2.0 — 股票技术分析 & 买卖信号生成
+# Stock Signals v2.1.0 — 股票技术分析 & 买卖信号生成
 
 ## 使用方法
 
-```bash
-# 美股
-python analyze_signals.py US.NVDA
-python analyze_signals.py US.NVDA --json          # JSON 输出
-python analyze_signals.py US.NVDA --timeframe 1w  # 周线分析
+`ash
+# 单股分析
+python -m stock_signals.cli US.NVDA
+python -m stock_signals.cli US.NVDA --json          # JSON 输出
+python -m stock_signals.cli US.NVDA --timeframe 1w  # 周线分析
 
-# A股
-python analyze_signals.py SH.600519
-python analyze_signals.py SZ.000001
+# 批量分析
+python -m stock_signals.cli US.NVDA US.AAPL SH.600519 --json
+python -m stock_signals.cli US.NVDA US.AAPL --csv results.csv
 
-# 港股
-python analyze_signals.py HK.00700
-```
+# A股 / 港股
+python -m stock_signals.cli SH.600519
+python -m stock_signals.cli HK.00700
+`
 
 ## 输出说明
 
@@ -55,8 +58,8 @@ python analyze_signals.py HK.00700
 |------|------|------|
 | 趋势 | 30% | MA5/10/20/60/120/200, 金叉/死叉, 均线排列, 价格偏离度 |
 | 动量 | 25% | RSI(6/12/14/24), MACD(DIF/DEA/Hist), KDJ(K/D/J) |
-| 量能 | 20% | OBV趋势, 量比, 价量配合 |
-| 波动率 | 15% | BOLL上下轨+带宽, ATR |
+| 量能 | 20% | OBV趋势, 量比, 量价配合 |
+| 波动率 | 15% | BOLL上下轨, 带宽, ATR |
 | 资金面 | 10% | 特大单/大单/中单/小单净流入, 卖空比例 |
 
 ### 多时间框架共振 (v2.0)
@@ -78,8 +81,8 @@ python analyze_signals.py HK.00700
 - distribution（派发）/ decline（下跌）
 
 ### 交易计划 (v2.0)
-- **entry_zone**: 建议买入区间（最近支撑位/MA20/VWAP中最高者）
-- **stop_loss**: 止损位（次级支撑下方或2xATR）
+- **entry_zone**: 建议买入区间（最近支撑/MA20/VWAP中最高者）
+- **stop_loss**: 止损位（次级支撑下方或 2xATR）
 - **target_1/2**: 目标位（阻力位 + ATR扩展）
 - **risk_reward_ratio**: 风险收益比
 - **position_size_pct**: 建议仓位比例
