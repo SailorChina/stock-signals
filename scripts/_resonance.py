@@ -30,7 +30,7 @@ def compute_timeframe_resonance(code, daily_ind, capital=None, short_pct=None):
     result.daily_rating = d_r['rating']
     result.daily_score = d_r['score']
     df_w = fetch_kline(code, '1w', num=100)
-    if not df_w.empty:
+    if not df_w.empty and len(df_w) >= 20:
         ind_w = compute_indicators(df_w, code, '1w')
         w_r = compute_rating(ind_w, capital, short_pct)
         result.weekly_rating = w_r['rating']
@@ -38,7 +38,7 @@ def compute_timeframe_resonance(code, daily_ind, capital=None, short_pct=None):
     else:
         result.weekly_score = 50.0
     df_m = fetch_kline(code, '1M', num=60)
-    if not df_m.empty:
+    if not df_m.empty and len(df_m) >= 10:
         ind_m = compute_indicators(df_m, code, '1M')
         m_r = compute_rating(ind_m, capital, short_pct)
         result.monthly_rating = m_r['rating']

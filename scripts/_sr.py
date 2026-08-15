@@ -25,9 +25,10 @@ def compute_support_resistance(df, n=20):
     for i in range(pn, len(close) - pn):
         wh = high[i-pn:i+pn+1]
         wl = low[i-pn:i+pn+1]
-        if close[i] == wh.max() and close[i] == high[i]:
+        # 使用 >= 允许略低于极值点，避免精确匹配遗漏
+        if close[i] >= wh.max() * 0.999 and close[i] >= high[i] * 0.999:
             swings_high.append(close[i])
-        if close[i] == wl.max() and close[i] == low[i]:
+        if close[i] <= wl.max() * 1.001 and close[i] <= low[i] * 1.001:
             swings_low.append(close[i])
     def _cluster(vals, tol=0.02):
         if not vals: return []
@@ -99,14 +100,15 @@ def generate_trade_plan(ind, sr, trend_phase):
     atr = ind.atr_14
     r1, r2 = sr["support_1"], sr["support_2"]
     res1, res2 = sr["resistance_1"], sr["resistance_2"]
-    # Entry: pick the highest support/vwap/MA20 that is below price (closest to price)
-    candidates = [v for v in (r1, ind.ma20, sr["vwap"]) if v > 0 and v < price]
-    entry = max(candidates) if candidates else (r1 if r1 > 0 else price * 0.98)
+    # Entry: prefer support near current price, not too far below
+    # 优先选择距当前价20%以内的支撑
+    near_candidates = [v for v in (r1, ind.ma20, sr["vwap"]) if v > 0 and v < price and v > price * 0.8]
+    entry = max(near_candidates) if near_candidates else (r1 if r1 > 0 else price * 0.95)
     # Stop: below the next support level or 2 ATRs below entry
     sl_sr = r2 * 0.98 if r2 > 0 and r2 < entry else entry * 0.96
     sl_atr = entry - 2 * atr
     stop = min(sl_sr, sl_atr)
-    stop = max(stop, price * 0.90)  # never more than 10% below price
+    stop = max(stop, price * 0.85)  # never more than 15% below price
     # Targets: above current price toward resistance
     tgt1 = min(res1, res2) if res1 > 0 and res2 > 0 else (res1 if res1 > 0 else res2)
     tgt1 = max(tgt1, price * 1.03)  # at least 3% above current

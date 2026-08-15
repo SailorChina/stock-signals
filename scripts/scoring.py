@@ -323,25 +323,7 @@ def generate_signals(ind, rating: str, capital=None, short_pct=None) -> List[dic
         signals.append({"type": "trend", "side": "bullish", "desc": "短中期均线多头排列"})
     if ind.ma5 < ind.ma10 and ind.ma10 < ind.ma20:
         signals.append({"type": "trend", "side": "bearish", "desc": "短中期均线空头排列"})
-    if ind.ma5_ma10_cross == 'golden':
-        signals.append({"type": "trend", "side": "bullish", "desc": "MA5/MA10 金叉信号"})
-    if ind.ma5_ma10_cross == 'death':
-        signals.append({"type": "trend", "side": "bearish", "desc": "MA5/MA10 死叉信号"})
-
     # 动量信号
-    if ind.rsi_14 < 30:
-        signals.append({"type": "momentum", "side": "bullish", "desc": f"RSI(14)={ind.rsi_14:.1f}，超卖反弹信号"})
-    if ind.rsi_14 > 70:
-        signals.append({"type": "momentum", "side": "bearish", "desc": f"RSI(14)={ind.rsi_14:.1f}，超买回调信号"})
-    if ind.macd_dif_dea_cross == 'golden':
-        signals.append({"type": "momentum", "side": "bullish", "desc": "MACD 金叉信号"})
-    if ind.macd_dif_dea_cross == 'death':
-        signals.append({"type": "momentum", "side": "bearish", "desc": "MACD 死叉信号"})
-    if ind.kdj_k < 20:
-        signals.append({"type": "momentum", "side": "bullish", "desc": f"KDJ K={ind.kdj_k:.1f}，超卖信号"})
-    if ind.kdj_k > 80:
-        signals.append({"type": "momentum", "side": "bearish", "desc": f"KDJ K={ind.kdj_k:.1f}，超买信号"})
-
     # 布林信号
     if ind.boll_upper > 0:
         pos = (ind.last_close - ind.boll_lower) / (ind.boll_upper - ind.boll_lower)
@@ -353,11 +335,6 @@ def generate_signals(ind, rating: str, capital=None, short_pct=None) -> List[dic
     # 量能信号
     if ind.vol_ratio > 2.0:
         signals.append({"type": "volume", "side": "neutral", "desc": f"量比={ind.vol_ratio:.2f}，显著放量，关注方向"})
-    if ind.obv_trend == "up":
-        signals.append({"type": "volume", "side": "bullish", "desc": "OBV持续上升，资金流入"})
-    elif ind.obv_trend == "down":
-        signals.append({"type": "volume", "side": "bearish", "desc": "OBV持续下降，资金流出"})
-
     # 资金信号
     if capital:
         super_net = capital.get("super_net", 0)
