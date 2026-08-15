@@ -726,7 +726,10 @@ def compute_indicators(df: pd.DataFrame, code: str = "", ktype: str = "1d") -> I
     # ---- Support/Resistance ----
 
 
-    from ._sr import compute_support_resistance
+    try:
+        from stock_signals._sr import compute_support_resistance
+    except ImportError:
+        from _sr import compute_support_resistance
 
 
     sr = compute_support_resistance(df)
