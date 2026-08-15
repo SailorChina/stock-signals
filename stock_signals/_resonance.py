@@ -47,21 +47,21 @@ def compute_timeframe_resonance(code, daily_ind, capital=None, short_pct=None):
     spread = max(d, w, m) - min(d, w, m)
     if d <= 1 and w <= 1 and m <= 1:
         result.alignment, result.confidence_boost = 'strong_up', 15.0
-        result.details = 'Daily/Weekly/Monthly all bullish - strong resonance'
+        result.details = '日/周/月线全部看多，强共振'
     elif d >= 3 and w >= 3 and m >= 3:
         result.alignment, result.confidence_boost = 'strong_down', -15.0
-        result.details = 'Daily/Weekly/Monthly all bearish - strong resonance'
+        result.details = '日/周/月线全部看空，强共振'
     elif spread <= 1:
         if d <= 1:
             result.alignment, result.confidence_boost = 'aligned', 8.0
-            result.details = 'Multi-timeframe bullish, resonance confirmed'
+            result.details = '多周期看多，共振确认'
         elif d >= 3:
             result.alignment, result.confidence_boost = 'aligned_down', -8.0
-            result.details = 'Multi-timeframe bearish, resonance confirmed'
+            result.details = '多周期看空，共振确认'
         else:
             result.alignment, result.confidence_boost = 'mixed', 0.0
-            result.details = 'Multi-timeframe direction neutral'
+            result.details = '多周期方向中性'
     else:
         result.alignment, result.confidence_boost = 'mixed', 0.0
-        result.details = 'Multi-timeframe divergence, wait for clarity'
+        result.details = '多周期分歧，等待方向明确'
     return result
