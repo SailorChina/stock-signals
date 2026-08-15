@@ -27,7 +27,6 @@ logger = logging.getLogger("stock-signals")
 STOCK_POOLS: Dict[str, List[str]] = {
     # ── A 股：沪深 300 + 核心龙头 ─────────────────────────────────
     "SH": [
-        # 金融
         "SH.600519", "SH.601318", "SH.601398", "SH.601288", "SH.601166",
         "SH.600030", "SH.600036", "SH.601818", "SH.601881",
         # 消费
@@ -48,7 +47,6 @@ STOCK_POOLS: Dict[str, List[str]] = {
         "SH.600048", "SH.601155", "SH.600000",
     ],
     "SZ": [
-        # 金融
         "SZ.000001", "SZ.000002", "SZ.002142", "SZ.000776",
         # 消费
         "SZ.000858", "SZ.002304", "SZ.002557", "SZ.002714",
@@ -70,7 +68,6 @@ STOCK_POOLS: Dict[str, List[str]] = {
         "HK.00700", "HK.09988", "HK.03690", "HK.09618",
         "HK.09888", "HK.02382", "HK.09999", "HK.09660",
         "HK.02015", "HK.02359",
-        # 金融
         "HK.00005", "HK.02388", "HK.03968", "HK.00939",
         "HK.01288", "HK.03988",
         # 消费 / 餐饮
@@ -90,10 +87,6 @@ STOCK_POOLS: Dict[str, List[str]] = {
         "US.META", "US.TSLA", "US.AVGO", "US.CSCO", "US.ORCL",
         "US.AMAT", "US.LRCX", "US.ASML",
         "US.INTC", "US.QCOM", "US.MU", "US.NXPI",
-        # 金融
-        "US.JPM", "US.BAC", "US.WFC", "US.C", "US.GS",
-        "US.MS", "US.BRK.B", "US.V", "US.MA",
-        # 消费
         "US.MCD", "US.NKE", "US.TGT", "US.KO", "US.PEP",
         "US.WMT", "US.COST",
         # 医药
@@ -104,12 +97,8 @@ STOCK_POOLS: Dict[str, List[str]] = {
         "US.FCX", "US.NEM", "US.CP",
         # 能源
         "US.XOM", "US.COP", "US.OXY",
-        # ETF
-        "US.SPY", "US.IWM", "US.QQQ", "US.DIA",
-        "US.VOO", "US.VTI",
     ],
 }
-
 MARKET_NAMES = {
     "SH": "A股\u30fb\u6caa", "SZ": "A股\u30fb\u6df1",
     "HK": "\u9999\u6e2f", "US": "\u7f8e\u80a1", "A": "A\u80a1",
