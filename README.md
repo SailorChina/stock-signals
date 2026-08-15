@@ -1,4 +1,4 @@
-﻿# stock-signals v2.1.0 — 股票技术分析 & 买卖信号生成器
+# stock-signals v2.3.3 — 股票技术分析 & 买卖信号生成器
 
 支持美股 / A股 / 港股的多时间框架技术分析 skill，基于富途 OpenAPI 获取实时行情数据。
 
@@ -10,6 +10,13 @@
 - **趋势阶段判断**: 吸筹 / 上涨早期 / 上涨 / 派发 / 下跌
 - **交易计划生成**: 建议买入区间、止损位、目标位、风险收益比
 - **五维评分引擎**: 趋势(30%) + 动量(25%) + 量能(20%) + 波动率(15%) + 资金面(10%)
+- **TD Sequential (9转信号)**: 买入/卖出序列检测 + Turn确认
+- **ADX趋势强度**: 趋势跟踪 vs 震荡市判断
+- **MACD/RSI背离检测**: 价格与动量分歧警示
+- **K线形态识别**: 吞没、射击之星等
+- **缺口分析**: 向上/向下缺口 + 回补状态
+- **波动率市况分类**: 低/正常/高波动率自动判断
+- **智能股票筛选器**: 多市场自动扫描，推荐最佳入场机会
 - **纯确定性计算**: 不依赖 LLM，结果可复现
 - **API 重试 & K线缓存**: 网络不稳定时自动重试，本地缓存加速
 - **批量分析 & CSV 导出**: 一次分析多只股票
@@ -27,9 +34,9 @@
 
 ### 1. 安装富途 OpenAPI
 
-`ash
+```bash
 pip install futu-api>=10.4.6408
-`
+```
 
 ### 2. 启动富途 OpenD
 
@@ -37,48 +44,130 @@ pip install futu-api>=10.4.6408
 
 ### 3. 安装本 Skill
 
-`ash
+```bash
 # 复制 skill 到 Codex skills 目录
 cp -r stock-signals ~/.codex/skills/
-`
+```
 
 或在 Codex 中使用：
-`
+```
 /plugin install SailorChina/stock-signals
-`
+```
 
 ## 使用方法
 
-### 命令行分析
+### 子命令说明
 
-`ash
+```
+python -m stock_signals.cli {analyze,scan} [选项]
+```
+
+### analyze — 分析单只/多只股票
+
+```bash
 # 美股分析
-python -m stock_signals.cli US.NVDA
+python -m stock_signals.cli analyze US.NVDA
 
 # JSON 输出
-python -m stock_signals.cli US.NVDA --json
+python -m stock_signals.cli analyze US.NVDA --json
 
 # 周线分析
-python -m stock_signals.cli US.NVDA --timeframe 1w
+python -m stock_signals.cli analyze US.NVDA --timeframe 1w
 
 # A股
-python -m stock_signals.cli SH.600519
+python -m stock_signals.cli analyze SH.600519
 
 # 港股
-python -m stock_signals.cli HK.00700
+python -m stock_signals.cli analyze HK.00700
 
 # 批量分析
-python -m stock_signals.cli US.NVDA US.AAPL SH.600519 --json
+python -m stock_signals.cli analyze US.NVDA US.AAPL SH.600519 --json
 
 # 导出 CSV
-python -m stock_signals.cli US.NVDA US.AAPL --csv results.csv
-`
+python -m stock_signals.cli analyze US.NVDA US.AAPL --csv results.csv
+```
 
-### Python 库调用
+### scan — 多市场智能选股（新功能）
 
-`python
+自动扫描候选股票池，筛选出技术面最佳的入场机会。
+
+**交互式模式**（推荐）— 无参数时弹出菜单：
+
+```bash
+python -m stock_signals.cli scan
+```
+
+```
+  请选择扫描市场:
+  [1] A股（沪深核心龙头）
+  [2] 港股（恒生+恒生科技）
+  [3] 美股（道指+标普500+纳指）
+  [4] 全部市场
+
+  输入选项 (1/2/3/4):
+```
+
+**命令行模式** — 指定市场跳过交互：
+
+```bash
+# 只扫美股
+python -m stock_signals.cli scan --markets US
+
+# 只扫A股
+python -m stock_signals.cli scan --markets A
+
+# 只扫港股
+python -m stock_signals.cli scan --markets HK
+
+# 全市场扫描
+python -m stock_signals.cli scan --markets A,US,HK
+```
+
+**参数说明：**
+
+| 参数 | 默认值 | 说明 |
+|------|--------|------|
+| `--markets, -m` | A,US,HK | 市场列表，逗号分隔 |
+| `--min-score` | 60.0 | 最低评分门槛（>=此分才推荐） |
+| `--max-picks` | 3 | 每个市场最多推荐数 |
+| `--delay` | 0.5 | API请求间隔（秒），避免限速 |
+| `--json, -j` | - | JSON格式输出 |
+| `--output, -o` | - | 保存结果到文件 |
+
+**筛选逻辑：**
+- 硬门槛：综合评分 >= min_score，多周期共振 aligned/strong_up
+- 加分项：MA金叉、MACD金叉、9转买入完成、OBV上升、风险收益比>=2:1
+- 排序：评分高优先，同分共振强优先，上涨趋势阶段优先
+
+**输出示例：**
+```
+============================================================
+  每日股票推荐报告  2026-08-15
+============================================================
+  扫描时间: 2026-08-15 20:30:00
+  分析 58 只 | 推荐 3 只 | 观察 5 只
+
+  ────────────────────────────────────────────────────────
+  美股
+  ────────────────────────────────────────────────────────
+  1. US.NVDA  价格: 132.50
+      评级: Buy (买入) · 分: 78.5 · 共振: 强共振看多
+      趋势: 上涨阶段
+      入场: 128.00  止损: 122.50  目标1: 145.00  目标2: 155.00  RR: 3.2:1
+      理由: MA5/MA10 金叉, MACD 金叉, OBV 上升，资金流入
+
+  2. US.AAPL  价格: 225.30
+      评级: Overweight (偏多) · 分: 68.2 · 共振: 共振看多
+      趋势: 上涨早期
+      ...
+```
+
+## Python 库调用
+
+```python
 from stock_signals import fetch_kline, compute_indicators, compute_rating
 from stock_signals import compute_timeframe_resonance, compute_support_resistance, generate_trade_plan
+from stock_signals.screener import scan, ScanConfig
 
 # 获取 K 线
 df = fetch_kline("US.NVDA", "1d", num=300)
@@ -89,7 +178,11 @@ ind = compute_indicators(df, "US.NVDA", "1d")
 # 计算评级
 rating = compute_rating(ind, {}, None)
 print(rating["rating"])  # "Buy" / "Overweight" / "Hold" / "Underweight" / "Sell"
-`
+
+# 多市场扫描
+cfg = ScanConfig(min_score=60, max_per_market=3, max_delay=0.6)
+result = scan(markets=["US"], config=cfg)
+```
 
 ## 输出说明
 
@@ -123,6 +216,20 @@ print(rating["rating"])  # "Buy" / "Overweight" / "Hold" / "Underweight" / "Sell
 - **aligned_down** — 多周期看空，共振确认，置信度 -8
 - **strong_down** — 三周期全部看空，强共振，置信度 -15
 
+### TD Sequential (9转信号) v2.3
+
+- **TD买入序列**: 连续9根收盘价低于4根前 → 超卖反转信号
+- **TD卖出序列**: 连续9根收盘价高于4根前 → 超买反转信号
+- **TD Turn**: 第10根打破序列方向 → 反转确认
+- 输出中显示：`[9转信号] TD买入序列完成(第9根)，当前计数=9`
+
+### ADX趋势强度 v2.3
+
+- ADX > 40: 强趋势，适合趋势跟踪
+- ADX 25-40: 中等趋势，可跟踪
+- ADX < 25: 低趋势，震荡市，慎用趋势策略
+- +DI/-DI 方向判断多头/空头占优
+
 ### 支撑/阻力位
 
 - **resistance_1/2**: 近期 swing 高点聚类 + 布林带上轨
@@ -153,24 +260,25 @@ print(rating["rating"])  # "Buy" / "Overweight" / "Hold" / "Underweight" / "Sell
 
 ## 文件结构
 
-`
+```
 stock-signals/
-* pyproject.toml          # Python 包配置 (v2.1.0)
-* README.md               # 项目说明文档
-* SKILL.md                # Codex skill 定义
-* .gitignore
-* stock_signals/
-    * __init__.py         # 包入口，公开 API
-    * config.py           # 配置系统 (v2.1.0)
-    * indicators.py       # 技术指标计算 + K线获取 + 缓存 (v2.1.0)
-    * scoring.py          # 五维评分引擎
-    * _resonance.py       # 多时间框架共振
-    * _sr.py              # 支撑阻力 + 交易计划
-    * cli.py              # 命令行入口 + 批量分析 + CSV 导出 (v2.1.0)
-* tests/
-    * __init__.py
-    * test_stock_signals.py  # 单元测试 (v2.1.0)
-`
+  pyproject.toml           # Python 包配置 (v2.3.3)
+  README.md                # 项目说明文档
+  SKILL.md                 # Codex skill 定义
+  .gitignore
+  stock_signals/
+    __init__.py            # 包入口，公开 API
+    config.py              # 配置系统
+    indicators.py          # 技术指标计算 + K线获取 + 缓存
+    scoring.py             # 五维评分引擎
+    screener.py            # 多市场股票筛选器 (v2.3.2)
+    reporter.py            # 推荐报告生成器 (v2.3.2)
+    _resonance.py          # 多时间框架共振
+    _sr.py                 # 支撑阻力 + 交易计划
+    cli.py                 # 命令行入口 (analyze + scan 子命令)
+  tests/
+    test_stock_signals.py  # 单元测试 (17 tests)
+```
 
 ## 依赖
 
@@ -181,6 +289,39 @@ stock-signals/
 - 富途 OpenD 服务运行中（默认 127.0.0.1:11111）
 
 ## 版本历史
+
+### v2.3.3 (2026-08-15)
+- **新增**: scan 命令交互式市场选择菜单（1.A股/2.港股/3.美股/4.全部）
+- **改进**: CLI 重构为 analyze/scan 双子命令结构
+
+### v2.3.2 (2026-08-15)
+- **新增**: 多市场智能选股器（screener.py）
+- **新增**: 每日推荐报告生成器（reporter.py）
+- **新增**: scan 子命令，支持 --markets/--min-score/--max-picks/--delay 参数
+- **新增**: A股/港股/美股三大市场股票池（约240只核心标的）
+- **修复**: TD Sequential 计算逻辑缺失问题
+- **修复**: cli.py 重复显示问题
+
+### v2.3.1 (2026-08-15)
+- **新增**: TD Sequential (9转信号) 买入/卖出序列 + Turn确认
+- **修复**: TD计算逻辑缺失导致的测试失败
+- **修复**: CLI输出重复显示问题
+
+### v2.3.0 (2026-08-15)
+- **新增**: ADX趋势强度指标（+DI/-DI方向判断）
+- **新增**: MACD/RSI背离检测
+- **新增**: K线形态识别（吞没、射击之星等）
+- **新增**: 缺口分析（向上/向下缺口 + 回补状态）
+- **新增**: 波动率市况分类（低/正常/高）
+- **新增**: 动态权重调整（根据波动率市况）
+- **新增**: 7个新单元测试
+
+### v2.2.1 (2026-08-15)
+- 全部CLI输出改为中文
+- 提取模块级常量（颜色/中文标签映射）
+
+### v2.2.0 (2026-08-14)
+- 版本统一 + 中文输出
 
 ### v2.1.0 (2026-08-15)
 - **新增**: Python 包结构重构 (stock_signals/)
