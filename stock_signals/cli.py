@@ -431,7 +431,24 @@ def main():
     logger.info("stock-signals v2.3.2 启动")
 
     if args.cmd == "scan":
-        markets = [m.strip() for m in args.markets.split(",")]
+        # Interactive market selection
+        markets_input = getattr(args, "markets", None)
+        if markets_input:
+            markets = [m.strip() for m in markets_input.split(",")]
+        else:
+            print()
+            print("  请选择扫描市场:")
+            print("  [1] A股（沪深核心龙头）")
+            print("  [2] 港股（恒生+恒生科技）")
+            print("  [3] 美股（道指+标普500+纳指）")
+            print("  [4] 全部市场")
+            print()
+            choice = input("  输入选项 (1/2/3/4): ").strip()
+            market_map = {"1": ["A"], "2": ["HK"], "3": ["US"], "4": ["A", "HK", "US"]}
+            markets = market_map.get(choice, ["A"])
+            print(f"  已选择: {markets}")
+            print()
+
         cfg = ScanConfig(
             min_score=args.min_score,
             max_per_market=args.max_picks,
