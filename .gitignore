@@ -29,3 +29,5 @@ config/*.json
 ~/.stock-signals/
 
 _us_result.json
+
+scan_result.json
