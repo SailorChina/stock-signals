@@ -1,4 +1,4 @@
-# stock-signals v2.9.1 — 多市场股票技术分析 & 买卖信号生成器
+# stock-signals v2.9.3 — 多市场股票技术分析 & 买卖信号生成器
 
 基于富途 OpenAPI 的多时间框架技术分析 skill，支持美股 / A股 / 港股实时扫描与选股。
 
@@ -158,7 +158,7 @@ python -m stock_signals.cli scan --markets US --json --output daily_scan.json
 
 ```
 stock_signals/
-├── __init__.py          # 包入口，版本 v2.9.1
+├── __init__.py          # 包入口，版本 v2.9.3
 ├── cli.py               # 命令行接口 (analyze/scan)
 ├── indicators.py        # 技术指标计算
 ├── scoring.py           # 五维评分引擎
