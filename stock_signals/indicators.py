@@ -29,6 +29,7 @@ import sys
 
 
 import os as _os
+import time
 
 
 from dataclasses import dataclass, field
@@ -102,6 +103,7 @@ def fetch_kline(code: str, ktype: str = "1d", num: int = 300) -> pd.DataFrame:
 
 
         check_ret(ret, data, ctx, "获取K线")
+        time.sleep(0.15)
 
 
         if data is None or data.empty:

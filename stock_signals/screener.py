@@ -135,30 +135,23 @@ def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
         import sys as _sys
         _sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
         from common import create_quote_context, check_ret
-        from futu import GetTopMoversRankQuery, StockMarket, RankPeriodType, SimpleRankIndicatorType, RankSortDir
+        from futu import ScrMarket
         
         ctx = create_quote_context()
-        mkt_map = {"US": StockMarket.US, "HK": StockMarket.HK, "SH": StockMarket.SH, "SZ": StockMarket.SZ}
+        mkt_map = {"US": ScrMarket.US, "HK": ScrMarket.HK, "A": ScrMarket.CN, "SH": ScrMarket.CN, "SZ": ScrMarket.CN}
         futu_mkt = mkt_map.get(market)
         if futu_mkt is None:
             return []
-        
-        req = GetTopMoversRankQuery()
-        req.set_market(futu_mkt)
-        req.set_rank_period(RankPeriodType.RankPeriod_1Day)
-        req.set_sort_field(SimpleRankIndicatorType.PriceChangeRatio)
-        req.set_sort_dir(RankSortDir.Desc)
-        req.set_limit(top_n)
         
         import socket
         orig_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(15)
         try:
-            ret, data, _ = ctx.request_query(req)
+            ret, (all_count, data) = ctx.get_top_movers_rank(futu_mkt, count=top_n)
             check_ret(ret, data, ctx, market + " HotStocks")
             if data is not None and not data.empty:
-                if "code" in data.columns:
-                    hot_codes = [str(c).strip() for c in data["code"].values if str(c).strip()]
+                if "security" in data.columns:
+                    hot_codes = [str(c).strip() for c in data["security"].values if str(c).strip()]
                 elif len(data.columns) > 0:
                     hot_codes = [str(c).strip() for c in data.iloc[:, 0].values if str(c).strip()]
         finally:
@@ -196,7 +189,7 @@ class ScanConfig:
     require_macd_cross: bool = False
     allow_td_buy: bool = True
     allow_oversold: bool = False
-    max_delay: float = 1.0
+    max_delay: float = 0.3
     max_per_market: int = 5
 
 
@@ -227,18 +220,18 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
         if _is_blacklisted(code):
             logger.info(f"  {code} 在黑名单中(银行/ETF)，跳过")
             return None
-        time.sleep(delay)
+        time.sleep(min(delay, 0.3))
         df = fetch_kline(code, "1d", num=300)
-        time.sleep(0.8)
+        time.sleep(0.2)
         if df is None or df.empty or len(df) < 60:
             return None
         ind = compute_indicators(df, code, "1d")
         rating = compute_rating(ind, capital, short_pct)
-        time.sleep(0.8)
+        time.sleep(0.2)
         score = rating["score"]
         r_name = rating["rating"]
         resonance = compute_timeframe_resonance(code, ind, capital, short_pct)
-        time.sleep(0.8)
+        time.sleep(0.2)
         from ._sr import compute_trend_phase
         try:
             phase = compute_trend_phase(df, ind)
