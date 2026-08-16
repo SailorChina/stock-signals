@@ -18,6 +18,14 @@ description: >-
   - 波动率市况分类(低/正常/高波动率自动判断)
   - 智能股票筛选器: 多市场自动扫描，推荐最佳入场机会
   - K线缓存 & API重试
+
+  - VCP (Volatility Contraction Pattern) 波动率收缩检测
+  - ATR 动态止损 (最大7.5%硬性约束)
+  - 相对强度 (RS) 评分 + 52周高低点分析
+  - Trend Template 8点趋势验证
+  - Episodic Pivot 事件性转折检测
+  - 成交量确认 (VCP模式必须配合缩量)
+  - 分批止盈策略
   - 全中文输出
   - 批量分析 & CSV导出
 
@@ -33,7 +41,7 @@ metadata:
 allowed-tools: Bash
 ---
 
-# Stock Signals v2.4.0 — 股票技术分析 & 买卖信号生成
+# Stock Signals v2.7.0 — 股票技术分析 & 买卖信号生成
 
 ## 使用方法
 
