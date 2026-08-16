@@ -167,7 +167,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
         tp = generate_trade_plan(ind, sr, phase)
         # v2.4: 扩展度过滤 - 距高点太近则跳过
         dist_to_high = getattr(ind, 'price_to_high_pct', 0)
-        if dist_to_high > -2:
+        if dist_to_high > -5:
             logger.warning(f"  {code} 距高点仅{abs(dist_to_high):.1f}%，跳过(追高风险)")
             return None
         # v2.4: MA5与MA20过度延伸检查

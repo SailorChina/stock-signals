@@ -150,11 +150,11 @@ def print_text_report(result, code):
         bearish = [s for s in signals if s["side"]=="bearish"]
         neutral = [s for s in signals if s["side"]=="neutral"]
         if bullish:
-            print(f"    {_color(f'BUY 信号 ({len(bullish)}个):', 'green')}")
+            print(f"    {_color(f'买入信号 ({len(bullish)}个):', 'green')}")
             for s in bullish:
                 print(f"      + {s['desc']}")
         if bearish:
-            print(f"    {_color(f'SELL 信号 ({len(bearish)}个):', 'red')}")
+            print(f"    {_color(f'卖出信号 ({len(bearish)}个):', 'red')}")
             for s in bearish:
                 print(f"      - {s['desc']}")
         if neutral:
@@ -207,7 +207,7 @@ def print_text_report(result, code):
         print(f"    止损位:   {tp['stop_loss']:.2f}")
         print(f"    第一目标: {tp['target_1']:.2f}")
         print(f"    第二目标: {tp['target_2']:.2f}")
-        rr = tp.get("risk_reward_ratio", 0)
+        rr = tp.get("risk_reward", 0)
         rr_c = "green" if rr >= 2 else ("yellow" if rr >= 1 else "red")
         print(f"    风险收益比: {_color(f'{rr:.2f}:1', rr_c)}")
         print(f"    建议仓位:   {tp['position_size_pct']:.1f}%")

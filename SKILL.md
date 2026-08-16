@@ -28,7 +28,7 @@ description: >-
   触发关键词: analyze, signals, technical analysis, 买卖信号, 技术分析,
   股票分析, 信号, MACD, RSI, KDJ, 布林带, 趋势, 买入, 卖出, 持仓建议, scan, 筛选, 选股.
 metadata:
-  version: 2.3.3
+  version: 2.4.0
   author: SailorChina
 allowed-tools: Bash
 ---
