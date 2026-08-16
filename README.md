@@ -1,4 +1,4 @@
-# stock-signals v2.8.0 — 多市场股票技术分析 & 买卖信号生成器
+# stock-signals v2.8.3 — 多市场股票技术分析 & 买卖信号生成器
 
 基于富途 OpenAPI 的多时间框架技术分析 skill，支持美股 / A股 / 港股实时扫描与选股。
 
@@ -129,9 +129,9 @@ python -m stock_signals.cli scan --markets US --json --output report.json
   推荐（5只）:
   1. US.MU 美光科技 · 存储芯片  现价: 971.66
       评级: Overweight (偏多) · 分: 63.5 · 共振: 共振看多
-      入场: 890.05 (-8.4%)  止损: 923.08 (-5.0%)
+      入场: 961.94 (-1.0%) [现价附近入场]  止损: 889.80 (-7.5%)
       目标1: 1132.16 (+16.5%)  目标2: 1327.07 (+36.6%)
-      风险回报: 4.5:1  仓位建议: 3.0%
+      风险回报: 5.1:1  仓位建议: 3.0%
       等待条件: MACD金叉确认，多头动能较强 | OBV资金持续流入
       指标: MA5/MA10 金叉, MACD 金叉, OBV 上升，资金流入
 ```
@@ -158,7 +158,7 @@ python -m stock_signals.cli scan --markets US --json --output daily_scan.json
 
 ```
 stock_signals/
-├── __init__.py          # 包入口，版本 v2.8.0
+├── __init__.py          # 包入口，版本 v2.8.3
 ├── cli.py               # 命令行接口 (analyze/scan)
 ├── indicators.py        # 技术指标计算
 ├── scoring.py           # 五维评分引擎
