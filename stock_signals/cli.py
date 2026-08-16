@@ -288,7 +288,7 @@ def analyze(code, timeframe="1d", output_json=False):
             "stop_loss": trade_plan.stop_loss,
             "target_1": trade_plan.target_1,
             "target_2": trade_plan.target_2,
-            "risk_reward_ratio": trade_plan.risk_reward,
+            "risk_reward": trade_plan.risk_reward,
             "risk_usd": trade_plan.risk_usd,
             "reward_usd": trade_plan.reward_usd,
             "position_size_pct": trade_plan.position_size_pct,
