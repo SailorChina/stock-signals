@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import sys
 import os
+from dataclasses import dataclass
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "stock_signals"))
 
@@ -114,23 +115,15 @@ class TestSupportResistance:
         assert tp.risk_reward > 0
 
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
-
-
 class TestNewFeatures:
-    """测试新增功能: ADX、背离、K线形态、缺口、波动率市况"""
-
     def test_adx_computed(self):
         df = _make_df(100, "up")
-        from indicators import compute_indicators
         ind = compute_indicators(df, "US.TEST", "1d")
         assert ind.adx >= 0
         assert ind.plus_di >= 0
         assert ind.minus_di >= 0
 
     def test_candle_pattern_fields(self):
-        from indicators import compute_indicators
         df = _make_df(100, "up")
         ind = compute_indicators(df, "US.TEST", "1d")
         assert hasattr(ind, "candle_pattern")
@@ -140,7 +133,6 @@ class TestNewFeatures:
         assert ind.gap_type in ("gap_up", "gap_down", "none", "")
 
     def test_divergence_fields(self):
-        from indicators import compute_indicators
         df = _make_df(100, "up")
         ind = compute_indicators(df, "US.TEST", "1d")
         assert hasattr(ind, "macd_divergence")
@@ -150,30 +142,21 @@ class TestNewFeatures:
 
     def test_dynamic_weights_sum_to_one(self):
         from scoring import get_dynamic_weights
-        from indicators import compute_indicators
         df = _make_df(100, "flat")
         ind = compute_indicators(df, "US.TEST", "1d")
         weights = get_dynamic_weights(ind)
         assert abs(sum(weights.values()) - 1.0) < 0.001
 
     def test_signal_summary_new_items(self):
-        from indicators import compute_indicators, signal_summary
+        from indicators import signal_summary
         df = _make_df(100, "up")
         ind = compute_indicators(df, "US.TEST", "1d")
         sigs = signal_summary(ind)
         assert len(sigs) >= 3
-        # New signal types should not crash
-        labels = [s[0] for s in sigs]
-        assert "趋势强度" in labels or "背离" in labels or "K线形态" in labels or len(sigs) >= 3
 
     def test_td_sequential_bullish(self):
-        """测试TD买入序列：连续9根收盘价低于4根前"""
-        import numpy as np
-        import pandas as pd
-        from indicators import compute_indicators
         np.random.seed(99)
         n = 20
-        # 构造连续下跌：每根close都比4根前低
         close = np.array([100., 98., 96., 94., 92., 90., 88., 86., 84., 82.,
                           80., 78., 76., 74., 72., 70., 68., 66., 64., 62.])
         open_arr = close + 0.5
@@ -184,14 +167,9 @@ class TestNewFeatures:
         df = pd.DataFrame({"time": times, "open": open_arr, "high": high,
                            "low": low, "close": close, "volume": volume})
         ind = compute_indicators(df, "US.TEST", "1d")
-        # 应该有买入序列
         assert ind.td_buy_setup or ind.td_buy_count > 0
 
     def test_td_sequential_sell(self):
-        """测试TD卖出序列：连续9根收盘价高于4根前"""
-        import numpy as np
-        import pandas as pd
-        from indicators import compute_indicators
         np.random.seed(99)
         n = 20
         close = np.array([62., 64., 66., 68., 70., 72., 74., 76., 78., 80.,
@@ -205,3 +183,99 @@ class TestNewFeatures:
                            "low": low, "close": close, "volume": volume})
         ind = compute_indicators(df, "US.TEST", "1d")
         assert ind.td_sell_setup or ind.td_sell_count > 0
+
+
+class TestReporter:
+    """测试 reporter.py 的中文报告生成和观察列表显示"""
+
+    def test_fmt_pct(self):
+        from stock_signals.reporter import _fmt_pct
+        assert _fmt_pct(110.0, 100.0) == "+10.0%"
+        assert _fmt_pct(90.0, 100.0) == "-10.0%"
+        assert _fmt_pct(100.0, 100.0) == "+0.0%"
+        assert _fmt_pct(50.0, 0) == ""
+
+    def test_gen_entry_conditions_rsi_overbought(self):
+        from stock_signals.reporter import _gen_entry_conditions
+        @dataclass
+        class MockResult:
+            code = "US.TEST"
+            last_close = 100.0
+            entry = 95.0
+            reasons = ["RSI(14)=75.2，超买", "MACD柱为正，多头动能"]
+            risk_reward = 2.5
+        r = MockResult()
+        conditions = _gen_entry_conditions(r)
+        assert any("RSI" in c for c in conditions)
+
+    def test_gen_entry_conditions_no_match(self):
+        from stock_signals.reporter import _gen_entry_conditions
+        @dataclass
+        class MockResult:
+            code = "US.TEST"
+            last_close = 100.0
+            entry = 95.0
+            reasons = []
+            risk_reward = 3.0
+        r = MockResult()
+        conditions = _gen_entry_conditions(r)
+        assert len(conditions) > 0
+        assert "等待" in conditions[0]
+
+    def test_gen_risk_warnings_overbought(self):
+        from stock_signals.reporter import _gen_risk_warnings
+        @dataclass
+        class MockResult:
+            code = "US.TEST"
+            last_close = 100.0
+            entry = 95.0
+            reasons = ["RSI(14)=82.5，严重超买"]
+            risk_reward = 2.5
+        r = MockResult()
+        warnings = _gen_risk_warnings(r)
+        assert any("严重超买" in w for w in warnings)
+
+    def test_gen_risk_warnings_low_rr(self):
+        from stock_signals.reporter import _gen_risk_warnings
+        @dataclass
+        class MockResult:
+            code = "US.TEST"
+            last_close = 100.0
+            entry = 98.0
+            reasons = []
+            risk_reward = 1.5
+        r = MockResult()
+        warnings = _gen_risk_warnings(r)
+        assert any("风险回报不足" in w for w in warnings)
+
+    def test_print_stock_watchlist(self, capsys):
+        from stock_signals.reporter import _print_stock
+        @dataclass
+        class MockResult:
+            code = "US.LRCX"
+            rating = "Overweight"
+            score = 58.5
+            alignment = "mixed"
+            trend_phase = "accumulation"
+            entry = 850.0
+            stop_loss = 810.0
+            target_1 = 920.0
+            target_2 = 960.0
+            risk_reward = 2.8
+            position_pct = 2.0
+            last_close = 880.0
+            reasons = ["KDJ K=80.5，超买", "ADX=18.9，趋势弱"]
+        r = MockResult()
+        _print_stock(r, 1, watch=True)
+        captured = capsys.readouterr()
+        assert "US.LRCX" in captured.out
+        assert "现价" in captured.out
+        assert "等待条件" in captured.out
+        assert "风险提示" in captured.out
+        assert "入场" in captured.out
+        assert "止损" in captured.out
+        assert "目标" in captured.out
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])

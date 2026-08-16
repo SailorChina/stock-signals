@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """每日推荐报告生成器"""
 from __future__ import annotations
 
@@ -8,28 +8,27 @@ from typing import Dict, List
 logger = logging.getLogger("stock-signals")
 
 RATING_CN = {
-    "Buy": "\u4e70\u5165", "Overweight": "\u504f\u591a", "Hold": "\u89c2\u671b",
-    "Underweight": "\u504f\u7a7a", "Sell": "\u5356\u51fa",
+    "Buy": "买入", "Overweight": "偏多", "Hold": "观望",
+    "Underweight": "偏空", "Sell": "卖出",
 }
-CONF_CN = {"high": "\u9ad8", "medium": "\u4e2d", "low": "\u4f4e"}
+CONF_CN = {"high": "高", "medium": "中", "low": "低"}
 ALIGN_CN = {
-    "strong_up": "\u5f3a\u5171\u632f\u770b\u591a", "aligned": "\u5171\u632f\u770b\u591a",
-    "mixed": "\u5206\u6b67", "aligned_down": "\u5171\u632f\u770b\u7a7a",
-    "strong_down": "\u5f3a\u5171\u632f\u770b\u7a7a", "none": "\u65e0",
+    "strong_up": "强共振看多", "aligned": "共振看多",
+    "mixed": "分歧", "aligned_down": "共振看空",
+    "strong_down": "强共振看空", "none": "无",
 }
 PHASE_CN = {
-    "accumulation": "\u5438\u7b79\u9636\u6bb5", "early_rally": "\u4e0a\u6da8\u65e9\u671f",
-    "rally": "\u4e0a\u6da8\u9636\u6bb5", "distribution": "\u6d3e\u53d1\u9636\u6bb5",
-    "decline": "\u4e0b\u8dcc\u9636\u6bb5", "unknown": "\u672a\u77e5",
+    "accumulation": "吸筹阶段", "early_rally": "上涨早期",
+    "rally": "上涨阶段", "distribution": "派发阶段",
+    "decline": "下跌阶段", "unknown": "未知",
 }
 MARKET_NAMES = {
-    "SH": "\u00a5A\u80a1\uff08\u6caa\uff09", "SZ": "\u00a5A\u80a1\uff08\u6df1\uff09",
-    "HK": "\u00a5\u9999\u6e2f", "US": "\u00a5\u7f8e\u80a1", "A": "\u00a5A\u80a1",
+    "SH": "¥A股（沪）", "SZ": "¥A股（深）",
+    "HK": "¥香港", "US": "¥美股", "A": "¥A股",
 }
 
 
 def print_scan_report(result: Dict) -> None:
-    """\u6253\u5370\u6bcf\u65e5\u63a8\u8350\u62a5\u544a\uff08\u4e2d\u6587\uff09"""
     import time
     date = result.get("date", time.strftime("%Y-%m-%d"))
     summary = result.get("summary", {})
@@ -37,12 +36,11 @@ def print_scan_report(result: Dict) -> None:
     watchlist = result.get("watchlist", {})
     sep = "=" * 60
     print(f"\n{sep}")
-    print(f"  \u00a5\u6bcf\u65e5\u80a1\u7968\u63a8\u8350\u62a5\u544a  {date}")
+    print(f"  ¥每日股票推荐报告  {date}")
     print(sep)
-    print(f"  \u626b\u63cf\u65f6\u95f4: {summary.get('scan_time', '\u672a\u77e5')}")
-    print(f"  \u5206\u6790 {summary.get('total_analyzed', 0)} \u53ea | \u63a8\u8350 {summary.get('total_picks', 0)} \u53ea | \u89c2\u5bdf {summary.get('total_watchlist', 0)} \u53ea")
+    print(f"  扫描时间: {summary.get('scan_time', '未知')}")
+    print(f"  分析 {summary.get('total_analyzed', 0)} 只 | 推荐 {summary.get('total_picks', 0)} 只 | 观察 {summary.get('total_watchlist', 0)} 只")
     print()
-    # 逐市场输出
     for market in ["A", "HK", "US"]:
         market_picks = picks.get(market, [])
         market_watch = watchlist.get(market, [])
@@ -52,43 +50,119 @@ def print_scan_report(result: Dict) -> None:
         print(f"{'─' * 60}")
         print(f"  {mname}")
         print(f"{'─' * 60}")
-        # 主推荐
         if market_picks:
-            print(f"  \u00a5\u63a8\u8350\uff08{len(market_picks)}\u53ea\uff09:")
+            print(f"  ¥推荐（{len(market_picks)}只）:")
             for i, r in enumerate(market_picks, 1):
                 _print_stock(r, i)
             print()
-        # 观察名单
         if market_watch:
-            print(f"  \u00a5\u89c2\u5bdf\uff08\u6697\u624b\uff09\uff08{len(market_watch)}\u53ea\uff09:")
+            print(f"  ¥观察（候选）（{len(market_watch)}只）:")
             for i, r in enumerate(market_watch, 1):
                 _print_stock(r, i, watch=True)
             print()
     print(sep)
-    print("  \u514d\u8d23\u58f0\u660e: \u672c\u5de5\u5177\u4ec5\u4f9b\u6280\u672f\u53c2\u8003\uff0c\u4e0d\u6784\u6210\u4efb\u4f55\u6295\u8d44\u5efa\u8bae\u3002")
+    print("  免责声明: 本工具仅供技术参考，不构成任何投资建议。")
     print(sep + "\n")
 
 
+def _fmt_pct(value: float, current: float) -> str:
+    if current <= 0:
+        return ""
+    pct = (value - current) / current * 100
+    sign = "+" if pct >= 0 else ""
+    return f"{sign}{pct:.1f}%"
+
+
+def _gen_entry_conditions(r) -> List[str]:
+    conditions = []
+    reasons = getattr(r, 'reasons', []) or []
+    reason_str = " ".join(reasons) if reasons else ""
+
+    if "RSI" in reason_str and "超买" in reason_str:
+        conditions.append("RSI超买，等待回调至RSI<70再买入")
+    if "ADX" in reason_str and ("弱" in reason_str or "weak" in reason_str.lower()):
+        conditions.append("ADX趋势弱，等待ADX>25确认后买入")
+    if "MACD" in reason_str and "死叉" in reason_str:
+        conditions.append("MACD死叉，等待金叉后再买入")
+    elif "MACD" in reason_str and ("负" in reason_str or "空头" in reason_str):
+        conditions.append("MACD柱为负，等待金叉或柱翻正后再买入")
+    if "MA60" in reason_str and "深度回调" in reason_str:
+        conditions.append("价格深度回调，等待企稳或缩量止跌信号")
+    elif "MA60" in reason_str and "高于" in reason_str and ("过度" in reason_str or "超买" in reason_str):
+        conditions.append("价格高于MA60过多，等待回踩MA20/MA60附近")
+    if "KDJ" in reason_str and "超买" in reason_str:
+        conditions.append("KDJ超买，等待K值回落至80以下")
+    if "TD" in reason_str and "卖出" in reason_str:
+        conditions.append("TD卖出序列进行中，等待9转完成确认后再观望")
+
+    if not conditions:
+        if r.entry > 0:
+            dist = (r.entry - r.last_close) / r.last_close * 100 if r.last_close > 0 else 0
+            if dist < 0:
+                conditions.append(f"等待价格回落至入场区{r.entry:.2f}附近（约{abs(dist):.1f}%）")
+            else:
+                conditions.append(f"等待价格突破入场区{r.entry:.2f}附近（约+{dist:.1f}%）")
+        else:
+            conditions.append("等待技术信号确认后再入场")
+
+    return conditions[:4]
+
+
+def _gen_risk_warnings(r) -> List[str]:
+    warnings = []
+    reasons = getattr(r, 'reasons', []) or []
+    reason_str = " ".join(reasons) if reasons else ""
+
+    if "严重超买" in reason_str:
+        warnings.append("严重超买，回调风险高")
+    elif "超买" in reason_str:
+        warnings.append("超买区域，注意短线回调")
+    if "严重超卖" in reason_str:
+        warnings.append("严重超卖，可能有继续下跌空间")
+    if "MACD死叉" in reason_str:
+        warnings.append("MACD死叉，中期趋势偏空")
+    if "均线空头排列" in reason_str:
+        warnings.append("均线空头排列，趋势向下")
+    if r.risk_reward > 0 and r.risk_reward < 2.0:
+        warnings.append(f"RR={r.risk_reward:.1f}:1，风险回报不足，谨慎")
+
+    return warnings
+
+
 def _print_stock(r, index: int, watch: bool = False):
-    """\u6253\u5370\u5355\u53ea\u80a1\u7968\u4fe1\u606f"""
     rating_cn = RATING_CN.get(r.rating, r.rating)
     align_cn = ALIGN_CN.get(r.alignment, r.alignment)
     phase_cn = PHASE_CN.get(r.trend_phase, r.trend_phase)
-    prefix = "[\u89c2]" if watch else f"{index}."
-    print(f"  {prefix} {r.code}  \u4ef7\u683c: {r.last_close:.2f}")
-    print(f"      \u8bc4\u7ea7: {r.rating} ({rating_cn}) \u00b7 \u5206: {r.score:.1f} \u00b7 \u5171\u632f: {align_cn}")
-    print(f"      \u8d8b\u52bf: {phase_cn}")
+    prefix = "[观]" if watch else f"{index}."
+
+    print(f"  {prefix} {r.code}  现价: {r.last_close:.2f}")
+    print(f"      评级: {r.rating} ({rating_cn}) · 分: {r.score:.1f} · 共振: {align_cn}")
+    print(f"      趋势: {phase_cn}")
+
     if r.entry > 0:
-        print(f"      \u5165\u573a: {r.entry:.2f}  \u6b62\u635f: {r.stop_loss:.2f}"
-              f"  \u76ee\u68071: {r.target_1:.2f}  \u76ee\u68072: {r.target_2:.2f}"
-              f"  RR: {r.risk_reward:.1f}:1")
+        dist_entry = _fmt_pct(r.entry, r.last_close)
+        dist_t1 = _fmt_pct(r.target_1, r.last_close)
+        dist_t2 = _fmt_pct(r.target_2, r.last_close)
+        dist_sl = _fmt_pct(r.stop_loss, r.last_close)
+        print(f"      入场: {r.entry:.2f} ({dist_entry})  止损: {r.stop_loss:.2f} ({dist_sl})")
+        print(f"      目标1: {r.target_1:.2f} ({dist_t1})  目标2: {r.target_2:.2f} ({dist_t2})")
+        print(f"      风险回报: {r.risk_reward:.1f}:1  仓位建议: {r.position_pct:.1f}%")
+
+    if watch:
+        conditions = _gen_entry_conditions(r)
+        if conditions:
+            print(f"      等待条件: {' | '.join(conditions)}")
+        warnings = _gen_risk_warnings(r)
+        if warnings:
+            print(f"      风险提示: {' | '.join(warnings)}")
+
     if r.reasons:
-        print(f"      \u7406\u7531: {', '.join(r.reasons[:5])}")
+        reasons_display = ", ".join(r.reasons[:5])
+        print(f"      指标: {reasons_display}")
 
 
 def get_summary_text(result: Dict) -> str:
-    """\u8fd4\u56de\u7b80\u77ed\u6587\u672c\u6458\u8981\uff08\u7528\u4e8e\u63a8\u9001\uff09"""
-    lines = [f"\u00a5\u6bcf\u65e5\u80a1\u7968\u63a8\u8350 {result.get('date', '')}"]
+    lines = [f"¥每日股票推荐 {result.get('date', '')}"]
     for market in ["A", "HK", "US"]:
         picks = result.get("picks", {}).get(market, [])
         if picks:
