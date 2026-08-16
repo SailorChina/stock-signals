@@ -44,7 +44,11 @@ def get_a_share_constituents() -> List[str]:
         return cached
     codes: List[str] = []
     try:
+        try:
         import akshare as ak
+        AKSHARE_AVAILABLE = True
+    except ImportError:
+        AKSHARE_AVAILABLE = False
         try:
             df = ak.index_stock_cons_csindex(symbol="000300")
             sh = [f"SH.{c}" for c in df["成分券代码"].tolist() if str(c).startswith("6")]
