@@ -111,21 +111,77 @@ def generate_trade_plan(ind, sr, trend_phase, vcp_result=None):
     r1, r2 = sr["support_1"], sr["support_2"]
     res1, res2 = sr["resistance_1"], sr["resistance_2"]
     
-    # Entry: 优先使用 VCP pivot 点，否则使用支撑位
+    # Entry: 入场点计算（v2.8.1 改进）
+    # 强势股（MACD金叉+OBV上升+RSI<70）可现价-1%入场
+    # 普通股使用支撑位（MA20/VWAP/支撑1），但不低于现价15%
+    entry = 0.0
+    
     if vcp_result and vcp_result.detected and vcp_result.pivot_point > 0:
         entry = vcp_result.pivot_point
     else:
-        near_candidates = [v for v in (r1, ind.ma20, sr["vwap"]) if v > 0 and v < price and v > price * 0.8]
-        entry = max(near_candidates) if near_candidates else (r1 if r1 > 0 else price * 0.95)
+        # 检查是否强势股
+        is_bullish = (ind.macd_dif_dea_cross == 'golden' and 
+                     ind.obv_trend == 'up' and
+                     ind.rsi_14 < 70 and
+                     50 < ind.rsi_14 < 70)  # RSI中性偏强
+        
+        if is_bullish:
+            # 强势股：现价-1% 或 MA5，取较高者
+            ma5_entry = ind.ma5 if ind.ma5 < price else price * 0.99
+            entry = max(ma5_entry, price * 0.99)
+        else:
+            # 普通股：寻找支撑位（不低于现价15%）
+            near_candidates = [v for v in (r1, ind.ma20, sr["vwap"]) 
+                              if v > 0 and v < price and v > price * 0.85]
+            if near_candidates:
+                entry = max(near_candidates)
+            else:
+                entry = price * 0.97  # 保守：现价-3%
+
+    # 1. 优先使用 VCP pivot 点
+    # 2. 其次使用支撑位/MA20/VWAP（必须低于现价且不低于85%）
+    # 3. 强势股（MACD金叉+OBV上升+RSI<70）可现价入场
+    # 4. 保守情况使用现价-3%
+    entry = 0.0
     
-    # Stop: ATR 动态止损 + 支撑位双重确认
+    if vcp_result and vcp_result.detected and vcp_result.pivot_point > 0:
+        entry = vcp_result.pivot_point
+    else:
+        # 寻找合理的支撑位（必须低于现价且不低于现价15%）
+        near_candidates = [v for v in (r1, ind.ma20, sr["vwap"]) 
+                          if v > 0 and v < price and v > price * 0.85]
+        if near_candidates:
+            entry = max(near_candidates)
+        else:
+            # 检查是否强势股
+            is_strong = (ind.macd_dif_dea_cross == 'golden' and 
+                        ind.obv_trend == 'up' and
+                        ind.rsi_14 < 70)
+            if is_strong:
+                entry = price * 0.99  # 强势股现价附近入场
+            else:
+                entry = price * 0.97  # 保守入场：现价-3%
+    
+    # Stop: ATR 动态止损 + 支撑位双重确认（v2.8.1 修复）
+    # 关键修复: 止损必须在入场点下方
+    max_stop_pct = 0.075
+    sl_atr = entry - 1.5 * atr
+    sl_sr = r2 * 0.98 if r2 > 0 and r2 < entry else entry * 0.96
+    sl_max = entry * (1 - max_stop_pct)
+    stop = max(min(sl_sr, sl_atr), sl_max)
+    # 确保止损在入场点下方
+    stop = min(stop, entry * 0.95)  # 最高不超过入场价5%
+    stop = max(stop, entry * 0.90)  # 最低不低于入场价10%
+
     # Minervini 规则: 最大止损 7-8%
     max_stop_pct = 0.075  # 7.5% 最大亏损
     sl_atr = entry - 1.5 * atr  # 1.5 ATR 止损
     sl_sr = r2 * 0.98 if r2 > 0 and r2 < entry else entry * 0.96
     sl_max = entry * (1 - max_stop_pct)  # 硬性止损上限
     stop = max(min(sl_sr, sl_atr), sl_max)  # 取最严格值
-    stop = max(stop, price * 0.95)  # 确保不低于价格下方 5%
+    # 关键修复: 止损必须在入场点下方，不能基于现价
+    stop = min(stop, entry * 0.95)  # 确保止损不高于入场价5%
+    stop = max(stop, entry * 0.90)  # 最低不低于入场价10%
     
     # Targets: 分批止盈策略
     tgt1 = min(res1, res2) if res1 > 0 and res2 > 0 else (res1 if res1 > 0 else res2)
