@@ -387,3 +387,24 @@ class TestBlacklist:
         # No blacklisted stock should be in the pool
         conflicts = [c for c in all_pool_codes if c in BLACKLIST]
         assert len(conflicts) == 0, f"Blacklisted stocks in pool: {conflicts}"
+
+
+class TestHotStocks:
+    def test_fetch_hot_stocks_returns_list(self):
+        from stock_signals.screener import _fetch_hot_stocks
+        result = _fetch_hot_stocks("US", top_n=10)
+        assert isinstance(result, list)
+
+    def test_fetch_hot_stocks_no_blacklisted(self):
+        from stock_signals.screener import _fetch_hot_stocks, BLACKLIST
+        result = _fetch_hot_stocks("US", top_n=50)
+        for code in result:
+            assert code not in BLACKLIST, f"Blacklisted code found: {code}"
+
+    def test_get_market_codes_includes_hot(self):
+        from stock_signals.screener import _get_market_codes, BLACKLIST
+        codes = _get_market_codes("US")
+        assert isinstance(codes, list)
+        assert len(codes) > 0
+        for c in codes:
+            assert c not in BLACKLIST, f"Blacklisted in pool: {c}"

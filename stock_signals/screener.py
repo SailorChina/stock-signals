@@ -8,6 +8,7 @@ import time
 import logging
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
 
@@ -115,6 +116,65 @@ BLACKLIST = {
 def _is_blacklisted(code: str) -> bool:
     # v2.7 黑名单过滤：银行/ETF
     return code in BLACKLIST
+# +--- 动态热门股：从 Futu API 获取每日热门股 TOP 100 ---+
+HOT_STOCK_CACHE: Dict[str, List[str]] = {}
+_HOT_FETCH_TIME: float = 0.0
+_HOT_FETCH_TIMEOUT = 3600.0
+
+
+def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
+    """从 Futu API 获取热门股列表，失败时返回空列表（降级到静态池）"""
+    global _HOT_FETCH_TIME, HOT_STOCK_CACHE
+    cache_key = f"{market}_{top_n}"
+    
+    if cache_key in HOT_STOCK_CACHE and (time.time() - _HOT_FETCH_TIME) < _HOT_FETCH_TIMEOUT:
+        return HOT_STOCK_CACHE[cache_key]
+    
+    hot_codes: List[str] = []
+    try:
+        import sys as _sys
+        _sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
+        from common import create_quote_context, check_ret
+        from futu import GetTopMoversRankQuery, StockMarket, RankPeriodType, SimpleRankIndicatorType, RankSortDir
+        
+        ctx = create_quote_context()
+        mkt_map = {"US": StockMarket.US, "HK": StockMarket.HK, "SH": StockMarket.SH, "SZ": StockMarket.SZ}
+        futu_mkt = mkt_map.get(market)
+        if futu_mkt is None:
+            return []
+        
+        req = GetTopMoversRankQuery()
+        req.set_market(futu_mkt)
+        req.set_rank_period(RankPeriodType.RankPeriod_1Day)
+        req.set_sort_field(SimpleRankIndicatorType.PriceChangeRatio)
+        req.set_sort_dir(RankSortDir.Desc)
+        req.set_limit(top_n)
+        
+        import socket
+        orig_timeout = socket.getdefaulttimeout()
+        socket.setdefaulttimeout(15)
+        try:
+            ret, data, _ = ctx.request_query(req)
+            check_ret(ret, data, ctx, market + " HotStocks")
+            if data is not None and not data.empty:
+                if "code" in data.columns:
+                    hot_codes = [str(c).strip() for c in data["code"].values if str(c).strip()]
+                elif len(data.columns) > 0:
+                    hot_codes = [str(c).strip() for c in data.iloc[:, 0].values if str(c).strip()]
+        finally:
+            socket.setdefaulttimeout(orig_timeout)
+        ctx.close()
+        
+        hot_codes = [c for c in hot_codes if not _is_blacklisted(c)]
+        HOT_STOCK_CACHE[cache_key] = hot_codes
+        _HOT_FETCH_TIME = time.time()
+        logger.info(f"  热门股获取成功: {market} {len(hot_codes)} 只")
+    except Exception as e:
+        logger.warning(f"  热门股获取失败 {market}: {type(e).__name__}: {e}，使用静态池")
+        hot_codes = []
+    
+    return hot_codes
+
 
 MARKET_NAMES = {
     "SH": "A股\u30fb\u6caa", "SZ": "A股\u30fb\u6df1",
@@ -350,14 +410,30 @@ def scan(markets=None, config=None, output_json=False, output_file=""):
     return output
 
 
-def _get_market_codes(market):
+def _get_market_codes(market: str) -> List[str]:
+    """获取市场代码列表：静态池 + 动态热门股（去重）"""
+    # 静态池
     if market == "A":
         codes = []
         for prefix in ("SH", "SZ"):
             codes.extend(STOCK_POOLS.get(prefix, []))
-        return codes
-    return STOCK_POOLS.get(market, [])
-
+    else:
+        codes = list(STOCK_POOLS.get(market, []))
+    
+    # 动态热门股（最多补充50只）
+    try:
+        hot_codes = _fetch_hot_stocks(market, top_n=50)
+        if hot_codes:
+            existing = set(codes)
+            for hc in hot_codes:
+                if hc not in existing:
+                    codes.append(hc)
+                    existing.add(hc)
+            logger.info(f"  热门股补充: +{len(hot_codes)} 只 (总计 {len(codes)} 只)")
+    except Exception as e:
+        logger.warning(f"  热门股获取异常: {e}")
+    
+    return codes
 
 def _sort_results(results):
     alignment_score = {
