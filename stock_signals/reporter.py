@@ -78,35 +78,83 @@ def _gen_entry_conditions(r) -> List[str]:
     conditions = []
     reasons = getattr(r, 'reasons', []) or []
     reason_str = " ".join(reasons) if reasons else ""
+    info = get_stock_info(r.code)
+    cn_name = info.get("name", "")
 
-    if "RSI" in reason_str and "超买" in reason_str:
-        conditions.append("RSI超买，等待回调至RSI<70再买入")
+    # RSI 超买/超卖
+    if "RSI" in reason_str and ("超买" in reason_str or "严重超买" in reason_str):
+        conditions.append("RSI极端超买，等待回调至RSI<65再考虑买入")
+    elif "RSI" in reason_str and ("超卖" in reason_str or "严重超卖" in reason_str):
+        conditions.append("RSI严重超卖，等待企稳反弹信号")
+
+    # ADX 趋势强度
     if "ADX" in reason_str and ("弱" in reason_str or "weak" in reason_str.lower()):
-        conditions.append("ADX趋势弱，等待ADX>25确认后买入")
+        conditions.append("ADX趋势弱(<20)，等待ADX>25确认趋势后再买入")
+    elif "ADX" in reason_str and ("强" in reason_str or "strong" in reason_str.lower()):
+        conditions.append("ADX趋势强劲，可顺势跟进")
+
+    # MACD 信号
     if "MACD" in reason_str and "死叉" in reason_str:
-        conditions.append("MACD死叉，等待金叉后再买入")
+        conditions.append("MACD死叉，中期偏空，等待金叉后再考虑")
     elif "MACD" in reason_str and ("负" in reason_str or "空头" in reason_str):
         conditions.append("MACD柱为负，等待金叉或柱翻正后再买入")
+    elif "MACD" in reason_str and "金叉" in reason_str:
+        conditions.append("MACD金叉确认，多头动能较强")
+
+    # MA60 位置
     if "MA60" in reason_str and "深度回调" in reason_str:
-        conditions.append("价格深度回调，等待企稳或缩量止跌信号")
+        conditions.append(f"{cn_name}价格深度回调，等待缩量止跌企稳信号")
     elif "MA60" in reason_str and "高于" in reason_str and ("过度" in reason_str or "超买" in reason_str):
-        conditions.append("价格高于MA60过多，等待回踩MA20/MA60附近")
+        conditions.append(f"{cn_name}价格偏离MA60过大，等待回踩MA20/MA60附近支撑")
+    elif "MA60" in reason_str and "健康" in reason_str:
+        conditions.append(f"{cn_name}价格处于MA60健康区间，趋势稳健")
+
+    # KDJ 超买
     if "KDJ" in reason_str and "超买" in reason_str:
-        conditions.append("KDJ超买，等待K值回落至80以下")
-    if "TD" in reason_str and "卖出" in reason_str:
-        conditions.append("TD卖出序列进行中，等待9转完成确认后再观望")
+        conditions.append("KDJ超买(J>100)，等待K值回落至80以下再考虑")
 
+    # TD 9转信号
+    if "TD" in reason_str and "卖出" in reason_str and "完成" in reason_str:
+        conditions.append("TD卖出序列已完成，短期见顶信号，谨慎追高")
+    elif "TD" in reason_str and "买入" in reason_str and "完成" in reason_str:
+        conditions.append("TD买入序列完成(9转)，可关注低吸机会")
+    elif "TD" in reason_str and "卖出" in reason_str:
+        conditions.append("TD卖出序列进行中，等待9转完成确认")
+    elif "TD" in reason_str and "买入" in reason_str and "进行中" in reason_str:
+        conditions.append("TD买入序列进行中，继续观察")
+
+    # VCP 模式
+    if "VCP" in reason_str and "强" in reason_str:
+        conditions.append(f"{cn_name}VCP强模式确认，等待价格突破pivot点入场")
+    elif "VCP" in reason_str:
+        conditions.append(f"{cn_name}VCP波动率收缩模式，等待突破确认后入场")
+    elif "Episodic" in reason_str or "事件性转折" in reason_str:
+        conditions.append(f"{cn_name}事件性突破，等待回踩确认支撑后再入场")
+
+    # OBV 资金流向
+    if "OBV" in reason_str and "下降" in reason_str:
+        conditions.append(f"{cn_name}OBV资金流出，等待放量企稳信号")
+    elif "OBV" in reason_str and "上升" in reason_str:
+        conditions.append(f"{cn_name}OBV资金持续流入，上涨动能健康")
+
+    # 默认：根据入场价距离生成条件
     if not conditions:
-        if r.entry > 0:
-            dist = (r.entry - r.last_close) / r.last_close * 100 if r.last_close > 0 else 0
-            if dist < 0:
-                conditions.append(f"等待价格回落至入场区{r.entry:.2f}附近（约{abs(dist):.1f}%）")
+        if r.entry > 0 and r.last_close > 0:
+            dist = (r.entry - r.last_close) / r.last_close * 100
+            if dist < -3:
+                conditions.append(f"{cn_name}: 等待价格回落至入场区{r.entry:.2f}（距现价{dist:.1f}%）")
+            elif dist < 0:
+                conditions.append(f"{cn_name}: 等待价格轻微回落至入场区{r.entry:.2f}（约{abs(dist):.1f}%）")
+            elif dist < 5:
+                conditions.append(f"{cn_name}: 等待价格突破入场区{r.entry:.2f}（距现价+{dist:.1f}%）")
             else:
-                conditions.append(f"等待价格突破入场区{r.entry:.2f}附近（约+{dist:.1f}%）")
+                conditions.append(f"{cn_name}: 当前价格接近入场区{r.entry:.2f}，可关注突破机会")
+        elif r.entry > 0:
+            conditions.append(f"等待价格到达入场区{r.entry:.2f}附近")
         else:
-            conditions.append("等待技术信号确认后再入场")
+            conditions.append("等待技术信号进一步确认后再入场")
 
-    return conditions[:4]
+    return conditions[:5]
 
 
 def _gen_risk_warnings(r) -> List[str]:

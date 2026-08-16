@@ -362,3 +362,28 @@ class TestRSAndTrendTemplate:
         assert hasattr(ind, 'rs_rating')
         assert hasattr(ind, 'distance_from_52w_high')
         assert hasattr(ind, 'trend_template_pass')
+
+
+class TestBlacklist:
+    def test_blacklist_filters_banks(self):
+        from stock_signals.screener import BLACKLIST
+        # Bank codes should be in blacklist
+        assert "US.JPM" in BLACKLIST
+        assert "US.BAC" in BLACKLIST
+        assert "HK.00939" in BLACKLIST  # 建设银行
+        assert "SH.601398" in BLACKLIST  # 工商银行
+
+    def test_blacklist_filters_etfs(self):
+        from stock_signals.screener import BLACKLIST
+        assert "US.SPY" in BLACKLIST
+        assert "US.QQQ" in BLACKLIST
+        assert "US.VTI" in BLACKLIST
+
+    def test_blacklist_not_in_pool(self):
+        from stock_signals.screener import STOCK_POOLS, BLACKLIST
+        all_pool_codes = []
+        for codes in STOCK_POOLS.values():
+            all_pool_codes.extend(codes)
+        # No blacklisted stock should be in the pool
+        conflicts = [c for c in all_pool_codes if c in BLACKLIST]
+        assert len(conflicts) == 0, f"Blacklisted stocks in pool: {conflicts}"

@@ -29,8 +29,6 @@ logger = logging.getLogger("stock-signals")
 STOCK_POOLS: Dict[str, List[str]] = {
     # ── A 股：沪深 300 + 核心龙头 ─────────────────────────────────
     "SH": [
-        "SH.600519", "SH.601318", "SH.601398", "SH.601288", "SH.601166",
-        "SH.600030", "SH.600036", "SH.601818", "SH.601881",
         # 消费
         "SH.600887", "SH.603288", "SH.603259", "SH.600085",
         "SH.603899", "SH.600104", "SH.603160",
@@ -49,7 +47,6 @@ STOCK_POOLS: Dict[str, List[str]] = {
         "SH.600048", "SH.601155", "SH.600000",
     ],
     "SZ": [
-        "SZ.000001", "SZ.000002", "SZ.002142", "SZ.000776",
         # 消费
         "SZ.000858", "SZ.002304", "SZ.002557", "SZ.002714",
         "SZ.000063", "SZ.002415", "SZ.002475",
@@ -70,8 +67,6 @@ STOCK_POOLS: Dict[str, List[str]] = {
         "HK.00700", "HK.09988", "HK.03690", "HK.09618",
         "HK.09888", "HK.02382", "HK.09999", "HK.09660",
         "HK.02015", "HK.02359",
-        "HK.00005", "HK.02388", "HK.03968", "HK.00939",
-        "HK.01288", "HK.03988",
         # 消费 / 餐饮
         "HK.00686", "HK.00291", "HK.00322", "HK.01071",
         "HK.09922",
@@ -101,6 +96,26 @@ STOCK_POOLS: Dict[str, List[str]] = {
         "US.XOM", "US.COP", "US.OXY",
     ],
 }
+
+# +--- 黑名单：银行/金融/ETF（用户明确要求过滤） ---+
+BLACKLIST = {
+    # A股银行/金融
+    # 港股银行
+    # 美股银行/金融
+    "US.JPM", "US.BAC", "US.WFC", "US.C", "US.GS", "US.MS",
+    "US.USB", "US.PNC", "US.TFC", "US.BK", "US.AXP",
+    # 常见ETF
+    "US.SPY", "US.QQQ", "US.IWM", "US.VTI", "US.VOO",
+    "US.EFA", "US.EEM", "US.VEA", "US.VWO", "US.BND",
+    "US.TLT", "US.GLD", "US.SLV", "US.XLF", "US.VNQ",
+    "US.XLE", "US.XLU",
+
+    "SH.601398", "SH.601288", "SH.601166", "SH.600030", "SH.600036", "SH.601818", "SH.601881", "SH.600016", "SZ.000001", "SZ.000002", "SZ.002142", "SZ.000776", "SZ.002807", "SZ.001227", "HK.00005", "HK.02388", "HK.03968", "HK.00939", "HK.01288", "HK.03988", "HK.02888",}
+
+def _is_blacklisted(code: str) -> bool:
+    # v2.7 黑名单过滤：银行/ETF
+    return code in BLACKLIST
+
 MARKET_NAMES = {
     "SH": "A股\u30fb\u6caa", "SZ": "A股\u30fb\u6df1",
     "HK": "\u9999\u6e2f", "US": "\u7f8e\u80a1", "A": "A\u80a1",
@@ -148,6 +163,10 @@ class ScanResult:
 def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
 
     try:
+        # v2.7: 黑名单过滤
+        if _is_blacklisted(code):
+            logger.info(f"  {code} 在黑名单中(银行/ETF)，跳过")
+            return None
         time.sleep(delay)
         df = fetch_kline(code, "1d", num=300)
         time.sleep(0.8)
