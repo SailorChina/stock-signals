@@ -421,7 +421,7 @@ def main():
         sys.exit(0)
 
     setup_logging(getattr(args, "log_level", "INFO"), getattr(args, "log_file", ""))
-    logger.info("stock-signals v2.8.1 启动")
+    logger.info("stock-signals v2.8.5 启动")
 
     if args.cmd == "scan":
         # Interactive market selection
