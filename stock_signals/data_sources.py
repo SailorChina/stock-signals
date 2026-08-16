@@ -1,5 +1,11 @@
 # -*- coding: utf-8 -*-
-"""免费股票数据源模块"""
+"""免费股票数据源模块
+
+支持多种免费数据源，自动降级：
+1. AkShare (A股/港股/美股，完全免费)
+2. yfinance (美股为主，完全免费)
+3. Tushare (A股为主，免费额度)
+"""
 from __future__ import annotations
 import logging
 from typing import List, Dict, Optional
@@ -88,12 +94,10 @@ def _get_from_akshare(market: str) -> List[str]:
             logger.warning(f"  AkShare A股失败: {e}")
     
     elif market == "HK":
-        try:
-            df = ak.stock_hk_spot_em()
-            if df is not None and not df.empty:
-                codes.extend([f"HK.{str(c).zfill(5)}" for c in df["代码"].tolist()[:100]])
-        except Exception as e:
-            logger.warning(f"  AkShare港股失败: {e}")
+        # 港股API不稳定，使用静态列表
+        logger.info("  港股使用静态池")
+        codes = ["HK.00700", "HK.09988", "HK.03690", "HK.09618", "HK.09888", 
+                 "HK.02382", "HK.09999", "HK.09660", "HK.02015", "HK.02359"]
     
     return list(dict.fromkeys(codes))
 
@@ -107,6 +111,9 @@ def _get_from_yfinance(market: str) -> List[str]:
                  "MA", "AVGO", "HD", "CVX", "MRK", "COST", "ABBV", "PEP", "TMO",
                  "ABT", "ACN", "MCD", "NFLX", "AMD", "DIS", "DHR", "VZ", "CRM"]
         codes = [f"US.{t}" for t in sp500]
+    elif market == "HK":
+        hk_stocks = ["0700", "9988", "3690", "9618", "9888", "2382", "9999", "9660"]
+        codes = [f"HK.{c}" for c in hk_stocks]
     return codes
 
 
