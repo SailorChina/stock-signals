@@ -152,7 +152,7 @@ python -m stock_signals.cli scan --markets US --json --output report.json
 
 ---
 
-## v2.4.0 新特性
+## v2.5.0 新特性
 
 ### 智能过滤（自动拦截追高风险股）
 | 过滤规则 | 阈值 | 效果 |
