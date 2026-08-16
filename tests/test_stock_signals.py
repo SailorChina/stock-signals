@@ -279,3 +279,86 @@ class TestReporter:
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+class TestVCP:
+    """测试 VCP 波动率收缩检测"""
+    def test_vcp_module_import(self):
+        from stock_signals._vcp import detect_vcp
+        assert callable(detect_vcp)
+
+    def test_vcp_no_data(self):
+        from stock_signals._vcp import detect_vcp
+        import pandas as pd
+        df = pd.DataFrame({'close': [100], 'high': [100], 'low': [99], 'volume': [1000]})
+        result = detect_vcp(df)
+        assert not result.detected
+
+    def test_vcp_contraction_detection(self):
+        from stock_signals._vcp import detect_vcp
+        import numpy as np
+        import pandas as pd
+        np.random.seed(42)
+        n = 100
+        close = np.ones(n) * 100
+        close[20:30] = 100 - np.linspace(0, 15, 10)
+        close[30:45] = 85 + np.linspace(0, 8, 15)
+        close[45:52] = 93 - np.linspace(0, 8, 7)
+        close[52:65] = 85 + np.linspace(0, 5, 13)
+        close[65:] = 85 + np.linspace(0, 12, 35)
+        high = close + np.abs(np.random.randn(n) * 2)
+        low = close - np.abs(np.random.randn(n) * 2)
+        volume = np.random.randint(100000, 1000000, n).astype(float)
+        volume[45:70] = volume[45:70] * 0.5
+        df = pd.DataFrame({'close': close, 'high': high, 'low': low, 'volume': volume})
+        result = detect_vcp(df)
+        assert hasattr(result, 'detected')
+        assert hasattr(result, 'contractions')
+
+
+class TestEpisodicPivot:
+    """测试 Episodic Pivot 事件性转折检测"""
+    def test_ep_module_import(self):
+        from stock_signals._episodic_pivot import detect_episodic_pivot
+        assert callable(detect_episodic_pivot)
+
+    def test_ep_no_data(self):
+        from stock_signals._episodic_pivot import detect_episodic_pivot
+        import pandas as pd
+        df = pd.DataFrame({'close': [100], 'high': [100], 'low': [99], 'volume': [1000]})
+        result = detect_episodic_pivot(df)
+        assert not result.detected
+
+    def test_ep_gap_detection(self):
+        from stock_signals._episodic_pivot import detect_episodic_pivot
+        import numpy as np
+        import pandas as pd
+        n = 60
+        close = np.ones(n) * 100
+        close[-1] = 105
+        high = close + 1
+        low = close - 1
+        volume = np.ones(n) * 100000
+        volume[-1] = 500000
+        df = pd.DataFrame({'close': close, 'high': high, 'low': low, 'volume': volume})
+        result = detect_episodic_pivot(df)
+        assert result.gap_up_pct > 0
+        assert result.volume_spike > 1
+
+
+class TestRSAndTrendTemplate:
+    """测试相对强度和趋势模板"""
+    def test_rs_fields_exist(self):
+        from stock_signals.indicators import compute_indicators
+        import numpy as np
+        import pandas as pd
+        np.random.seed(42)
+        close = 100 + np.cumsum(np.random.randn(100) * 0.5) + np.linspace(0, 30, 100)
+        high = close + 1
+        low = close - 1
+        volume = np.ones(100) * 100000
+        df = pd.DataFrame({'close': close, 'high': high, 'low': low, 'volume': volume})
+        ind = compute_indicators(df, 'US.TEST', '1d')
+        assert hasattr(ind, 'rs_rating')
+        assert hasattr(ind, 'distance_from_52w_high')
+        assert hasattr(ind, 'trend_template_pass')
