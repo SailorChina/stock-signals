@@ -74,13 +74,13 @@ def get_hk_constituents() -> List[str]:
     try:
         import akshare as ak
         try:
-            df = ak.index_stock_cons_weight_hsgt(stock=["恒指"])
+            df = ak.index_hist_hs_code_name()
             codes.extend([f"HK.{c.zfill(5)}" for c in df["股票代码"].tolist()])
             logger.info(f"  AkShare恒生指数: {len(codes)} 只")
         except Exception as e:
             logger.warning(f"  AkShare恒生指数失败: {e}")
         try:
-            df = ak.index_stock_cons_weight_hsgt(stock=["恒生科技"])
+            df = ak.index_stock_cons_hs300()
             codes.extend([f"HK.{c.zfill(5)}" for c in df["股票代码"].tolist()])
             logger.info(f"  AkShare恒生科技: +{len(codes)} 只")
         except Exception as e:
