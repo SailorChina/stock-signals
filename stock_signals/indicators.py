@@ -251,6 +251,14 @@ class Indicators:
     td_buy_count: int = 0            # 当前买入计数 1-9
     td_sell_count: int = 0           # 当前卖出计数 1-9
     td_turn: str = "none"            # turn信号: buy_turn / sell_turn / none
+    
+    # ── VCP (Volatility Contraction Pattern) ──────────────────────
+    vcp_detected: bool = False        # 是否检测到 VCP 模式
+    vcp_contractions: int = 0          # 收缩次数
+    vcp_pivot_point: float = 0.0      # pivot 点 (入场价)
+    vcp_pattern_width: float = 0.0    # 模式宽度 (%)
+    vcp_volume_drying: bool = False   # 成交量是否萎缩
+    vcp_quality: str = "none"          # 质量: strong/medium/weak/none
 
 
 
@@ -1060,6 +1068,24 @@ def compute_indicators(df: pd.DataFrame, code: str = "", ktype: str = "1d") -> I
                     ind.macd_cross_bar = len(dif_arr) - 1 - i
                     break
 
+
+    # ── VCP (Volatility Contraction Pattern) 检测 ──────────────────────
+    try:
+        from ._vcp import detect_vcp
+        vcp_res = detect_vcp(df, lookback=100)
+        ind.vcp_detected = vcp_res.detected
+        ind.vcp_contractions = vcp_res.contractions
+        ind.vcp_pivot_point = vcp_res.pivot_point
+        ind.vcp_pattern_width = vcp_res.pattern_width
+        ind.vcp_volume_drying = vcp_res.volume_drying
+        ind.vcp_quality = vcp_res.quality
+    except Exception:
+        ind.vcp_detected = False
+        ind.vcp_contractions = 0
+        ind.vcp_pivot_point = 0.0
+        ind.vcp_pattern_width = 0.0
+        ind.vcp_volume_drying = False
+        ind.vcp_quality = "none"
     return ind
 
 

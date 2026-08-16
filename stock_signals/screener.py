@@ -15,6 +15,7 @@ from .indicators import fetch_kline, compute_indicators, signal_summary
 from .scoring import compute_rating, RATINGS
 from ._resonance import compute_timeframe_resonance
 from ._sr import compute_support_resistance, generate_trade_plan
+from ._vcp import detect_vcp
 from .config import config
 
 
@@ -164,7 +165,12 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
         except Exception:
             phase = "unknown"
         sr = compute_support_resistance(df)
-        tp = generate_trade_plan(ind, sr, phase)
+        vcp_res = detect_vcp(df, lookback=100)
+        tp = generate_trade_plan(ind, sr, phase, vcp_res)
+        # v2.5: VCP 模式增强 - 成交量确认
+        if vcp_res.detected and not vcp_res.volume_drying:
+            logger.warning(f"  {code} VCP模式但成交量未萎缩，跳过")
+            return None
         # v2.4: 扩展度过滤 - 距高点太近则跳过
         dist_to_high = getattr(ind, 'price_to_high_pct', 0)
         if dist_to_high > -8:

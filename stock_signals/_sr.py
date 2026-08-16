@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-# -* coding: utf-8
+# -*- coding: utf-8 -*-
 import numpy as np
 from dataclasses import dataclass
+from typing import Optional
 
 @dataclass
 class TradePlan:
@@ -26,7 +27,6 @@ def compute_support_resistance(df, n=20):
     for i in range(pn, len(close) - pn):
         wh = high[i-pn:i+pn+1]
         wl = low[i-pn:i+pn+1]
-        # 使用 >= 允许略低于极值点，避免精确匹配遗漏
         if high[i] >= wh.max() * 0.95:
             swings_high.append(close[i])
         if low[i] <= wl.min() * 1.10:
@@ -64,7 +64,6 @@ def compute_support_resistance(df, n=20):
     cur = float(close[-1])
     resists_above = [v for v in resists if v > cur]
     supports_below = [v for v in supports if v < cur]
-    # ???????????????/??????????????
     if not resists_above:
         resists_above = [v for v in resists if v > cur] or [recent_high]
     if not supports_below:
@@ -105,24 +104,37 @@ def compute_trend_phase(df, ind):
     if ind.ma20 < ind.ma60 < ma200: return "decline"
     return "accumulation"
 
-def generate_trade_plan(ind, sr, trend_phase):
+def generate_trade_plan(ind, sr, trend_phase, vcp_result=None):
+    """生成交易计划，支持 ATR 动态止损和 VCP pivot 入场"""
     price = ind.last_close
     atr = ind.atr_14
     r1, r2 = sr["support_1"], sr["support_2"]
     res1, res2 = sr["resistance_1"], sr["resistance_2"]
-    # Entry: prefer support near current price, not too far below
-    # 优先选择距当前价20%以内的支撑
-    near_candidates = [v for v in (r1, ind.ma20, sr["vwap"]) if v > 0 and v < price and v > price * 0.8]
-    entry = max(near_candidates) if near_candidates else (r1 if r1 > 0 else price * 0.95)
-    # Stop: below the next support level or 2 ATRs below entry
+    
+    # Entry: 优先使用 VCP pivot 点，否则使用支撑位
+    if vcp_result and vcp_result.detected and vcp_result.pivot_point > 0:
+        entry = vcp_result.pivot_point
+    else:
+        near_candidates = [v for v in (r1, ind.ma20, sr["vwap"]) if v > 0 and v < price and v > price * 0.8]
+        entry = max(near_candidates) if near_candidates else (r1 if r1 > 0 else price * 0.95)
+    
+    # Stop: ATR 动态止损 + 支撑位双重确认
+    # Minervini 规则: 最大止损 7-8%
+    max_stop_pct = 0.075  # 7.5% 最大亏损
+    sl_atr = entry - 1.5 * atr  # 1.5 ATR 止损
     sl_sr = r2 * 0.98 if r2 > 0 and r2 < entry else entry * 0.96
-    sl_atr = entry - 2 * atr
-    stop = min(sl_sr, sl_atr)
-    stop = max(stop, price * 0.85)  # never more than 15% below price
-    # Targets: above current price toward resistance
+    sl_max = entry * (1 - max_stop_pct)  # 硬性止损上限
+    stop = max(min(sl_sr, sl_atr), sl_max)  # 取最严格值
+    stop = max(stop, price * 0.95)  # 确保不低于价格下方 5%
+    
+    # Targets: 分批止盈策略
     tgt1 = min(res1, res2) if res1 > 0 and res2 > 0 else (res1 if res1 > 0 else res2)
-    tgt1 = max(tgt1, price * 1.03)  # at least 3% above current
-    tgt2 = tgt1 + atr * 2 if atr > 0 else tgt1 * 1.08
+    tgt1 = max(tgt1, price * 1.05)  # 至少 5% 收益
+    tgt2 = tgt1 + atr * 3 if atr > 0 else tgt1 * 1.12
+    # 如果 VCP 模式质量高，可以放宽目标
+    if vcp_result and vcp_result.quality == "strong":
+        tgt2 = tgt1 * 1.15
+    
     risk = entry - stop if entry > stop else atr * 1.5
     reward = tgt2 - entry if tgt2 > entry else atr * 2
     rr = reward / risk if risk > 0 else 0
