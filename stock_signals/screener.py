@@ -160,7 +160,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
         time.sleep(0.8)
         from ._sr import compute_trend_phase
         try:
-            phase = compute_trend_phase(ind, df)
+            phase = compute_trend_phase(df, ind)
         except Exception:
             phase = "unknown"
         sr = compute_support_resistance(df)
