@@ -175,6 +175,18 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
         if rr < 2.0:
             logger.warning(f"  {code} RR={rr:.2f}:1 不足2:1，跳过")
             return None
+        # v2.4.2: TD卖出Turn确认 → 卖出信号，跳过
+        if getattr(ind, 'td_turn', '') == 'sell_turn':
+            logger.warning(f"  {code} TD卖出Turn确认，看跌反转，跳过")
+            return None
+        # v2.4.2: MACD看跌背离 → 动量衰竭，跳过
+        if getattr(ind, 'macd_divergence', '') == 'bearish':
+            logger.warning(f"  {code} MACD看跌背离，动量衰竭，跳过")
+            return None
+        # v2.4.2: 看跌K线形态 → 短期回调风险，跳过
+        if getattr(ind, 'candle_pattern', '') in ('bearish_engulfing', 'shooting_star'):
+            logger.warning(f"  {code} K线形态{ind.candle_pattern_name}，看跌，跳过")
+            return None
         # v2.4: MA5与MA20过度延伸检查
         ma_gap = getattr(ind, 'ma5_ma20_gap', 0)
         if ma_gap > 8:
