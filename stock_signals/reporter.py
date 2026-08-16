@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from typing import Dict, List
+from ._info import get_stock_info
 
 logger = logging.getLogger("stock-signals")
 
@@ -135,9 +136,16 @@ def _print_stock(r, index: int, watch: bool = False):
     phase_cn = PHASE_CN.get(r.trend_phase, r.trend_phase)
     prefix = "[观]" if watch else f"{index}."
 
-    print(f"  {prefix} {r.code}  现价: {r.last_close:.2f}")
+    # 股票基本信息
+    info = get_stock_info(r.code)
+    cn_name = info.get("name", "")
+    sector = info.get("sector", "")
+    desc = info.get("desc", "")
+    meta = f" {cn_name}" + (f" · {sector}" if sector else "")
+
+    print(f"  {prefix} {r.code}{meta}  现价: {r.last_close:.2f}")
     print(f"      评级: {r.rating} ({rating_cn}) · 分: {r.score:.1f} · 共振: {align_cn}")
-    print(f"      趋势: {phase_cn}")
+    print(f"      趋势: {phase_cn}" + (f"  |  {desc}" if desc else ""))
 
     if r.entry > 0:
         dist_entry = _fmt_pct(r.entry, r.last_close)

@@ -4,7 +4,7 @@ description: >-
   多市场股票技术分析 & 买卖信号生成器。支持美股(US.XXXX)、A股(SH.600519/SZ.000001)、港股(HK.00700)。
   生成5级评级(Buy/Overweight/Hold/Underweight/Sell)及置信度分数，基于确定性技术指标计算(无LLM)。
 
-  功能(v2.4.0):
+  功能(v2.5.2):
   - 多时间框架共振分析(日线/周线/月线联动)
   - 支撑阻力位检测(swing点聚类+BOLL+均线)
   - 趋势阶段分类(吸筹/上涨早期/上涨/派发/下跌)
@@ -28,7 +28,7 @@ description: >-
   触发关键词: analyze, signals, technical analysis, 买卖信号, 技术分析,
   股票分析, 信号, MACD, RSI, KDJ, 布林带, 趋势, 买入, 卖出, 持仓建议, scan, 筛选, 选股.
 metadata:
-  version: 2.4.0
+  version: 2.5.2
   author: SailorChina
 allowed-tools: Bash
 ---
