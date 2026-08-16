@@ -5,6 +5,8 @@ from __future__ import annotations
 import sys
 import os as _os
 import time
+import json
+from datetime import datetime, timedelta
 import logging
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional
@@ -116,20 +118,45 @@ BLACKLIST = {
 def _is_blacklisted(code: str) -> bool:
     # v2.7 黑名单过滤：银行/ETF
     return code in BLACKLIST
-# +--- 动态热门股：从 Futu API 获取每日热门股 TOP 100 ---+
-HOT_STOCK_CACHE: Dict[str, List[str]] = {}
-_HOT_FETCH_TIME: float = 0.0
-_HOT_FETCH_TIMEOUT = 3600.0
+# +--- 动态热门股：3天持久化注册表（每日TOP100） ---+
+_HOT_REGISTRY_PATH = _os.path.join(_os.path.dirname(__file__), '.hot_registry.json')
+
+def _load_hot_registry() -> Dict[str, str]:
+    """加载热门股注册表 {code: last_seen_date}"""
+    try:
+        if _os.path.exists(_HOT_REGISTRY_PATH):
+            with open(_HOT_REGISTRY_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+    except Exception as e:
+        logger.warning(f"  加载热门股注册表失败: {e}")
+    return {}
+
+def _save_hot_registry(registry: Dict[str, str]):
+    """保存热门股注册表"""
+    try:
+        with open(_HOT_REGISTRY_PATH, 'w', encoding='utf-8') as f:
+            json.dump(registry, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        logger.warning(f"  保存热门股注册表失败: {e}")
+
+def _update_hot_registry(today_codes: List[str]) -> List[str]:
+    """更新注册表：标记今日热门股，清除3天未出现的股票"""
+    registry = _load_hot_registry()
+    today = time.strftime('%Y-%m-%d')
+    for code in today_codes:
+        registry[code] = today
+    # 清除超过3天未出现的股票
+    cutoff = (datetime.date.today() - timedelta(days=3)).strftime('%Y-%m-%d')
+    to_remove = [c for c, d in registry.items() if d < cutoff]
+    for c in to_remove:
+        del registry[c]
+    _save_hot_registry(registry)
+    logger.info(f"  热门股注册表: {len(registry)} 只在库 (今日更新 {len(today_codes)} 只)")
+    return list(registry.keys())
 
 
 def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
-    """从 Futu API 获取热门股列表，失败时返回空列表（降级到静态池）"""
-    global _HOT_FETCH_TIME, HOT_STOCK_CACHE
-    cache_key = f"{market}_{top_n}"
-    
-    if cache_key in HOT_STOCK_CACHE and (time.time() - _HOT_FETCH_TIME) < _HOT_FETCH_TIMEOUT:
-        return HOT_STOCK_CACHE[cache_key]
-    
+    """从 Futu API 获取热门股列表（TOP 100），失败时返回空列表"""
     hot_codes: List[str] = []
     try:
         import sys as _sys
@@ -138,7 +165,7 @@ def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
         from futu import ScrMarket
         
         ctx = create_quote_context()
-        mkt_map = {"US": ScrMarket.US, "HK": ScrMarket.HK, "A": ScrMarket.CN, "SH": ScrMarket.CN, "SZ": ScrMarket.CN}
+        mkt_map = {"US": ScrMarket.US, "HK": ScrMarket.HK, "A": ScrMarket.CN}
         futu_mkt = mkt_map.get(market)
         if futu_mkt is None:
             return []
@@ -159,15 +186,12 @@ def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
         ctx.close()
         
         hot_codes = [c for c in hot_codes if not _is_blacklisted(c)]
-        HOT_STOCK_CACHE[cache_key] = hot_codes
-        _HOT_FETCH_TIME = time.time()
         logger.info(f"  热门股获取成功: {market} {len(hot_codes)} 只")
     except Exception as e:
         logger.warning(f"  热门股获取失败 {market}: {type(e).__name__}: {e}，使用静态池")
         hot_codes = []
     
     return hot_codes
-
 
 MARKET_NAMES = {
     "SH": "A股\u30fb\u6caa", "SZ": "A股\u30fb\u6df1",
@@ -404,7 +428,7 @@ def scan(markets=None, config=None, output_json=False, output_file=""):
 
 
 def _get_market_codes(market: str) -> List[str]:
-    """获取市场代码列表：静态池 + 动态热门股（去重）"""
+    """获取市场代码列表：静态池 + 持久化热门股注册表（去重）"""
     # 静态池
     if market == "A":
         codes = []
@@ -413,20 +437,27 @@ def _get_market_codes(market: str) -> List[str]:
     else:
         codes = list(STOCK_POOLS.get(market, []))
     
-    # 动态热门股（最多补充50只）
+    # 从注册表获取热门股（3天持久化）
+    hot_registry = _load_hot_registry()
+    hot_registry = {k: v for k, v in hot_registry.items() if not _is_blacklisted(k)}
+    if hot_registry:
+        existing = set(codes)
+        for hc in hot_registry:
+            if hc not in existing:
+                codes.append(hc)
+                existing.add(hc)
+        logger.info(f"  热门股注册表: +{len(hot_registry)} 只 (总计 {len(codes)} 只)")
+    
+    # 实时获取今日热门股并更新注册表
     try:
-        hot_codes = _fetch_hot_stocks(market, top_n=50)
-        if hot_codes:
-            existing = set(codes)
-            for hc in hot_codes:
-                if hc not in existing:
-                    codes.append(hc)
-                    existing.add(hc)
-            logger.info(f"  热门股补充: +{len(hot_codes)} 只 (总计 {len(codes)} 只)")
+        today_hot = _fetch_hot_stocks(market, top_n=100)
+        if today_hot:
+            _update_hot_registry(today_hot)
     except Exception as e:
-        logger.warning(f"  热门股获取异常: {e}")
+        logger.warning(f"  热门股实时更新异常: {e}")
     
     return codes
+
 
 def _sort_results(results):
     alignment_score = {

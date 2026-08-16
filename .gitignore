@@ -31,3 +31,5 @@ config/*.json
 _us_result.json
 
 scan_result.json
+
+.hot_registry.json
