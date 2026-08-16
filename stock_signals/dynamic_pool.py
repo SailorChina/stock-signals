@@ -67,27 +67,9 @@ def get_a_share_constituents() -> List[str]:
 
 def get_hk_constituents() -> List[str]:
     """获取港股指数成分股"""
-    cached = _load_cache("HK")
-    if cached:
-        return cached
-    codes: List[str] = []
-    try:
-        import akshare as ak
-        try:
-            df = ak.index_hist_hs_code_name()
-            codes.extend([f"HK.{c.zfill(5)}" for c in df["股票代码"].tolist()])
-            logger.info(f"  AkShare恒生指数: {len(codes)} 只")
-        except Exception as e:
-            logger.warning(f"  AkShare恒生指数失败: {e}")
-        try:
-            df = ak.index_stock_cons_hs300()
-            codes.extend([f"HK.{c.zfill(5)}" for c in df["股票代码"].tolist()])
-            logger.info(f"  AkShare恒生科技: +{len(codes)} 只")
-        except Exception as e:
-            logger.warning(f"  AkShare恒生科技失败: {e}")
-    except ImportError:
-        logger.warning("  AkShare未安装，跳过动态获取")
-    return list(dict.fromkeys(codes))
+    # 港股动态获取暂不可用，使用静态池
+    logger.warning("  港股动态获取暂不可用，使用静态池")
+    return []
 
 def get_us_constituents() -> List[str]:
     """获取美股指数成分股（使用静态池为主）"""
