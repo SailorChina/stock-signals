@@ -89,7 +89,7 @@ def _get_from_akshare(market: str) -> List[str]:
     
     elif market == "HK":
         try:
-            df = ak.hk_stock_spot_em()
+            df = ak.stock_hk_spot_em()
             if df is not None and not df.empty:
                 codes.extend([f"HK.{str(c).zfill(5)}" for c in df["代码"].tolist()[:100]])
         except Exception as e:
