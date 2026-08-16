@@ -148,13 +148,13 @@ def _print_stock(r, index: int, watch: bool = False):
         print(f"      目标1: {r.target_1:.2f} ({dist_t1})  目标2: {r.target_2:.2f} ({dist_t2})")
         print(f"      风险回报: {r.risk_reward:.1f}:1  仓位建议: {r.position_pct:.1f}%")
 
-    if watch:
-        conditions = _gen_entry_conditions(r)
-        if conditions:
-            print(f"      等待条件: {' | '.join(conditions)}")
-        warnings = _gen_risk_warnings(r)
-        if warnings:
-            print(f"      风险提示: {' | '.join(warnings)}")
+    # 入场条件 & 风险提示（推荐和观察都显示）
+    conditions = _gen_entry_conditions(r)
+    if conditions:
+        print(f"      等待条件: {' | '.join(conditions)}")
+    warnings = _gen_risk_warnings(r)
+    if warnings:
+        print(f"      风险提示: {' | '.join(warnings)}")
 
     if r.reasons:
         reasons_display = ", ".join(r.reasons[:5])
