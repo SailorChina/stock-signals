@@ -340,7 +340,7 @@ class TestEpisodicPivot:
         low = close - 1
         volume = np.ones(n) * 100000
         volume[-1] = 500000
-        df = pd.DataFrame({'time': pd.date_range('2024-01-01', periods=100, freq='D').astype(str), 'close': close, 'high': high, 'low': low, 'volume': volume})
+        df = pd.DataFrame({'time': pd.date_range('2024-01-01', periods=n, freq='D').astype(str), 'open': close, 'high': high, 'low': low, 'volume': volume})
         result = detect_episodic_pivot(df)
         assert result.gap_up_pct > 0
         assert result.volume_spike > 1
