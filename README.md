@@ -1,268 +1,195 @@
-﻿# stock-signals v2.4.0 — 股票技术分析 & 买卖信号生成器
+# stock-signals v2.8.0 — 多市场股票技术分析 & 买卖信号生成器
 
-支持美股 / A股 / 港股的多时间框架技术分析 skill，基于富途 OpenAPI 获取实时行情数据。
+基于富途 OpenAPI 的多时间框架技术分析 skill，支持美股 / A股 / 港股实时扫描与选股。
 
-## 功能概览
+> **36/36 单元测试全部通过** | GitHub: [SailorChina/stock-signals](https://github.com/SailorChina/stock-signals)
 
-- **5 级买卖评级**: Buy / Overweight / Hold / Underweight / Sell
-- **多时间框架共振**: 日线 + 周线 + 月线联动分析
-- **支撑阻力位**: 基于 swing point 聚类 + 布林带 + 均线检测
-- **趋势阶段判断**: 吸筹 / 上涨早期 / 上涨 / 派发 / 下跌
-- **交易计划生成**: 建议买入区间、止损位、目标位、风险收益比
-- **五维评分引擎**: 趋势(30%) + 动量(25%) + 量能(20%) + 波动率(15%) + 资金面(10%)
-- **TD Sequential (9转信号)**: 买入/卖出序列检测 + Turn确认
-- **ADX趋势强度**: 趋势跟踪 vs 震荡市判断
-- **MACD/RSI背离检测**: 价格与动量分歧警示
-- **K线形态识别**: 吞噬、射击之星等
-- **缺口分析**: 向上/向下缺口 + 回补状态
-- **波动率市况分类**: 低/正常/高波动率自动判断
-- **智能股票筛选器**: 多市场自动扫描，推荐最佳入场机会
-- **纯确定性计算**: 不依赖 LLM，结果可复现
-- **API 重试 & K线缓存**: 网络不稳定时自动重试，本地缓存加速
-- **批量分析 & CSV 导出**: 一次分析多只股票
-- **完善日志系统**: 结构化日志输出
+---
 
-## 支持的市场
+## 核心功能
 
-| 市场 | 前缀 | 示例 |
+### 技术指标
+| 指标 | 说明 |
+|------|------|
+| MA/EMA | 5/10/20/60/120/200 日均线，金叉/死叉检测 |
+| MACD | DIF/DEA/Hist，金叉/死叉，背离检测 |
+| RSI | 6/12/14/24 周期，超买超卖判断 |
+| KDJ | K/D/J 三线，超买超卖 |
+| BOLL | 布林带上中下轨 + 宽度 |
+| ATR | 14周期真实波幅，动态止损 |
+| OBV | 能量潮，资金流向判断 |
+| ADX | 趋势强度（+DI/-DI），趋势 vs 震荡分类 |
+| VWMA | 成交量加权均线 |
+
+### 高级信号
+| 信号 | 说明 |
+|------|------|
+| **VCP** 波动率收缩 | Mark Minervini SEPA 策略，检测2-6次收缩循环 + 量能萎缩 |
+| **Episodic Pivot** 事件性转折 | Kristjan Qullamaggie 策略，跳空高开 + 量能放大突破 |
+| **TD Sequential** 9转信号 | 9连阴买入 / 9连阳卖出，Turn 确认反转 |
+| **多时间框架共振** | 日/周/月线联动评分，共振看多 +8 分 |
+| **趋势阶段判断** | 吸筹 / 上涨早期 / 上涨 / 派发 / 下跌 |
+| **支撑阻力位** | Swing Point 聚类 + VWAP + 布林带 |
+| **ATR 动态止损** | 1.5×ATR 止损 + 7.5% 硬上限（Minervini 规则） |
+| **RS 相对强度** | 1-99 相对强度评分，RS≥90 加5分 |
+
+### 智能过滤（v2.5+）
+| 规则 | 阈值 | 效果 |
 |------|------|------|
-| 美股 | US. | US.NVDA, US.AAPL, US.DRAM |
-| A股 | SH. / SZ. | SH.600519, SZ.000001 |
-| 港股 | HK. | HK.00700 |
+| RSI 极端超买 | RSI(14) > 75 | 硬拦截 |
+| 距高点过近 | > -2% | 拦截追高 |
+| MA5/MA20 延伸 | > 8% | 拦截过度延伸 |
+| 风险收益比 | RR < 2.0 | 硬拦截 |
+| TD 卖出 Turn | sell_turn | 跳过 |
+| MACD 看跌背离 | bearish | 跳过 |
+| 看跌K线形态 | 吞没/流星线 | 跳过 |
 
-## 安装方法
+### 黑名单过滤（v2.7+）
+- 自动过滤银行股（A股/港股/美股）和 ETF
+- 涵盖 SPY/QQQ/VTI 等主流 ETF 及 JPM/BAC/工行/中行 等银行
 
-### 1. 安装富途 OpenAPI
+### 动态热门股（v2.8+）
+- 扫描时自动从 Futu API 获取每日热门股 TOP 100
+- 与静态池合并去重，补充候选股票
+- API 超时自动降级，不影响扫描
 
+---
+
+## 快速开始
+
+### 1. 环境准备
 ```bash
-pip install futu-api>=10.4.6408
+pip install futu-api>=10.4.6408 pandas numpy
+# 启动富途 OpenD（默认端口 11111）
 ```
 
-### 2. 启动富途 OpenD
-
-确保富途牛牛 OpenD 服务正在运行（默认端口 11111）。
-
-### 3. 安装本 Skill
-
+### 2. 安装 Skill
 ```bash
-# 复制到 Codex skills 目录
 cp -r stock-signals ~/.codex/skills/
 ```
 
-或在 Codex 中使用：
-```
-/plugin install SailorChina/stock-signals
-```
+---
 
 ## 使用方法
 
 ### analyze — 分析单只/多只股票
-
 ```bash
-# 分析单只股票
 python -m stock_signals.cli analyze US.NVDA
-
-# JSON格式输出
-python -m stock_signals.cli analyze US.NVDA --json
-
-# 周线分析
-python -m stock_signals.cli analyze US.NVDA --timeframe 1w
-
-# A股分析
+python -m stock_signals.cli analyze US.QCOM --timeframe 1w
 python -m stock_signals.cli analyze SH.600519
-
-# 港股分析
 python -m stock_signals.cli analyze HK.00700
-
-# 批量分析
-python -m stock_signals.cli analyze US.NVDA US.AAPL SH.600519 --json
-
-# 导出CSV
+python -m stock_signals.cli analyze US.NVDA US.AAPL --json
 python -m stock_signals.cli analyze US.NVDA US.AAPL --csv results.csv
 ```
 
-### scan — 多市场智能选股（新功能）
-
-自动扫描候选股票池，筛选出技术面最佳的入场机会。
-
-**交互式模式**（推荐）— 无参数时弹出菜单：
-
+### scan — 智能选股（推荐）
 ```bash
+# 交互式选择市场（推荐）
 python -m stock_signals.cli scan
-```
 
-```
-  请选择扫描市场:
-  [1] A股（沪深核心龙头）
-  [2] 港股（恒生/恒生科技）
-  [3] 美股（道指/标普500+纳指）
-  [4] 全部市场
-
-  输入选项 (1/2/3/4):
-```
-
-**命令行模式** — 指定市场跳过交互：
-
-```bash
-# 只扫美股
+# 命令行指定市场
 python -m stock_signals.cli scan --markets US
-
-# 只扫A股
 python -m stock_signals.cli scan --markets A
-
-# 只扫港股
 python -m stock_signals.cli scan --markets HK
+python -m stock_signals.cli scan --markets US,HK
 
-# 全市场扫描
-python -m stock_signals.cli scan --markets A,US,HK
+# 调整参数
+python -m stock_signals.cli scan --markets US --min-score 55 --max-picks 5
+python -m stock_signals.cli scan --markets US --json --output report.json
 ```
 
-**参数说明**：
-
-| 参数 | 默认值 | 说明 |
-|------|--------|------|
-| `--markets, -m` | A,US,HK | 市场列表，逗号分隔 |
-| `--min-score` | 60.0 | 最低评分门槛（>=此分才推荐） |
-| `--max-picks` | 3 | 每个市场最多推荐数 |
-| `--delay` | 1.0 | API请求间隔（秒），避免限流 |
-| `--json, -j` | - | JSON格式输出 |
+**参数说明：**
+| 参数 | 默认 | 说明 |
+|------|------|------|
+| `--markets, -m` | A,US,HK | 市场：A=沪深, US, HK |
+| `--min-score` | 60.0 | 推荐门槛（越高越严格） |
+| `--max-picks` | 3 | 每市场最多推荐数 |
+| `--delay` | 1.0 | API 间隔（秒） |
+| `--json, -j` | - | JSON 格式输出 |
 | `--output, -o` | - | 保存结果到文件 |
 
-**筛选逻辑**：
-- 硬门槛：综合评分 >= min_score，多周期共振 aligned/strong_up
-- 加分项：MA金叉、MACD金叉、9转买入完成、OBV上升、风险收益比>2:1
-- 排序：评分优先，共振次之，趋势阶段再次
+---
 
-## 输出示例
+## 输出解读
 
 ### analyze 输出
+显示评级、综合得分、五维评分条、技术指标详情、多时间框架共振、交易计划（入场/止损/目标/RR比/仓位）、入场条件提示、风险提示。
 
-```
-================================================================
-  US.DRAM  技术分析 & 买卖信号
-  时间: 2026-08-14 00:00:00
-================================================================
-
-  评级: Overweight (偏多)
-  综合得分: 60.6/100
-  置信度: medium (中)
-
-  各维度评分
-    趋势: [████████░░░░░░░░] 52  (40%)
-    动量: [███████████░░░░░] 72  (30%)
-    量能: [███████████░░░░░] 70  (15%)
-    波动率: [███████░░░░░░░░░] 45  (10%)
-    资金面: [██████████░░░░░░] 65  (5%)
-
-  技术指标
-    最新价: 57.32  MA5=53.91 MA10=53.13 MA20=53.01 MA60=60.42
-    MACD: DIF=-1.2469 DEA=-2.2511 Hist=2.0084
-    RSI:  6=80.8 12=73.1 14=57.1
-    KDJ:  K=76.5 D=66.8 J=96.1
-    BOLL: 上=60.35 中=53.01 下=45.68 宽=27.7%
-    ADX:  23.4  +DI=1.3 -DI=0.8 (多)
-
-  BUY 信号 (2个):
-    + 短中期均线多头排列
-    + 特大单净流入 $2027万
-
-  多时间框架共振
-    日线: Overweight (偏多) (60.6)  周线: Hold (观望) (55.5)  月线: Hold (观望) (50.0)
-    共振: aligned (共振看多)  置信度调整: +8
-
-  交易计划
-    建议入场: 53.01
-    止损位:   48.72
-    第一目标: 76.80
-    第二目标: 84.13
-    风险收益比: 7.25:1
-    建议仓位:   3.0%
-```
-
-### scan 输出
-
+### scan 输出示例
 ```
 ============================================================
-  每日股票推荐报告  2026-08-15
+  每日股票推荐报告  2026-08-16
 ============================================================
-  扫描时间: 2026-08-15 21:20:17
-  分析 58 只 | 推荐 3 只 | 观察 0 只
+  扫描时间: 2026-08-16 21:46:38
+  分析 43 只 | 推荐 5 只 | 观察 0 只
 
 ────────────────────────────────────────────────────────────
   美股
 ────────────────────────────────────────────────────────────
-  推荐（3只）:
-  1. US.BAC  价格: 64.49
-      评级: Overweight (偏多) · 分: 65.4 · 共振: 共振看多
-      入场: 62.61  止损: 58.28  目标1: 66.42  目标2: 68.40  RR: 1.3:1
-      理由: MACD 金叉, 9转买入序列完成
-  2. US.MU  价格: 971.66
-      评级: Overweight (偏多) · 分: 58.0 · 共振: 共振看多
-      入场: 890.05  止损: 825.91  目标1: 1132.16  目标2: 1262.10  RR: 5.8:1
-      理由: MA5/MA10 金叉, MACD 金叉, OBV 上升，资金流入
-  ...
+  推荐（5只）:
+  1. US.MU 美光科技 · 存储芯片  现价: 971.66
+      评级: Overweight (偏多) · 分: 63.5 · 共振: 共振看多
+      入场: 890.05 (-8.4%)  止损: 923.08 (-5.0%)
+      目标1: 1132.16 (+16.5%)  目标2: 1327.07 (+36.6%)
+      风险回报: 4.5:1  仓位建议: 3.0%
+      等待条件: MACD金叉确认，多头动能较强 | OBV资金持续流入
+      指标: MA5/MA10 金叉, MACD 金叉, OBV 上升，资金流入
 ```
 
-## 文件结构
+---
 
-```
-stock-signals/
-  pyproject.toml           # Python 包配置 (v2.4.0)
-  README.md                # 项目说明文档
-  SKILL.md                 # Codex skill 定义
-  .gitignore
-  stock_signals/
-    __init__.py            # 包入口，公开 API
-    config.py              # 配置系统
-    indicators.py          # 技术指标计算 + K线获取 + 缓存
-    scoring.py             # 五维评分引擎
-    screener.py            # 多市场股票筛选器 (v2.3.2)
-    reporter.py            # 推荐报告生成器 (v2.3.2)
-    _resonance.py          # 多时间框架共振
-    _sr.py                 # 支撑阻力 + 交易计划
-    cli.py                 # 命令行入口 (analyze + scan 子命令)
-  tests/
-    test_stock_signals.py  # 单元测试 (17 tests)
+## 每日使用流程
+
+```bash
+# 1. 扫描推荐
+python -m stock_signals.cli scan --markets US --min-score 55 --max-picks 5
+
+# 2. 深入分析感兴趣的股票
+python -m stock_signals.cli analyze US.QCOM
+python -m stock_signals.cli analyze US.MU --timeframe 1w
+
+# 3. 保存报告
+python -m stock_signals.cli scan --markets US --json --output daily_scan.json
 ```
 
-## 依赖
+---
 
-- Python 3.10+
-- pandas
-- numpy
-- futu-api >= 10.4.6408
-- 富途 OpenD 服务运行中（默认 127.0.0.1:11111）
+## 技术架构
 
-## 版本历史
+```
+stock_signals/
+├── __init__.py          # 包入口，版本 v2.8.0
+├── cli.py               # 命令行接口 (analyze/scan)
+├── indicators.py        # 技术指标计算
+├── scoring.py           # 五维评分引擎
+├── screener.py          # 筛选引擎 (股票池+热门股+黑名单)
+├── reporter.py          # 报告生成器
+├── _sr.py               # 支撑阻力位 + 交易计划
+├── _resonance.py        # 多时间框架共振
+├── _vcp.py              # VCP 波动率收缩检测
+├── _episodic_pivot.py   # Episodic Pivot 检测
+├── _info.py             # 股票信息库 (中文名/板块/简介)
+└── config.py            # 配置管理
+```
 
-### v2.4.0 (2026-08-15)
-- **修复**: 版本不一致 (__init__.py/pyproject.toml/cli.py 统一为 2.3.3)
-- **修复**: cli.py 模块导入警告 (改用绝对导入)
-- **修复**: __init__.py 循环导入 (移除 from .cli import main)
-- **修复**: pyproject.toml BOM 编码问题
-- **优化**: 扫描限流 — 默认延迟 0.3s→1.0s，API调用间增加 0.8s 间隔
-- **新增**: API 限流自动重试机制（指数退避）
+---
 
-### v2.3.2 (2026-08-15)
-- **新增**: scan 子命令，支持 --markets/--min-score/--max-picks/--delay 参数
-- **新增**: A股/港股/美股三大市场股票池（约 150 只核心标的）
-- **新增**: 每日推荐报告生成器（reporter.py）
-- **修复**: TD Sequential 计算逻辑缺失问题
-- **修复**: cli.py 重复显示问题
+## 常见问题
 
-### v2.3.1 (2026-08-15)
-- **新增**: TD Sequential (9转信号) 买入/卖出序列 + Turn确认
-- **修复**: TD计算逻辑缺失导致的测试失败
+**Q: 连接失败 `Connection refused to 127.0.0.1:11111`**
+A: 启动富途 OpenD 服务。
 
-### v2.3.0 (2026-08-15)
-- **新增**: ADX趋势强度指标 (+DI/-DI方向判断)
-- **新增**: MACD/RSI背离检测
-- **新增**: K线形态识别（吞噬、射击之星等）
-- **新增**: 缺口分析（向上/向下缺口 + 回补状态）
-- **新增**: 波动率市况分类（低/正常/高）
-- **新增**: 动态权重调整（根据波动率市况）
-- **新增**: 7个新单元测试
+**Q: API 限流**
+A: 增加 `--delay` 参数，如 `--delay 1.5`。
+
+**Q: 无推荐股票**
+A: 降低 `--min-score` 到 50 或扫描更大范围。
+
+**Q: 热门股获取失败**
+A: 自动降级到静态池，不影响扫描。
+
+---
 
 ## 免责声明
 
-> 本工具仅供技术参考，不构成任何投资建议。股票市场存在风险，投资需谨慎。请结合自身风险承受能力，结合基本面、消息面综合判断。
+本工具仅供技术参考，不构成任何投资建议。股票市场存在风险，投资需谨慎。
