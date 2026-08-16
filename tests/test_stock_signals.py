@@ -310,7 +310,7 @@ class TestVCP:
         low = close - np.abs(np.random.randn(n) * 2)
         volume = np.random.randint(100000, 1000000, n).astype(float)
         volume[45:70] = volume[45:70] * 0.5
-        df = pd.DataFrame({'close': close, 'high': high, 'low': low, 'volume': volume})
+        df = pd.DataFrame({'time': pd.date_range('2024-01-01', periods=100, freq='D').astype(str), 'close': close, 'high': high, 'low': low, 'volume': volume})
         result = detect_vcp(df)
         assert hasattr(result, 'detected')
         assert hasattr(result, 'contractions')
