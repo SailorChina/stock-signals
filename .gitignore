@@ -27,3 +27,5 @@ Thumbs.db
 # Config & cache
 config/*.json
 ~/.stock-signals/
+
+_us_result.json
