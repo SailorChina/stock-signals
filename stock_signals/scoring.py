@@ -105,6 +105,30 @@ def score_trend(ind) -> Tuple[float, str]:
         score -= 10
         reasons.append("MA5/MA10 死叉")
 
+    # 52周位置检查 (Minervini Trend Template)
+    if getattr(ind, 'distance_from_52w_high', 0) > 0:
+        dist_high = ind.distance_from_52w_high
+        dist_low = ind.distance_from_52w_low
+        if dist_high > 5:
+            score += 8
+            reasons.append(f"距52周高点仅{abs(dist_high):.1f}%，处于强势区")
+        elif dist_high > 15:
+            score -= 5
+            reasons.append(f"距52周高点{abs(dist_high):.1f}%，仍有上涨空间")
+        if dist_low > 30:
+            score += 5
+            reasons.append(f"距52周低点+{dist_low:.1f}%，非底部风险区")
+        elif dist_low < 5:
+            score -= 8
+            reasons.append(f"距52周低点仅{dist_low:.1f}%，接近底部风险")
+    
+    # Trend Template 验证结果
+    if getattr(ind, 'trend_template_pass', True):
+        score += 5
+        reasons.append("通过8点趋势模板验证，趋势健康")
+    else:
+        reasons.append("未通过趋势模板验证，趋势可能不健康")
+    
     # ADX trend strength adjustment
     if ind.adx > 0:
         if ind.adx < 20:
@@ -353,6 +377,13 @@ def compute_rating(ind, capital=None, short_pct=None) -> dict:
     else:
         confidence = "medium"
 
+    # RS Rating 加成 (Minervini)
+    rs_rating = getattr(ind, 'rs_rating', 0)
+    if rs_rating >= 90:
+        final_score += 5
+    elif rs_rating >= 80:
+        final_score += 3
+    
     # 确定评级
     if final_score >= 70:
         rating = "Buy"

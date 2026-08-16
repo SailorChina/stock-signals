@@ -259,6 +259,19 @@ class Indicators:
     vcp_pattern_width: float = 0.0    # 模式宽度 (%)
     vcp_volume_drying: bool = False   # 成交量是否萎缩
     vcp_quality: str = "none"          # 质量: strong/medium/weak/none
+    
+    # ── 相对强度 (RS) 评分 (Minervini RS Rating) ──────────────────
+    rs_rating: int = 0                  # 相对强度评分 1-99
+    rs_percentile: float = 0.0          # 价格处于历史Percentile
+    distance_from_52w_high: float = 0.0 # 距52周高点距离 (%)
+    distance_from_52w_low: float = 0.0  # 距52周低点距离 (%)
+    trend_template_pass: bool = False    # 是否通过8点趋势模板
+    # ── Episodic Pivot (事件性转折) ────────────────────────────────
+    ep_detected: bool = False           # 是否检测到事件性转折
+    ep_gap_up_pct: float = 0.0          # 跳空高开幅度 (%)
+    ep_volume_spike: float = 0.0        # 成交量放大倍数
+    ep_catalyst_score: float = 0.0      # 催化剂评分
+    ep_quality: str = "none"            # 质量: strong/medium/weak/none
 
 
 
@@ -1086,6 +1099,48 @@ def compute_indicators(df: pd.DataFrame, code: str = "", ktype: str = "1d") -> I
         ind.vcp_pattern_width = 0.0
         ind.vcp_volume_drying = False
         ind.vcp_quality = "none"
+
+    # ── 相对强度 (RS) 评分 ──────────────────────────────────────────
+    # 计算52周高点和低点
+    _52w = min(252, n)
+    if n >= 20:
+        _recent_high = float(np.max(close[-252:])) if n >= 252 else float(np.max(close))
+        _recent_low = float(np.min(close[-252:])) if n >= 252 else float(np.min(close))
+        if _recent_high > 0:
+            ind.distance_from_52w_high = round((ind.last_close - _recent_high) / _recent_high * 100, 2)
+            ind.distance_from_52w_low = round((ind.last_close - _recent_low) / _recent_low * 100, 2)
+            ind.rs_percentile = round((ind.last_close - _recent_low) / (_recent_high - _recent_low) * 100, 1) if _recent_high > _recent_low else 50.0
+            ind.rs_rating = int(ind.rs_percentile)
+    
+    # Trend Template 验证 (Minervini 8点模板)
+    _passed = True
+    if ind.ma200 > 0:
+        if close[-1] <= ind.ma20: _passed = False
+        if close[-1] <= ind.ma60: _passed = False
+        if close[-1] <= ind.ma200: _passed = False
+        if ind.ma60 <= ind.ma200: _passed = False
+        if n >= 200:
+            _ma200_prev = float(np.mean(close[-201:-1]))
+            if ind.ma200 <= _ma200_prev: _passed = False
+    ind.trend_template_pass = _passed
+
+
+    # ── Episodic Pivot (事件性转折) 检测 ───────────────────────────
+    try:
+        from ._episodic_pivot import detect_episodic_pivot
+        ep_res = detect_episodic_pivot(df, lookback=60)
+        ind.ep_detected = ep_res.detected
+        ind.ep_gap_up_pct = ep_res.gap_up_pct
+        ind.ep_volume_spike = ep_res.volume_spike
+        ind.ep_catalyst_score = ep_res.catalyst_score
+        ind.ep_quality = ep_res.quality
+    except Exception:
+        ind.ep_detected = False
+        ind.ep_gap_up_pct = 0.0
+        ind.ep_volume_spike = 0.0
+        ind.ep_catalyst_score = 0.0
+        ind.ep_quality = "none"
+
     return ind
 
 

@@ -16,6 +16,7 @@ from .scoring import compute_rating, RATINGS
 from ._resonance import compute_timeframe_resonance
 from ._sr import compute_support_resistance, generate_trade_plan
 from ._vcp import detect_vcp
+from ._episodic_pivot import detect_episodic_pivot
 from .config import config
 
 
@@ -166,6 +167,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
             phase = "unknown"
         sr = compute_support_resistance(df)
         vcp_res = detect_vcp(df, lookback=100)
+        ep_res = detect_episodic_pivot(df, lookback=60)
         tp = generate_trade_plan(ind, sr, phase, vcp_res)
         # v2.5: VCP 模式增强 - 成交量确认
         if vcp_res.detected and not vcp_res.volume_drying:
@@ -224,6 +226,8 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
             reasons.append("\u9ad8\u6ce2\u52a8\u7387\uff0c\u8d8b\u52bf\u660e\u663e")
         if ind.obv_trend == "up":
             reasons.append("OBV \u4e0a\u5347\uff0c\u8d44\u91d1\u6d41\u5165")
+        if ep_res.detected:
+            reasons.append(f"事件性转折(跳空{ep_res.gap_up_pct:.1f}%+成交量{ep_res.volume_spike:.1f}x)")
         if tp and tp.risk_reward >= 2.0:
             reasons.append(f"\u98ce\u9669\u6536\u76ca\u6bd4 {tp.risk_reward:.1f}:1")
         return ScanResult(
