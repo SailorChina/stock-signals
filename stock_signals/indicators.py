@@ -107,34 +107,6 @@ def _reset_ctx():
             pass
         _ctx = None
 
-# ============================================================
-# FUTU OPENAPI 限流规则（重点标记，禁止修改）
-# 限制: 每 30 秒最多 60 次 K 线请求 (request_history_kline)
-# 说明: 每次 create_quote_context() 新建连接都计入请求配额
-# 策略: 模块级复用同一个 context 对象，避免重复建连
-# ============================================================
-_ctx = None  # 模块级 Futu 行情上下文，跨调用复用
-
-def _get_ctx():
-    """获取或创建复用的行情上下文"""
-    global _ctx
-    if _ctx is None:
-        try:
-            _ctx = create_quote_context()
-        except Exception as e:
-            _ctx = None
-            raise RuntimeError(f"无法连接 Futu OpenD: {e}")
-    return _ctx
-
-def _reset_ctx():
-    """重置上下文（出错时调用，下次自动重建）"""
-    global _ctx
-    if _ctx is not None:
-        try:
-            _ctx.close()
-        except Exception:
-            pass
-        _ctx = None
 
 def fetch_kline(code: str, ktype: str = "1d", num: int = 300) -> pd.DataFrame:
     kl_type = KTYPE_MAP.get(ktype, KLType.K_DAY)

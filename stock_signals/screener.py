@@ -368,7 +368,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
         if _is_blacklisted(code):
             logger.info(f"  {code} 在黑名单中(银行/ETF)，跳过")
             return None
-        time.sleep(min(delay, 0.3))
+        time.sleep(min(delay, 0.2))
         df = fetch_kline(code, "1d", num=300)
         time.sleep(0.2)
         if df is None or df.empty or len(df) < 60:
@@ -554,7 +554,7 @@ def scan(markets=None, config=None, output_json=False, output_file=""):
 def _analyze_batch(codes, delay):
     """并行分析一批股票"""
     results = []
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=8) as executor:
         futures = {executor.submit(_analyze_one, code, delay=delay): code for code in codes}
         for future in as_completed(futures):
             try:
@@ -584,7 +584,7 @@ def scan_parallel(markets=None, config=None, output_json=False, output_file=""):
         market_codes = _get_market_codes(market)
         logger.info(f"  {MARKET_NAMES.get(market, market)}: {len(market_codes)} 只候选")
         
-        batch_size = 50
+        batch_size = 100
         for i in range(0, len(market_codes), batch_size):
             batch = market_codes[i:i+batch_size]
             batch_results = _analyze_batch(batch, config.max_delay)

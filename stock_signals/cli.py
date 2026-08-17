@@ -19,7 +19,7 @@ try:
     )
     from stock_signals._resonance import compute_timeframe_resonance
     from stock_signals._sr import compute_support_resistance, generate_trade_plan
-    from stock_signals.screener import scan, scan_parallel, ScanConfig
+    from stock_signals.screener import scan_parallel, ScanConfig
     from stock_signals.reporter import print_scan_report
 except ImportError:
     pass
@@ -408,7 +408,7 @@ def main():
     p_scan.add_argument("--markets", "-m", default="A,US,HK", help="市场: A,US,HK")
     p_scan.add_argument("--min-score", type=float, default=60.0, help="最低评分门槛")
     p_scan.add_argument("--max-picks", type=int, default=3, help="每市场最多推荐数")
-    p_scan.add_argument("--delay", type=float, default=0.5, help="请求间隔(秒)")
+    p_scan.add_argument("--delay", type=float, default=0.3, help="请求间隔(秒)，并行模式建议0.3-0.5")
     p_scan.add_argument("--json", "-j", action="store_true", help="JSON output")
     p_scan.add_argument("--output", "-o", type=str, help="保存结果到文件")
     p_scan.add_argument("--log-level", default="INFO", choices=["DEBUG","INFO","WARNING","ERROR"])
@@ -448,7 +448,7 @@ def main():
             max_per_market=args.max_picks,
             max_delay=args.delay,
         )
-        result = scan(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
+        result = scan_parallel(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
         if not args.json:
             print_scan_report(result)
         sys.exit(0)
