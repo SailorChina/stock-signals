@@ -451,6 +451,30 @@ def generate_signals(ind, rating: str, capital=None, short_pct=None) -> List[dic
 # 资金数据获取
 # ---------------------------------------------------------------------------
 
+# FUTU OPENAPI 限流规则（重点标记，禁止修改）
+# 限制: 每 30 秒最多 60 次 K 线请求 (request_history_kline)
+# get_capital_data 和 get_short_data 通过同一 context 复用，减少建连次数
+_ctx_cap = None
+
+def _get_cap_ctx():
+    global _ctx_cap
+    if _ctx_cap is None:
+        try:
+            _ctx_cap = create_quote_context()
+        except Exception as e:
+            _ctx_cap = None
+            raise RuntimeError(f"无法连接 Futu OpenD: {e}")
+    return _ctx_cap
+
+def _reset_cap_ctx():
+    global _ctx_cap
+    if _ctx_cap is not None:
+        try:
+            _ctx_cap.close()
+        except Exception:
+            pass
+        _ctx_cap = None
+
 def get_capital_data(code: str) -> dict:
     """从 Futu API 获取资金分布数据"""
     try:
@@ -458,7 +482,7 @@ def get_capital_data(code: str) -> dict:
         from common import create_quote_context, check_ret, safe_close
         ctx = None
         try:
-            ctx = create_quote_context()
+            ctx = _get_cap_ctx()
             ret, data = ctx.get_capital_distribution(code)
             check_ret(ret, data, ctx, "获取资金分布")
             if data is None or data.empty:
@@ -496,7 +520,7 @@ def get_short_data(code: str) -> Optional[float]:
         from common import create_quote_context, check_ret, safe_close
         ctx = None
         try:
-            ctx = create_quote_context()
+            ctx = _get_cap_ctx()
             ret, data, _ = ctx.get_daily_short_volume(code, num=1)
             check_ret(ret, data, ctx, "获取卖空数据")
             if data is None or data.empty:
