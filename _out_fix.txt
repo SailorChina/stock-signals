@@ -1,0 +1,6 @@
+_US_HOT_STOCKS_POOL 数量: 208
+2026-08-17 13:38:31,704 | 33532 | 32016 | [open_context_base.py:411] _init_connect_sync: New connect ready: conn=7494991029799208705(1) context=<futu.quote.open_quote_context.OpenQuoteContext object at 0x000002307CD37980>
+WARNING:stock-signals:  热门股API错误 US: 'str' object cannot be interpreted as an integer，尝试备用数据源
+WARNING:stock-signals:  热门股获取失败 US: UnboundLocalError: cannot access local variable 'data' where it is not associated with a value，使用静态池
+热门股数量: 0
+未获取到热门股
