@@ -174,7 +174,12 @@ def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
         orig_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(15)
         try:
-            ret, (all_count, data) = ctx.get_top_movers_rank(futu_mkt, count=top_n)
+            ret, result = ctx.get_top_movers_rank(futu_mkt, count=top_n)
+            if ret != 0:
+                logger.warning(f"  热门股API错误 {market}: {result}")
+                result = None
+            else:
+                all_count, data = result
             check_ret(ret, data, ctx, market + " HotStocks")
             if data is not None and not data.empty:
                 if "security" in data.columns:
