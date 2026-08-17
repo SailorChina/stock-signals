@@ -288,8 +288,8 @@ def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
         orig_timeout = socket.getdefaulttimeout()
         socket.setdefaulttimeout(15)
         try:
-            ret, result = ctx.get_top_movers_rank(futu_mkt, count=top_n)
             data = None
+            ret, result = ctx.get_top_movers_rank(futu_mkt, count=int(top_n))
             if ret != 0:
                 logger.warning(f"  热门股API错误 {market}: {result}，尝试备用数据源")
                 result = None

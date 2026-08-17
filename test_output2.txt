@@ -1,4 +1,0 @@
-2026-08-17 12:37:42,781 | 33248 | 30172 | [open_context_base.py:411] _init_connect_sync: New connect ready: conn=7494975725104822267(1) context=<futu.quote.open_quote_context.OpenQuoteContext object at 0x00000174E2383DA0>
-WARNING:stock-signals:  热门股API错误 US: 'str' object cannot be interpreted as an integer
-WARNING:stock-signals:  热门股获取失败 US: UnboundLocalError: cannot access local variable 'data' where it is not associated with a value，使用静态池
-热门股数量: 0

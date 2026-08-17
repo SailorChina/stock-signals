@@ -13,6 +13,7 @@ from typing import List, Optional
 
 try:
     from stock_signals.indicators import fetch_kline, compute_indicators, signal_summary
+    from stock_signals._info import get_stock_info
     from stock_signals.scoring import (
         compute_rating, generate_signals,
         get_capital_data, get_short_data,
@@ -80,7 +81,11 @@ def print_text_report(result, code):
 
     print()
     print("=" * 64)
-    print(f"  {_color(code, 'cyan', True)}  技术分析 & 买卖信号")
+    info = get_stock_info(code)
+    cn_name = info.get("name", "")
+    sector = info.get("sector", "")
+    meta = (f" ({cn_name} · {sector})" if cn_name and sector else (f" ({cn_name})" if cn_name else ""))
+    print(f"  {_color(code, 'cyan', True)}  技术分析 & 买卖信号{meta}")
     print(f"  时间: {result.get('timestamp', 'N/A')}")
     print("=" * 64)
     print()

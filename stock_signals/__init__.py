@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """stock_signals package v2.8.4"""
-__version__ = "2.10.0"
+__version__ = "2.10.1"
 __author__ = "SailorChina"
 
 from .indicators import fetch_kline, compute_indicators, Indicators, signal_summary
