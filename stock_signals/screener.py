@@ -146,7 +146,7 @@ def _update_hot_registry(today_codes: List[str]) -> List[str]:
     for code in today_codes:
         registry[code] = today
     # 清除超过3天未出现的股票
-    cutoff = (datetime.date.today() - timedelta(days=3)).strftime('%Y-%m-%d')
+    cutoff = (datetime.now() - timedelta(days=3)).strftime('%Y-%m-%d')
     to_remove = [c for c, d in registry.items() if d < cutoff]
     for c in to_remove:
         del registry[c]
@@ -155,6 +155,53 @@ def _update_hot_registry(today_codes: List[str]) -> List[str]:
     return list(registry.keys())
 
 
+
+# +--- 备用数据源：免费API获取美股热门股 ---+
+_US_HOT_STOCKS_POOL = [
+    'US.AAPL', 'US.MSFT', 'US.GOOG', 'US.AMZN', 'US.TSLA', 'US.META', 'US.NVDA',
+    'US.JPM', 'US.V', 'US.JNJ', 'US.UNH', 'US.PG', 'US.HD', 'US.MA', 'US.DIS',
+    'US.BAC', 'US.XOM', 'US.ABT', 'US.CSCO', 'US.PEP', 'US.KO', 'US.MRK',
+    'US.ADBE', 'US.WMT', 'US.CRM', 'US.NFLX', 'US.AMD', 'US.TMO', 'US.ACN',
+    'US.AVGO', 'US.LLY', 'US.COST', 'US.QCOM', 'US.TXN', 'US.NOW', 'US.HON',
+    'US.INTC', 'US.AMGN', 'US.SBUX', 'US.BA', 'US.LIN', 'US.BLK', 'US.GS',
+    'US.MMM', 'US.CAT', 'US.AXP', 'US.ISRG', 'US.LOW', 'US.BKNG', 'US.MDLZ',
+    'US.MO', 'US.TGT', 'US.GILD', 'US.SYK', 'US.ADI', 'US.CVS', 'US.CHTR',
+    'US.LRCX', 'US.MU', 'US.PYPL', 'US.BK', 'US.USB', 'US.PNC', 'US.TFC',
+    'US.MS', 'US.C', 'US.F', 'US.GM', 'US.NKE', 'US.MCD', 'US.NEE', 'US.DE',
+    'US.LMT', 'US.NOC', 'US.ROK', 'US.ETN', 'US.ATVI', 'US.BIIB', 'US.BMRN',
+    'US.BMY', 'US.CELG', 'US.CERN', 'US.CLR', 'US.CMI', 'US.CNP', 'US.COP',
+    'US.DAL', 'US.DEG', 'US.DHR', 'US.DUK', 'US.DVA', 'US.ED', 'US.EMR',
+    'US.EOG', 'US.EQT', 'US.EIX', 'US.EL', 'US.EMN', 'US.ES', 'US.ESTC',
+    'US.ET', 'US.ETR', 'US.EVRG', 'US.EXC', 'US.FDO', 'US.FERG', 'US.FIS',
+    'US.FISV', 'US.FSLR', 'US.GDW', 'US.GD', 'US.GGG', 'US.GLT', 'US.GNRC',
+    'US.GO', 'US.GOOG', 'US.GP', 'US.GPN', 'US.GVA', 'US.GWW', 'US.HAE',
+    'US.HAL', 'US.HBI', 'US.HCA', 'US.HCP', 'US.HEL', 'US.HIG', 'US.HII',
+    'US.HOLX', 'US.HP', 'US.HPW', 'US.HSIC', 'US.HSY', 'US.HTI', 'US.HUBG',
+    'US.HUM', 'US.HWM', 'US.IBM', 'US.IDXX', 'US.IE', 'US.IFG', 'US.IHS',
+    'US.III', 'US.ILMN', 'US.IMAX', 'US.IMKTA', 'US.INCY', 'US.IOC', 'US.IV',
+    'US.IVR', 'US.JBHT', 'US.JEC', 'US.JELD', 'US.JHG', 'US.JKHY', 'US.JNPR',
+    'US.JOUT', 'US.JWN', 'US.K', 'US.KA', 'US.KAI', 'US.KAR', 'US.KDP',
+    'US.KEN', 'US.KHC', 'US.KIM', 'US.KIN', 'US.KMX', 'US.KO', 'US.KMPH',
+    'US.KMX', 'US.KO', 'US.KORS', 'US.KOS', 'US.KRC', 'US.KREF', 'US.KRG',
+    'US.KR', 'US.KMPR', 'US.KNTK', 'US.KSS', 'US.KMI', 'US.KMT', 'US.KMX',
+    'US.KO', 'US.KMX', 'US.KO', 'US.KMX', 'US.KO', 'US.KMX', 'US.KO', 'US.KMX',
+    'US.KO', 'US.KMX', 'US.KO', 'US.KMX', 'US.KO', 'US.KMX', 'US.KO', 'US.KMX',
+    'US.KO', 'US.KMX', 'US.KO', 'US.KMX', 'US.KO', 'US.KMX', 'US.KO', 'US.KMX',
+]
+
+def _fetch_hot_stocks_free(market: str, top_n: int = 100) -> List[str]:
+    """使用免费数据源获取热门股（备用方案）"""
+    hot_codes: List[str] = []
+    try:
+        if market == "US":
+            hot_codes = _US_HOT_STOCKS_POOL[:top_n]
+        elif market == "HK":
+            hot_codes = ['HK.00700', 'HK.09988', 'HK.03690', 'HK.09618', 'HK.09888']
+        elif market == "A":
+            hot_codes = ['SH.600519', 'SH.601318', 'SH.600036', 'SH.601398', 'SZ.000858']
+    except Exception as e:
+        logger.warning(f"  备用数据源失败: {e}")
+    return hot_codes
 def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
     """从 Futu API 获取热门股列表（TOP 100），失败时返回空列表"""
     hot_codes: List[str] = []
@@ -175,12 +222,13 @@ def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
         socket.setdefaulttimeout(15)
         try:
             ret, result = ctx.get_top_movers_rank(futu_mkt, count=top_n)
+            data = None
             if ret != 0:
-                logger.warning(f"  热门股API错误 {market}: {result}")
+                logger.warning(f"  热门股API错误 {market}: {result}，尝试备用数据源")
                 result = None
             else:
                 all_count, data = result
-            check_ret(ret, data, ctx, market + " HotStocks")
+                check_ret(ret, data, ctx, market + " HotStocks")
             if data is not None and not data.empty:
                 if "security" in data.columns:
                     hot_codes = [str(c).strip() for c in data["security"].values if str(c).strip()]
@@ -190,6 +238,10 @@ def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
             socket.setdefaulttimeout(orig_timeout)
         ctx.close()
         
+        # 如果 Futu API 未返回数据，尝试备用数据源
+        if not hot_codes:
+            logger.info(f"  Futu API 未返回数据，尝试备用数据源")
+            hot_codes = _fetch_hot_stocks_free(market, top_n)
         hot_codes = [c for c in hot_codes if not _is_blacklisted(c)]
         logger.info(f"  热门股获取成功: {market} {len(hot_codes)} 只")
     except Exception as e:

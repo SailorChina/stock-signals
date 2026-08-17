@@ -1,0 +1,64 @@
+INFO:stock-signals:开始扫描 ['US'] 市场...
+2026-08-17 13:36:24,679 | 33936 | 23256 | [open_context_base.py:411] _init_connect_sync: New connect ready: conn=7494990497015272658(1) context=<futu.quote.open_quote_context.OpenQuoteContext object at 0x000001658A92B530>
+WARNING:stock-signals:  热门股API错误 US: 'str' object cannot be interpreted as an integer，尝试备用数据源
+WARNING:stock-signals:  热门股获取失败 US: UnboundLocalError: cannot access local variable 'data' where it is not associated with a value，使用静态池
+INFO:stock-signals:  美股: 43 只候选
+2026-08-17 13:36:24,981 | 33936 | 23256 | [open_context_base.py:411] _init_connect_sync: New connect ready: conn=7494990498288144481(2) context=<futu.quote.open_quote_context.OpenQuoteContext object at 0x000001658A0836E0>
+WARNING:stock-signals:  US.NVDA 距高点仅4.7%，跳过(追高风险)
+WARNING:stock-signals:  US.AAPL TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.MSFT TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.GOOG TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.AMZN TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.META TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.AVGO TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.CSCO TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.ORCL TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.AMAT TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.ASML 距高点仅7.7%，跳过(追高风险)
+WARNING:stock-signals:  US.QCOM K线形态阴包阳(看跌)，看跌，跳过
+WARNING:stock-signals:  US.MCD TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.NKE TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.TGT 距高点仅1.3%，跳过(追高风险)
+WARNING:stock-signals:  US.KO 距高点仅3.5%，跳过(追高风险)
+WARNING:stock-signals:  US.JNJ 距高点仅5.3%，跳过(追高风险)
+WARNING:stock-signals:  US.PFE 距高点仅3.6%，跳过(追高风险)
+WARNING:stock-signals:  US.UNH TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.LLY 距高点仅5.4%，跳过(追高风险)
+WARNING:stock-signals:  US.ABBV 距高点仅6.7%，跳过(追高风险)
+WARNING:stock-signals:  US.MRK 距高点仅0.1%，跳过(追高风险)
+WARNING:stock-signals:  US.BMY 距高点仅6.3%，跳过(追高风险)
+WARNING:stock-signals:  US.AMGN 距高点仅1.6%，跳过(追高风险)
+WARNING:stock-signals:  US.HON TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.CAT K线形态流星线(看跌)，看跌，跳过
+WARNING:stock-signals:  US.BA TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.DE TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.FCX 距高点仅7.8%，跳过(追高风险)
+WARNING:stock-signals:  US.NEM MACD看跌背离，动量衰竭，跳过
+WARNING:stock-signals:  US.CP 距高点仅1.2%，跳过(追高风险)
+WARNING:stock-signals:  US.COP 距高点仅6.0%，跳过(追高风险)
+WARNING:stock-signals:  US.OXY TD卖出Turn确认，看跌反转，跳过
+INFO:stock-signals:扫描完成: 分析 43 只, 失败 33 只, 推荐 2 只, 观察 5 只
+Traceback (most recent call last):
+  File "D:\Backup\Documents\ChatGPT\AI\stock-signals\_test_scan.py", line 7, in <module>
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 202, in encode
+    chunks = list(chunks)
+             ^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 326, in _iterencode_list
+    yield from chunks
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type ScanResult is not JSON serializable

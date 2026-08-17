@@ -1,0 +1,6 @@
+2026-08-17 12:41:03,851 | 33004 | 33084 | [open_context_base.py:411] _init_connect_sync: New connect ready: conn=7494976568459060343(1) context=<futu.quote.open_quote_context.OpenQuoteContext object at 0x000001B3D65A0AD0>
+Traceback (most recent call last):
+  File "D:\Backup\Documents\ChatGPT\AI\stock-signals\_tmp5.py", line 5, in <module>
+    ret, data = ctx.get_stock_code(ScrMarket.US)
+                ^^^^^^^^^^^^^^^^^^
+AttributeError: 'OpenQuoteContext' object has no attribute 'get_stock_code'. Did you mean: 'get_stock_quote'?
