@@ -507,7 +507,7 @@ def get_capital_data(code: str) -> dict:
                 "sml_in": sml_in, "sml_out": sml_out,
             }
         finally:
-            safe_close(ctx)
+            pass
     except Exception as e:
         print(f"[WARN] 获取资金数据失败 {code}: {e}", file=sys.stderr)
         return {}
@@ -529,7 +529,7 @@ def get_short_data(code: str) -> Optional[float]:
             short_pct = float(row.get("short_percent", 0) or 0)
             return short_pct
         finally:
-            safe_close(ctx)
+            pass
     except Exception:
         return None
 
