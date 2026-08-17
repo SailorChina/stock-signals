@@ -1,0 +1,239 @@
+INFO:stock-signals:开始扫描 ['US'] 市场...
+2026-08-17 12:37:12,229 | 29912 | 33148 | [open_context_base.py:411] _init_connect_sync: New connect ready: conn=7494975596962912962(1) context=<futu.quote.open_quote_context.OpenQuoteContext object at 0x0000022661CBB980>
+WARNING:stock-signals:  热门股API错误 US: 'str' object cannot be interpreted as an integer
+WARNING:stock-signals:  热门股获取失败 US: UnboundLocalError: cannot access local variable 'data' where it is not associated with a value，使用静态池
+INFO:stock-signals:  美股: 43 只候选
+2026-08-17 12:37:12,533 | 29912 | 33148 | [open_context_base.py:411] _init_connect_sync: New connect ready: conn=7494975598238710680(2) context=<futu.quote.open_quote_context.OpenQuoteContext object at 0x0000022614DBBB30>
+WARNING:stock-signals:  US.NVDA 距高点仅4.7%，跳过(追高风险)
+WARNING:stock-signals:  US.AAPL TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.MSFT TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.GOOG TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.AMZN TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.META TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.AVGO TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.CSCO TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.ORCL TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.AMAT TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.ASML 距高点仅7.7%，跳过(追高风险)
+WARNING:stock-signals:  US.QCOM K线形态阴包阳(看跌)，看跌，跳过
+WARNING:stock-signals:  US.MCD TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.NKE TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.TGT 距高点仅1.3%，跳过(追高风险)
+WARNING:stock-signals:  US.KO 距高点仅3.5%，跳过(追高风险)
+WARNING:stock-signals:  US.JNJ 距高点仅5.3%，跳过(追高风险)
+WARNING:stock-signals:  US.PFE 距高点仅3.6%，跳过(追高风险)
+WARNING:stock-signals:  US.UNH TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.LLY 距高点仅5.4%，跳过(追高风险)
+WARNING:stock-signals:  US.ABBV 距高点仅6.7%，跳过(追高风险)
+WARNING:stock-signals:  US.MRK 距高点仅0.1%，跳过(追高风险)
+WARNING:stock-signals:  US.BMY 距高点仅6.3%，跳过(追高风险)
+WARNING:stock-signals:  US.AMGN 距高点仅1.6%，跳过(追高风险)
+WARNING:stock-signals:  US.HON TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.CAT K线形态流星线(看跌)，看跌，跳过
+WARNING:stock-signals:  US.BA TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.DE TD卖出Turn确认，看跌反转，跳过
+WARNING:stock-signals:  US.FCX 距高点仅7.8%，跳过(追高风险)
+WARNING:stock-signals:  US.NEM MACD看跌背离，动量衰竭，跳过
+WARNING:stock-signals:  US.CP 距高点仅1.2%，跳过(追高风险)
+WARNING:stock-signals:  US.COP 距高点仅6.0%，跳过(追高风险)
+WARNING:stock-signals:  US.OXY TD卖出Turn确认，看跌反转，跳过
+INFO:stock-signals:扫描完成: 分析 43 只, 失败 33 只, 推荐 2 只, 观察 5 只
+{
+  "date": "2026-08-17",
+  "summary": {
+    "scan_time": "2026-08-17 12:38:19",
+    "total_analyzed": 43,
+    "total_failed": 33,
+    "total_picks": 2,
+    "total_watchlist": 5,
+    "markets_scanned": [
+      "US"
+    ]
+  },
+  "picks": {
+    "US": [
+      {
+        "code": "US.MU",
+        "score": 63.5,
+        "rating": "Overweight",
+        "pullback_score": 0,
+        "alignment": "aligned",
+        "trend_phase": "accumulation",
+        "last_close": 971.66,
+        "entry": 961.94,
+        "stop_loss": 889.8,
+        "target_1": 1132.16,
+        "target_2": 1327.07,
+        "risk_reward": 5.06,
+        "position_pct": 3.0,
+        "reasons": [
+          "MA5/MA10 金叉",
+          "MACD 金叉",
+          "高波动率，趋势明显",
+          "OBV 上升，资金流入",
+          "风险收益比 5.1:1"
+        ]
+      },
+      {
+        "code": "US.GILD",
+        "score": 62.5,
+        "rating": "Overweight",
+        "pullback_score": 0,
+        "alignment": "aligned",
+        "trend_phase": "accumulation",
+        "last_close": 138.36,
+        "entry": 136.98,
+        "stop_loss": 130.13,
+        "target_1": 149.36,
+        "target_2": 160.69,
+        "risk_reward": 3.46,
+        "position_pct": 2.5,
+        "reasons": [
+          "MA5/MA10 金叉",
+          "MACD 金叉",
+          "9转买入序列完成",
+          "OBV 上升，资金流入",
+          "风险收益比 3.5:1"
+        ]
+      }
+    ]
+  },
+  "watchlist": {
+    "US": [
+      {
+        "code": "US.LRCX",
+        "score": 59.2,
+        "rating": "Overweight",
+        "pullback_score": 0,
+        "alignment": "aligned",
+        "trend_phase": "accumulation",
+        "last_close": 332.36,
+        "entry": 306.38,
+        "stop_loss": 283.4,
+        "target_1": 433.33,
+        "target_2": 493.07,
+        "risk_reward": 8.12,
+        "position_pct": 3.0,
+        "reasons": [
+          "MA5/MA10 金叉",
+          "MACD 金叉",
+          "9转买入序列完成",
+          "高波动率，趋势明显",
+          "风险收益比 8.1:1"
+        ]
+      },
+      {
+        "code": "US.PEP",
+        "score": 59.0,
+        "rating": "Overweight",
+        "pullback_score": 0,
+        "alignment": "aligned",
+        "trend_phase": "decline",
+        "last_close": 140.79,
+        "entry": 138.74,
+        "stop_loss": 131.8,
+        "target_1": 162.2,
+        "target_2": 169.17,
+        "risk_reward": 4.39,
+        "position_pct": 2.5,
+        "reasons": [
+          "回调入场机会(距高点-16.3%)",
+          "MA5/MA10 金叉",
+          "9转买入序列完成",
+          "OBV 上升，资金流入",
+          "风险收益比 4.4:1"
+        ]
+      },
+      {
+        "code": "US.INTC",
+        "score": 58.6,
+        "rating": "Overweight",
+        "pullback_score": 0,
+        "alignment": "aligned",
+        "trend_phase": "accumulation",
+        "last_close": 102.5,
+        "entry": 101.47,
+        "stop_loss": 93.86,
+        "target_1": 132.7,
+        "target_2": 151.9,
+        "risk_reward": 6.63,
+        "position_pct": 3.0,
+        "reasons": [
+          "MA5/MA10 金叉",
+          "MACD 金叉",
+          "9转买入序列完成",
+          "高波动率，趋势明显",
+          "OBV 上升，资金流入",
+          "风险收益比 6.6:1"
+        ]
+      },
+      {
+        "code": "US.TSLA",
+        "score": 57.0,
+        "rating": "Hold",
+        "pullback_score": 0,
+        "alignment": "mixed",
+        "trend_phase": "decline",
+        "last_close": 342.27,
+        "entry": 329.14,
+        "stop_loss": 304.45,
+        "target_1": 471.53,
+        "target_2": 509.48,
+        "risk_reward": 7.31,
+        "position_pct": 3.0,
+        "reasons": [
+          "MA5/MA10 金叉",
+          "MACD 金叉",
+          "9转买入序列完成",
+          "OBV 上升，资金流入",
+          "风险收益比 7.3:1"
+        ]
+      },
+      {
+        "code": "US.COST",
+        "score": 56.0,
+        "rating": "Hold",
+        "pullback_score": 0,
+        "alignment": "mixed",
+        "trend_phase": "accumulation",
+        "last_close": 961.1,
+        "entry": 947.81,
+        "stop_loss": 900.42,
+        "target_1": 1039.2,
+        "target_2": 1087.2,
+        "risk_reward": 2.94,
+        "position_pct": 2.5,
+        "reasons": [
+          "回调入场机会(距高点-12.2%)",
+          "9转买入序列完成",
+          "OBV 上升，资金流入",
+          "风险收益比 2.9:1"
+        ]
+      }
+    ]
+  }
+}
+Traceback (most recent call last):
+  File "D:\Backup\Documents\ChatGPT\AI\stock-signals\test3.py", line 7, in <module>
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 202, in encode
+    chunks = list(chunks)
+             ^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 432, in _iterencode
+    yield from _iterencode_dict(o, _current_indent_level)
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 406, in _iterencode_dict
+    yield from chunks
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 326, in _iterencode_list
+    yield from chunks
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 439, in _iterencode
+    o = _default(o)
+        ^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\json\encoder.py", line 180, in default
+    raise TypeError(f'Object of type {o.__class__.__name__} '
+TypeError: Object of type ScanResult is not JSON serializable
