@@ -81,33 +81,35 @@ KTYPE_MAP = {
 
 # ============================================================
 # ============================================================
+# ============================================================
 # FUTU OPENAPI 限流规则（重点标记，禁止修改）
 # 限制: 每 30 秒最多 60 次 K 线请求 (request_history_kline)
 # 说明: 每次 create_quote_context() 新建连接都计入请求配额
-# 策略: threading.local 为每个线程维护独立 context，避免多线程死锁
+# 策略: 单例 context + 锁保护，串行化 API 调用避免超限
 # ============================================================
-_ctx_local = threading.local()  # 线程局部存储，每线程独立 context
+_ctx = None  # 单例 Futu 行情上下文
+_ctx_lock = threading.Lock()  # 保护 API 调用，确保串行
 
 def _get_ctx():
-    """获取当前线程的行情上下文（线程安全）"""
-    ctx = getattr(_ctx_local, 'ctx', None)
-    if ctx is None:
+    """获取单例行情上下文（线程安全）"""
+    global _ctx
+    if _ctx is None:
         try:
-            ctx = create_quote_context()
-            _ctx_local.ctx = ctx
+            _ctx = create_quote_context()
         except Exception as e:
             raise RuntimeError(f"无法连接 Futu OpenD: {e}")
-    return ctx
+    return _ctx
 
 def _reset_ctx():
-    """重置当前线程的上下文（出错时调用）"""
-    ctx = getattr(_ctx_local, 'ctx', None)
-    if ctx is not None:
-        try:
-            ctx.close()
-        except Exception:
-            pass
-        _ctx_local.ctx = None
+    """重置上下文（出错时调用）"""
+    global _ctx
+    with _ctx_lock:
+        if _ctx is not None:
+            try:
+                _ctx.close()
+            except Exception:
+                pass
+            _ctx = None
 
 def fetch_kline(code: str, ktype: str = "1d", num: int = 300) -> pd.DataFrame:
     kl_type = KTYPE_MAP.get(ktype, KLType.K_DAY)
