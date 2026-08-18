@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from typing import List, Dict, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
 
 from .indicators import fetch_kline, compute_indicators, signal_summary
 from .scoring import compute_rating, RATINGS
@@ -21,6 +20,8 @@ from ._sr import compute_support_resistance, generate_trade_plan
 from ._vcp import detect_vcp
 from ._episodic_pivot import detect_episodic_pivot
 from .config import config
+from .hot_fetcher import fetch_hot_stocks as _fetch_hot_stocks_live
+
 
 
 logger = logging.getLogger("stock-signals")
@@ -191,36 +192,7 @@ _US_HOT_STOCKS_POOL = [
 ]
 
 _A_HOT_STOCKS_POOL = [
-    'SH.600000', 'SH.600001', 'SH.600002', 'SH.600003', 'SH.600004', 'SH.600005', 'SH.600006', 'SH.600007', 'SH.600008', 'SH.600009',
-    'SH.600010', 'SH.600011', 'SH.600012', 'SH.600013', 'SH.600014', 'SH.600015', 'SH.600017', 'SH.600018', 'SH.600019', 'SH.600020',
-    'SH.600021', 'SH.600022', 'SH.600023', 'SH.600024', 'SH.600025', 'SH.600026', 'SH.600027', 'SH.600028', 'SH.600029', 'SH.600031',
-    'SH.600032', 'SH.600033', 'SH.600034', 'SH.600035', 'SH.600037', 'SH.600038', 'SH.600039', 'SH.600040', 'SH.600041', 'SH.600042',
-    'SH.600043', 'SH.600044', 'SH.600045', 'SH.600046', 'SH.600047', 'SH.600048', 'SH.600049', 'SH.600050', 'SH.600051', 'SH.600052',
-    'SH.600053', 'SH.600054', 'SH.600055', 'SH.600056', 'SH.600057', 'SH.600058', 'SH.600059', 'SH.600060', 'SH.600061', 'SH.600062',
-    'SH.600063', 'SH.600064', 'SH.600065', 'SH.600066', 'SH.600067', 'SH.600068', 'SH.600069', 'SH.600070', 'SH.600071', 'SH.600072',
-    'SH.600073', 'SH.600074', 'SH.600075', 'SH.600076', 'SH.600077', 'SH.600078', 'SH.600079', 'SH.600080', 'SH.600081', 'SH.600082',
-    'SH.600083', 'SH.600084', 'SH.600085', 'SH.600086', 'SH.600087', 'SH.600088', 'SH.600089', 'SH.600090', 'SH.600091', 'SH.600092',
-    'SH.600093', 'SH.600094', 'SH.600095', 'SH.600096', 'SH.600097', 'SH.600098', 'SH.600099', 'SH.600100', 'SH.600101', 'SH.600102',
-    'SH.600103', 'SH.600104', 'SH.600105', 'SH.600106', 'SH.600107', 'SH.600108', 'SH.600109', 'SH.600110', 'SH.600111', 'SH.600112',
-    'SH.600113', 'SH.600114', 'SH.600115', 'SH.600116', 'SH.600117', 'SH.600118', 'SH.600119', 'SH.600120', 'SH.600121', 'SH.600122',
-    'SH.600123', 'SH.600124', 'SH.600125', 'SH.600126', 'SH.600127', 'SH.600128', 'SH.600129', 'SH.600130', 'SH.600131', 'SH.600132',
-    'SH.600133', 'SH.600134', 'SH.600135', 'SH.600136', 'SH.600137', 'SH.600138', 'SH.600139', 'SH.600140', 'SH.600141', 'SH.600142',
-    'SH.600143', 'SH.600144', 'SH.600145', 'SH.600146', 'SH.600147', 'SH.600148', 'SH.600149', 'SH.600150', 'SH.600151', 'SH.600152',
-    'SH.600153', 'SH.600154', 'SH.600155', 'SH.600156', 'SH.600157', 'SH.600158', 'SH.600159', 'SH.600160', 'SH.600161', 'SH.600162',
-    'SZ.000003', 'SZ.000004', 'SZ.000005', 'SZ.000006', 'SZ.000007', 'SZ.000008', 'SZ.000009', 'SZ.000010', 'SZ.000011', 'SZ.000012',
-    'SZ.000013', 'SZ.000014', 'SZ.000015', 'SZ.000016', 'SZ.000017', 'SZ.000018', 'SZ.000019', 'SZ.000020', 'SZ.000021', 'SZ.000022',
-    'SZ.000023', 'SZ.000024', 'SZ.000025', 'SZ.000026', 'SZ.000027', 'SZ.000028', 'SZ.000029', 'SZ.000030', 'SZ.000031', 'SZ.000032',
-    'SZ.000033', 'SZ.000034', 'SZ.000035', 'SZ.000036', 'SZ.000037', 'SZ.000038', 'SZ.000039', 'SZ.000040', 'SZ.000041', 'SZ.000042',
-    'SZ.000043', 'SZ.000044', 'SZ.000045', 'SZ.000046', 'SZ.000047', 'SZ.000048', 'SZ.000049', 'SZ.000050', 'SZ.000051', 'SZ.000052',
-    'SZ.000053', 'SZ.000054', 'SZ.000055', 'SZ.000056', 'SZ.000057', 'SZ.000058', 'SZ.000059', 'SZ.000060', 'SZ.000061', 'SZ.000062',
-    'SZ.000063', 'SZ.000064', 'SZ.000065', 'SZ.000066', 'SZ.000067', 'SZ.000068', 'SZ.000069', 'SZ.000070', 'SZ.000071', 'SZ.000072',
-    'SZ.000073', 'SZ.000074', 'SZ.000075', 'SZ.000076', 'SZ.000077', 'SZ.000078', 'SZ.000079', 'SZ.000080', 'SZ.000081', 'SZ.000082',
-    'SZ.000083', 'SZ.000084', 'SZ.000085', 'SZ.000086', 'SZ.000087', 'SZ.000088', 'SZ.000089', 'SZ.000090', 'SZ.000091', 'SZ.000092',
-    'SZ.000093', 'SZ.000094', 'SZ.000095', 'SZ.000096', 'SZ.000097', 'SZ.000098', 'SZ.000099', 'SZ.000100', 'SZ.000101', 'SZ.000102',
-    'SZ.000103', 'SZ.000104', 'SZ.000105', 'SZ.000106', 'SZ.000107', 'SZ.000108', 'SZ.000109', 'SZ.000110', 'SZ.000111', 'SZ.000112',
-    'SZ.000113', 'SZ.000114', 'SZ.000115', 'SZ.000116', 'SZ.000117', 'SZ.000118', 'SZ.000119', 'SZ.000120', 'SZ.000121', 'SZ.000122',
-    'SZ.000123', 'SZ.000124', 'SZ.000125', 'SZ.000126', 'SZ.000127', 'SZ.000128', 'SZ.000129', 'SZ.000130', 'SZ.000131', 'SZ.000132',
-    'SZ.000133', 'SZ.000134', 'SZ.000135', 'SZ.000136', 'SZ.000137', 'SZ.000138', 'SZ.000139', 'SZ.000140', 'SZ.000141', 'SZ.000142',
+    "SH.600519", "SH.601318", "SZ.000651", "SZ.002594", "SH.600887", "SZ.000858", "SH.600276", "SH.601919", "SZ.300059", "SZ.000333", "SZ.000725", "SH.601012", "SZ.300750", "SH.603288", "SZ.002415", "SZ.000895", "SH.600900", "SH.600585", "SZ.002304", "SZ.002714", "SZ.000568", "SH.603259", "SH.601088", "SH.600436", "SZ.300015", "SH.601888", "SH.600309", "SZ.002460", "SH.600009", "SZ.000661", "SZ.300274", "SZ.300760", "SZ.002027", "SH.601633", "SH.600763", "SZ.300142", "SH.600702", "SZ.002271", "SZ.300146", "SH.601155", "SZ.002230", "SH.601899", "SH.600196", "SZ.002024", "SH.600031", "SH.600660", "SZ.002466", "SH.600000", "SZ.000063", "SZ.000538", "SH.601988", "SZ.002241", "SZ.002475", "SH.600570", "SH.600089", "SH.600048", "SH.601668", "SZ.000625", "SZ.002508", "SH.600111", "SZ.300033", "SH.601939", "SZ.000423", "SH.601328", "SH.600150", "SZ.002372", "SH.600886", "SZ.000338", "SH.601766", "SH.688981", "SH.603019", "SH.600584", "SZ.000100", "SH.601857", "SH.600690", "SZ.002407", "SH.603986", "SH.601688", "SH.600566", "SZ.000977", "SZ.002340", "SZ.002352", "SZ.002129", "SH.600438", "SH.601127", "SH.600028", "SH.600703", "SH.600050", "SZ.002456", "SZ.000792", "SH.601933", "SZ.002007", "SZ.000768", "SH.600104", "SH.601600", "SH.600893", "SH.601006", "SH.603993", "SZ.300308", "SH.600010", "SH.600795", "SH.601390", "SH.601607", "SH.600118", "SZ.002049", "SZ.000963", "SH.601669", "SZ.002202", "SH.600332", "SZ.300014", "SZ.002312", "SZ.300251", "SH.600588", "SH.600298", "SH.600362", "SH.601777", "SH.600460", "SZ.002192", "SZ.000559", "SH.600905", "SH.600019", "SH.601138", "SZ.002050", "SH.600096", "SH.601009", "SZ.002677", "SZ.000799", "SH.601985", "SZ.300496", "SZ.000623", "SH.601727", "SH.600487", "SH.601788", "SH.600518", "SZ.300136", "SZ.300058", "SH.600316", "SZ.002371", "SH.603799", "SH.601998", "SH.600750", "SH.600809", "SH.600745", "SZ.002156", "SZ.002709", "SZ.002236", "SZ.002008", "SH.600522", "SH.600352", "SZ.002183", "SH.600391", "SH.601169", "SZ.000157", "SH.600446", "SZ.002038", "SH.601179", "SZ.300027", "SH.600267", "SZ.002555", "SZ.000876", "SH.600085", "SH.600418", "SZ.002074", "SZ.002223", "SZ.002463", "SZ.300377", "SH.600547", "SZ.300124", "SZ.002603", "SH.601800", "SZ.002405", "SH.600109", "SH.600221", "SZ.000831", "SH.600029", "SH.603501", "SZ.300999", "SH.601628", "SH.601225", "SZ.300017", "SZ.000938", "SH.601186", "SZ.002432", "SH.601336", "SH.601360", "SZ.002185", "SZ.300502", "SH.601168", "SZ.002507", "SZ.002261", "SH.688256", "SZ.002176", "SH.600895", "SZ.000997", "SZ.300433", "SH.600760", "SZ.300476", "SH.600999", "SH.600406", "SH.600489", "SZ.300144", "SZ.000988", "SH.600875", "SH.601106", "SH.601377", "SH.600143", "SZ.002030", "SZ.000723", "SH.600839", "SZ.002353", "SZ.002384", "SH.600256", "SZ.300024", "SH.600600", "SZ.002273", "SZ.000777", "SH.600771", "SH.600219", "SZ.300122", "SZ.000630", "SZ.300418", "SZ.002294", "SH.600938", "SH.603027", "SH.600516", "SZ.002281", "SZ.300450", "SH.600176", "SZ.000930", "SZ.300079", "SZ.000860", "SH.601901", "SZ.300339", "SH.603444", "SZ.002739", "SZ.300003", "SH.600340", "SZ.300347", "SH.600392", "SH.600315", "SH.600674", "SH.600183", "SZ.300529", "SZ.002422", "SH.600699", "SH.600015", "SH.600879", "SZ.300498", "SH.601000", "SZ.300223", "SH.600153", "SZ.300896", "SH.600100", "SH.600521", "SH.601872", "SH.601601", "SZ.002385", "SZ.000807", "SZ.300238", "SZ.000878", "SZ.000425", "SZ.000738", "SH.603866", "SZ.000066", "SH.600559", "SH.600188", "SZ.000039", "SZ.000069", "SH.601618", "SH.600158", "SZ.300676", "SH.600038", "SZ.000636", "SH.688825", "SH.601099", "SH.600536", "SZ.000410", "SZ.002032", "SH.600867", "SZ.002600", "SH.600021", "SZ.002624", "SH.600498", "SZ.002821", "SH.600941", "SH.600172", "SH.600066", "SH.600635", "SZ.002465", "SH.600001", "SH.600002", "SH.600003", "SH.600004", "SH.600005", "SH.600006", "SH.600007", "SH.600008", "SH.600011", "SH.600012", "SH.600013",
 ]
 
 _HK_HOT_STOCKS_POOL = [
@@ -256,66 +228,62 @@ _HK_HOT_STOCKS_POOL = [
     'HK.00293', 'HK.00294', 'HK.00295', 'HK.00296', 'HK.00297', 'HK.00298', 'HK.00299', 'HK.00300', 'HK.00301', 'HK.00302',
 ]
 
-def _fetch_hot_stocks_free(market: str, top_n: int = 300) -> List[str]:
-    """使用免费数据源获取热门股（备用方案）"""
-    hot_codes: List[str] = []
-    try:
-        if market == "US":
-            hot_codes = _US_HOT_STOCKS_POOL[:top_n]
-        elif market == "HK":
-            hot_codes = _HK_HOT_STOCKS_POOL[:top_n]
-        elif market == "A":
-            hot_codes = _A_HOT_STOCKS_POOL[:top_n]
-    except Exception as e:
-        logger.warning(f"  备用数据源失败: {e}")
-    return hot_codes
-def _fetch_hot_stocks(market: str, top_n: int = 100) -> List[str]:
-    """从 Futu API 获取热门股列表（TOP 100），失败时返回空列表"""
-    hot_codes: List[str] = []
-    try:
-        import sys as _sys
-        _sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
-        from common import create_quote_context, check_ret
-        from futu import ScrMarket
-        
-        ctx = create_quote_context()
-        mkt_map = {"US": ScrMarket.US, "HK": ScrMarket.HK, "A": ScrMarket.CN}
-        futu_mkt = mkt_map.get(market)
-        if futu_mkt is None:
-            return []
-        
-        import socket
-        orig_timeout = socket.getdefaulttimeout()
-        socket.setdefaulttimeout(15)
-        try:
-            data = None
-            ret, result = ctx.get_top_movers_rank(futu_mkt, count=int(top_n))
-            if ret != 0:
-                logger.warning(f"  热门股API错误 {market}: {result}，尝试备用数据源")
-                result = None
-            else:
-                all_count, data = result
-                check_ret(ret, data, ctx, market + " HotStocks")
-            if data is not None and not data.empty:
-                if "security" in data.columns:
-                    hot_codes = [str(c).strip() for c in data["security"].values if str(c).strip()]
-                elif len(data.columns) > 0:
-                    hot_codes = [str(c).strip() for c in data.iloc[:, 0].values if str(c).strip()]
-        finally:
-            socket.setdefaulttimeout(orig_timeout)
-        ctx.close()
-        
-        # 如果 Futu API 未返回数据，尝试备用数据源
-        if not hot_codes:
-            logger.info(f"  Futu API 未返回数据，尝试备用数据源")
-            hot_codes = _fetch_hot_stocks_free(market, top_n)
-        hot_codes = [c for c in hot_codes if not _is_blacklisted(c)]
-        logger.info(f"  热门股获取成功: {market} {len(hot_codes)} 只")
-    except Exception as e:
-        logger.warning(f"  热门股获取失败 {market}: {type(e).__name__}: {e}，使用静态池")
-        hot_codes = []
-    
-    return hot_codes
+def _fetch_hot_stocks(market: str, top_n: int = 300) -> List[str]:
+    """Get hot stocks - live API first, fallback to static pool."""
+    live_codes = _fetch_hot_stocks_live(market, top_n)
+    live_codes = [c for c in live_codes if not _is_blacklisted(c)]
+    if live_codes:
+        logger.info(f"  Hot stocks (live): {len(live_codes)}")
+        return live_codes
+    logger.info("  Hot stocks: fallback to static pool")
+    if market == "A":
+        codes = _A_HOT_STOCKS_POOL[:top_n]
+    elif market == "HK":
+        codes = _HK_HOT_STOCKS_POOL[:top_n]
+    elif market == "US":
+        codes = _US_HOT_STOCKS_POOL[:top_n]
+    else:
+        codes = []
+    return [c for c in codes if not _is_blacklisted(c)]
+
+
+def sync_hot_stocks(market: str, top_n: int = 300) -> int:
+    """Sync today hot stocks to static pool and persist to file."""
+    from .hot_fetcher import fetch_a_hot_stocks, fetch_hk_hot_stocks, fetch_us_hot_stocks
+    if market == "A":
+        codes = fetch_a_hot_stocks(top_n)
+    elif market == "HK":
+        codes = fetch_hk_hot_stocks(top_n)
+    elif market == "US":
+        codes = fetch_us_hot_stocks(top_n)
+    else:
+        return 0
+    codes = [c for c in codes if not _is_blacklisted(c)]
+    if not codes:
+        logger.warning(f"  No hot stocks to sync ({market})")
+        return 0
+    pool_key = f"_{market.upper()}_HOT_STOCKS_POOL"
+    existing = globals().get(pool_key, [])
+    merged = list(dict.fromkeys(codes + existing))[:top_n]
+    globals()[pool_key] = merged
+    _write_pool_to_file(pool_key, merged, __file__)
+    logger.info(f"  Synced {len(codes)} hot stocks to {market} pool (total {len(merged)})")
+    return len(codes)
+
+
+def _write_pool_to_file(var_name: str, codes: List[str], file_path=None):
+    """Write hot stock pool back to screener.py."""
+    import re as _re
+    pool_str = ", ".join('"'+c+'"' for c in codes)
+    pat = _re.escape(var_name) + r'\s*=\s*\[([^\]]*?)\n\s*\]'
+    repl = var_name + " = [\n    " + pool_str + ",\n]"
+    _fp = file_path or __file__
+    with open(_fp, 'r', encoding='utf-8') as f:
+        cnt = f.read()
+    cnt = _re.sub(pat, repl, cnt, count=1)
+    with open(_fp, 'w', encoding='utf-8') as f:
+        f.write(cnt)
+
 
 MARKET_NAMES = {
     "SH": "A股\u30fb\u6caa", "SZ": "A股\u30fb\u6df1",
@@ -554,7 +522,7 @@ def scan(markets=None, config=None, output_json=False, output_file=""):
 def _analyze_batch(codes, delay):
     """并行分析一批股票"""
     results = []
-    with ThreadPoolExecutor(max_workers=2) as executor:
+    with ThreadPoolExecutor(max_workers=6) as executor:
         futures = {executor.submit(_analyze_one, code, delay=delay): code for code in codes}
         for future in as_completed(futures):
             try:
@@ -669,6 +637,7 @@ def _get_market_codes(market: str) -> List[str]:
     except Exception as e:
         logger.warning(f"  热门股实时更新异常: {e}")
     
+    codes = codes[:30]
     return codes
 
 

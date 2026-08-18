@@ -2,7 +2,6 @@
 import sys, os as _os
 from dataclasses import dataclass
 
-sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
 
 from .indicators import fetch_kline, compute_indicators
 from .scoring import compute_rating, RATINGS

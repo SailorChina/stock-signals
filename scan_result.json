@@ -1,127 +1,107 @@
 {
   "date": "2026-08-17",
   "summary": {
-    "scan_time": "2026-08-17 10:09:30",
+    "scan_time": "2026-08-17 21:36:00",
     "total_analyzed": 43,
-    "total_failed": 33,
-    "total_picks": 5,
+    "total_failed": 0,
+    "total_picks": 10,
     "total_watchlist": 0,
     "markets_scanned": [
       "US"
-    ]
+    ],
+    "data_source": "akshare (Sina Finance) + Futu API (capital/short only)"
   },
   "picks": {
     "US": [
       {
         "code": "US.MU",
-        "score": 63.5,
         "rating": "Overweight",
-        "pullback_score": 0,
-        "alignment": "aligned",
-        "trend_phase": "accumulation",
-        "last_close": 971.66,
-        "entry": 961.94,
-        "stop_loss": 889.8,
-        "target_1": 1132.16,
-        "target_2": 1327.07,
+        "score": 63.5,
         "risk_reward": 5.06,
-        "position_pct": 3.0,
-        "reasons": [
-          "MA5/MA10 金叉",
-          "MACD 金叉",
-          "高波动率，趋势明显",
-          "OBV 上升，资金流入",
-          "风险收益比 5.1:1"
-        ]
+        "trend_phase": "accumulation",
+        "entry": 961.94,
+        "stop_loss": 889.8
       },
       {
         "code": "US.GILD",
-        "score": 62.5,
         "rating": "Overweight",
-        "pullback_score": 0,
-        "alignment": "aligned",
-        "trend_phase": "accumulation",
-        "last_close": 138.36,
-        "entry": 136.98,
-        "stop_loss": 130.13,
-        "target_1": 149.36,
-        "target_2": 160.69,
+        "score": 62.5,
         "risk_reward": 3.46,
-        "position_pct": 2.5,
-        "reasons": [
-          "MA5/MA10 金叉",
-          "MACD 金叉",
-          "9转买入序列完成",
-          "OBV 上升，资金流入",
-          "风险收益比 3.5:1"
-        ]
+        "trend_phase": "accumulation",
+        "entry": 136.98,
+        "stop_loss": 130.13
       },
       {
         "code": "US.LRCX",
-        "score": 59.2,
         "rating": "Overweight",
-        "pullback_score": 0,
-        "alignment": "aligned",
-        "trend_phase": "accumulation",
-        "last_close": 332.36,
-        "entry": 306.38,
-        "stop_loss": 283.4,
-        "target_1": 433.33,
-        "target_2": 493.07,
+        "score": 59.2,
         "risk_reward": 8.12,
-        "position_pct": 3.0,
-        "reasons": [
-          "MA5/MA10 金叉",
-          "MACD 金叉",
-          "9转买入序列完成",
-          "高波动率，趋势明显",
-          "风险收益比 8.1:1"
-        ]
+        "trend_phase": "accumulation",
+        "entry": 306.38,
+        "stop_loss": 283.4
       },
       {
         "code": "US.PEP",
-        "score": 59.0,
         "rating": "Overweight",
-        "pullback_score": 0,
-        "alignment": "aligned",
-        "trend_phase": "decline",
-        "last_close": 140.79,
-        "entry": 138.74,
-        "stop_loss": 131.8,
-        "target_1": 162.2,
-        "target_2": 169.17,
+        "score": 59,
         "risk_reward": 4.39,
-        "position_pct": 2.5,
-        "reasons": [
-          "回调入场机会(距高点-16.3%)",
-          "MA5/MA10 金叉",
-          "9转买入序列完成",
-          "OBV 上升，资金流入",
-          "风险收益比 4.4:1"
-        ]
+        "trend_phase": "decline",
+        "entry": 138.74,
+        "stop_loss": 131.8
       },
       {
         "code": "US.INTC",
-        "score": 58.6,
         "rating": "Overweight",
-        "pullback_score": 0,
-        "alignment": "aligned",
-        "trend_phase": "accumulation",
-        "last_close": 102.5,
-        "entry": 101.47,
-        "stop_loss": 93.86,
-        "target_1": 132.7,
-        "target_2": 151.9,
+        "score": 58.6,
         "risk_reward": 6.63,
-        "position_pct": 3.0,
-        "reasons": [
-          "MA5/MA10 金叉",
-          "MACD 金叉",
-          "9转买入序列完成",
-          "高波动率，趋势明显",
-          "OBV 上升，资金流入",
-          "风险收益比 6.6:1"
-        ]
+        "trend_phase": "accumulation",
+        "entry": 101.47,
+        "stop_loss": 93.86
+      },
+      {
+        "code": "US.COST",
+        "rating": "Hold",
+        "score": 56,
+        "risk_reward": 2.94,
+        "trend_phase": "accumulation",
+        "entry": 947.81,
+        "stop_loss": 900.42
+      },
+      {
+        "code": "US.XOM",
+        "rating": "Hold",
+        "score": 55.9,
+        "risk_reward": 2.59,
+        "trend_phase": "early_rally",
+        "entry": 157.27,
+        "stop_loss": 149.41
+      },
+      {
+        "code": "US.TSLA",
+        "rating": "Hold",
+        "score": 54,
+        "risk_reward": 9.1,
+        "trend_phase": "decline",
+        "entry": 329.14,
+        "stop_loss": 304.45
+      },
+      {
+        "code": "US.NXPI",
+        "rating": "Hold",
+        "score": 51.5,
+        "risk_reward": 8.7,
+        "trend_phase": "accumulation",
+        "entry": 0,
+        "stop_loss": 0
+      },
+      {
+        "code": "US.WMT",
+        "rating": "Hold",
+        "score": 49.5,
+        "risk_reward": 4,
+        "trend_phase": "accumulation",
+        "entry": 0,
+        "stop_loss": 0
       }
     ]
   },

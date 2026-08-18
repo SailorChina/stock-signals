@@ -1,0 +1,61 @@
+Traceback (most recent call last):
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py", line 788, in urlopen
+    response = self._make_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+               ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+                       ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\http\client.py", line 1430, in getresponse
+    response.begin()
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\http\client.py", line 331, in begin
+    version, status, reason = self._read_status()
+                              ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\http\client.py", line 300, in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+http.client.RemoteDisconnected: Remote end closed connection without response
+
+The above exception was the direct cause of the following exception:
+
+urllib3.exceptions.ProxyError: ('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response'))
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\adapters.py", line 696, in send
+    resp = conn.urlopen(
+           ^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py", line 842, in urlopen
+    retries = retries.increment(
+              ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\util\retry.py", line 543, in increment
+    raise MaxRetryError(_pool, url, reason) from reason  # type: ignore[arg-type]
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+urllib3.exceptions.MaxRetryError: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/ulist.np/get?ut=f057cbcbce2a86e2866ab8877db1d059&fltt=2&invt=2&fields=f14%2Cf3%2Cf12%2Cf2&secids=1.688825%2C0.002156%2C1.600206%2C0.002081%2C1.603118%2C1.600584%2C0.002436%2C0.000725%2C1.600186%2C1.600487%2C0.002437%2C1.600172%2C1.603186%2C1.603330%2C1.600667%2C0.000670%2C1.600330%2C1.605179%2C0.002428%2C1.603002%2C0.002229%2C0.002172%2C0.002407%2C0.000737%2C0.300684%2C0.300570%2C1.603773%2C1.601700%2C0.002185%2C1.600613%2C1.600127%2C0.002907%2C1.600353%2C1.600313%2C1.603986%2C0.003031%2C0.002651%2C1.600459%2C0.000938%2C0.000735%2C0.000564%2C0.002165%2C1.600519%2C1.603011%2C0.002820%2C1.603259%2C1.603936%2C1.603089%2C1.600522%2C0.000620%2C0.300308%2C1.603703%2C1.600176%2C0.301282%2C0.000021%2C1.600664%2C0.000779%2C1.603079%2C0.300394%2C1.600222%2C0.002192%2C0.000551%2C1.603221%2C0.000636%2C1.603629%2C0.001309%2C1.603395%2C0.002448%2C0.000505%2C0.000811%2C0.300679%2C1.603929%2C1.603095%2C1.600545%2C0.300313%2C0.300059%2C1.605162%2C0.002396%2C0.002682%2C1.601366%2C1.600860%2C0.300017%2C0.300314%2C1.603110%2C0.300862%2C1.600105%2C0.001356%2C0.002476%2C1.603823%2C0.002478%2C0.002353%2C0.002491%2C0.002384%2C0.002258%2C0.002028%2C0.002655%2C0.002668%2C0.002787%2C1.600703%2C0.002742 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "D:\Backup\Documents\ChatGPT\AI\stock-signals\test_rank.py", line 5, in <module>
+    df = ak.stock_hot_rank_em()
+         ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\akshare\stock\stock_hot_rank_em.py", line 44, in stock_hot_rank_em
+    r = requests.get(url, params=params)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\api.py", line 87, in get
+    return request("get", url, params=params, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\api.py", line 71, in request
+    return session.request(method=method, url=url, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\sessions.py", line 651, in request
+    resp = self.send(prep, **send_kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\sessions.py", line 784, in send
+    r = adapter.send(request, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Administrator\AppData\Local\Programs\Python\Python312\Lib\site-packages\requests\adapters.py", line 723, in send
+    raise ProxyError(e, request=request)
+requests.exceptions.ProxyError: HTTPSConnectionPool(host='push2.eastmoney.com', port=443): Max retries exceeded with url: /api/qt/ulist.np/get?ut=f057cbcbce2a86e2866ab8877db1d059&fltt=2&invt=2&fields=f14%2Cf3%2Cf12%2Cf2&secids=1.688825%2C0.002156%2C1.600206%2C0.002081%2C1.603118%2C1.600584%2C0.002436%2C0.000725%2C1.600186%2C1.600487%2C0.002437%2C1.600172%2C1.603186%2C1.603330%2C1.600667%2C0.000670%2C1.600330%2C1.605179%2C0.002428%2C1.603002%2C0.002229%2C0.002172%2C0.002407%2C0.000737%2C0.300684%2C0.300570%2C1.603773%2C1.601700%2C0.002185%2C1.600613%2C1.600127%2C0.002907%2C1.600353%2C1.600313%2C1.603986%2C0.003031%2C0.002651%2C1.600459%2C0.000938%2C0.000735%2C0.000564%2C0.002165%2C1.600519%2C1.603011%2C0.002820%2C1.603259%2C1.603936%2C1.603089%2C1.600522%2C0.000620%2C0.300308%2C1.603703%2C1.600176%2C0.301282%2C0.000021%2C1.600664%2C0.000779%2C1.603079%2C0.300394%2C1.600222%2C0.002192%2C0.000551%2C1.603221%2C0.000636%2C1.603629%2C0.001309%2C1.603395%2C0.002448%2C0.000505%2C0.000811%2C0.300679%2C1.603929%2C1.603095%2C1.600545%2C0.300313%2C0.300059%2C1.605162%2C0.002396%2C0.002682%2C1.601366%2C1.600860%2C0.300017%2C0.300314%2C1.603110%2C0.300862%2C1.600105%2C0.001356%2C0.002476%2C1.603823%2C0.002478%2C0.002353%2C0.002491%2C0.002384%2C0.002258%2C0.002028%2C0.002655%2C0.002668%2C0.002787%2C1.600703%2C0.002742 (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))

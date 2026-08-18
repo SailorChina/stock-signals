@@ -11,11 +11,15 @@ import os as _os
 from dataclasses import dataclass, field
 from typing import List, Tuple
 
-sys.path.insert(0, r'C:\Users\Administrator\.codex\skills\futuapi\scripts')
 
-from common import create_quote_context, check_ret, safe_close
-
-
+try:
+    from common import create_quote_context, check_ret, safe_close
+    _FUTU_AVAILABLE = True
+except ImportError:
+    _FUTU_AVAILABLE = False
+    create_quote_context = None
+    check_ret = None
+    safe_close = None
 # ---------------------------------------------------------------------------
 # 评级定义
 # ---------------------------------------------------------------------------
@@ -478,9 +482,8 @@ def _reset_cap_ctx():
 def get_capital_data(code: str) -> dict:
     """从 Futu API 获取资金分布数据"""
     try:
-        sys.path.insert(0, _os.path.normpath(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "..", "futuapi", "scripts")))
-        from common import create_quote_context, check_ret, safe_close
-        ctx = None
+        if not _FUTU_AVAILABLE:
+            return {}
         try:
             ctx = _get_cap_ctx()
             ret, data = ctx.get_capital_distribution(code)
@@ -516,9 +519,8 @@ def get_capital_data(code: str) -> dict:
 def get_short_data(code: str) -> Optional[float]:
     """从 Futu API 获取最新卖空比例"""
     try:
-        sys.path.insert(0, _os.path.normpath(_os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "..", "..", "futuapi", "scripts")))
-        from common import create_quote_context, check_ret, safe_close
-        ctx = None
+        if not _FUTU_AVAILABLE:
+            return None
         try:
             ctx = _get_cap_ctx()
             ret, data, _ = ctx.get_daily_short_volume(code, num=1)
