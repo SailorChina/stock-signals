@@ -1,10 +1,6 @@
-# stock-signals v2.10.0 — 多市场股票技术分析 & 买卖信号生成器
+# stock-signals
 
-基于富途 OpenAPI 的多时间框架技术分析 skill，支持美股 / A股 / 港股实时扫描与选股。
-
-> **37/37 单元测试全部通过（热点股测试需Futu实时数据）** | GitHub: [SailorChina/stock-signals](https://github.com/SailorChina/stock-signals)
-
----
+股票买卖信号分析系统 — 三市场（A股/港股/美股）技术指标扫描
 
 ## 核心功能
 
@@ -18,191 +14,114 @@
 | BOLL | 布林带上中下轨 + 宽度 |
 | ATR | 14周期真实波幅，动态止损 |
 | OBV | 能量潮，资金流向判断 |
-| ADX | 趋势强度（+DI/-DI），趋势 vs 震荡分类 |
 | VWMA | 成交量加权均线 |
 
 ### 高级信号
 | 信号 | 说明 |
 |------|------|
-| **VCP** 波动率收缩 | Mark Minervini SEPA 策略，检测2-6次收缩循环 + 量能萎缩 |
-| **Episodic Pivot** 事件性转折 | Kristjan Qullamaggie 策略，跳空高开 + 量能放大突破 |
-| **TD Sequential** 9转信号 | 9连阴买入 / 9连阳卖出，Turn 确认反转 |
-| **多时间框架共振** | 日/周/月线联动评分，共振看多 +8 分 |
-| **趋势阶段判断** | 吸筹 / 上涨早期 / 上涨 / 派发 / 下跌 |
-| **支撑阻力位** | Swing Point 聚类 + VWAP + 布林带 |
-| **ATR 动态止损** | 1.5×ATR 止损 + 7.5% 硬上限（Minervini 规则） |
-| **RS 相对强度** | 1-99 相对强度评分，RS≥90 加5分 |
+| **VCP** 波动率收缩 | Mark Minervini SEPA 策略，检测2-6次收缩循环 |
+| **Episodic Pivot** 事件性转折 | 跳空高开 + 量能放大突破 |
+| **TD Sequential** 9转信号 | 9连阴买入 / 9连阳卖出 |
+| **多时间框架共振** | 日/周/月线联动评分 |
 
-### 智能过滤（v2.5+）
-| 规则 | 阈值 | 效果 |
-|------|------|------|
-| RSI 极端超买 | RSI(14) > 75 | 硬拦截 |
-| 距高点过近 | > -2% | 拦截追高 |
-| MA5/MA20 延伸 | > 8% | 拦截过度延伸 |
-| 风险收益比 | RR < 2.0 | 硬拦截 |
-| TD 卖出 Turn | sell_turn | 跳过 |
-| MACD 看跌背离 | bearish | 跳过 |
-| 看跌K线形态 | 吞没/流星线 | 跳过 |
+## 数据源 (v2.1)
 
-### 黑名单过滤（v2.7+）
-- 自动过滤银行股（A股/港股/美股）和 ETF
-- 涵盖 SPY/QQQ/VTI 等主流 ETF 及 JPM/BAC/工行/中行 等银行
+| 市场 | 热门股获取 | K线数据 |
+|------|-----------|---------|
+| A股 | 雪球热度榜 (akshare) | Sina优先, akshare fallback |
+| 港股 | 静态池+Tencent验证 | akshare daily |
+| 美股 | 静态池 (知名蓝筹) | akshare daily |
 
-### 热门股候选池（v2.10+）
-- 各市场扩展至 **300 只**热门股进入候选池
-- **美股**: 300只（S&P 500基础，去重，无银行/ETF）
-- **A股**: 300只（沪深300+中证500，无银行/ETF）
-- **港股**: 300只（恒生指数+恒生科技，无银行）
-- 每日扫描时 Futu API 获取实时热门股，与静态池合并去重
-- API 超时自动降级到静态池，不影响扫描
+## 扫描速度
 
+| 市场 | 股票数 | 首次扫描 | 缓存命中 |
+|------|--------|----------|----------|
+| A股 | 300 | ~75s | ~0.2s |
+| 港股 | 20 | ~12s | - |
+| 美股 | 25 | ~15s | - |
 
+## 安装
 
-### v2.9.4 (2026-08-17)
-- 修复热门股API解包bug，避免错误时崩溃
-- 错误处理改为安全降级，不影响扫描流程
-### 动态热门股（v2.8+）
-- 扫描时自动从 Futu API 获取每日热门股 TOP 100
-- 与静态池合并去重，补充候选股票
-- API 超时自动降级，不影响扫描
-
----
-
-## 快速开始
-
-### 1. 环境准备
 ```bash
-pip install futu-api>=10.4.6408 pandas numpy
-# 启动富途 OpenD（默认端口 11111）
+pip install -e .
 ```
 
-### 2. 安装 Skill
-```bash
-cp -r stock-signals ~/.codex/skills/
-```
-
----
+依赖：
+- akshare >= 1.18
+- pandas >= 2.0
+- numpy >= 1.24
 
 ## 使用方法
 
-### analyze — 分析单只/多只股票
-```bash
-python -m stock_signals.cli analyze US.NVDA
-python -m stock_signals.cli analyze US.QCOM --timeframe 1w
-python -m stock_signals.cli analyze SH.600519
-python -m stock_signals.cli analyze HK.00700
-python -m stock_signals.cli analyze US.NVDA US.AAPL --json
-python -m stock_signals.cli analyze US.NVDA US.AAPL --csv results.csv
+```python
+from stock_signals.hot_fetcher import fetch_hot_stocks
+from stock_signals.indicators import fetch_kline, compute_indicators
+from stock_signals.scoring import compute_rating
+
+# 获取热门股
+a_hot = fetch_hot_stocks('A', 300)
+hk_hot = fetch_hot_stocks('HK', 300)
+us_hot = fetch_hot_stocks('US', 300)
+
+# 扫描单只股票
+df = fetch_kline('SH.600519')
+ind = compute_indicators(df, 'SH.600519')
+rat = compute_rating(ind)
+print(f"评级: {rat['rating']}, 分数: {rat['score']}")
 ```
 
-### scan — 智能选股（推荐）
-```bash
-# 交互式选择市场（推荐）
-python -m stock_signals.cli scan
+## API说明
 
-# 命令行指定市场
-python -m stock_signals.cli scan --markets US
-python -m stock_signals.cli scan --markets A
-python -m stock_signals.cli scan --markets HK
-python -m stock_signals.cli scan --markets US,HK
+### fetch_kline(code, ktype='1d', num=300)
+获取K线数据
+- code格式: SH.600519, SZ.000001, HK.00700, US.AAPL
+- 返回DataFrame: time, open, high, low, close, volume
 
-# 调整参数
-python -m stock_signals.cli scan --markets US --min-score 55 --max-picks 5
-python -m stock_signals.cli scan --markets US --json --output report.json
-```
+### compute_indicators(df, code, ktype)
+计算技术指标，返回Indicators对象
 
-**参数说明：**
-| 参数 | 默认 | 说明 |
-|------|------|------|
-| `--markets, -m` | A,US,HK | 市场：A=沪深, US, HK |
-| `--min-score` | 60.0 | 推荐门槛（越高越严格） |
-| `--max-picks` | 3 | 每市场最多推荐数 |
-| `--delay` | 1.0 | API 间隔（秒） |
-| `--json, -j` | - | JSON 格式输出 |
-| `--output, -o` | - | 保存结果到文件 |
+### compute_rating(ind)
+计算综合评分，返回评级字典
 
----
+### fetch_hot_stocks(market, top_n=300)
+获取热门股列表
+- market: 'A', 'HK', 'US'
 
-## 输出解读
+## 评级说明
 
-### analyze 输出
-显示评级、综合得分、五维评分条、技术指标详情、多时间框架共振、交易计划（入场/止损/目标/RR比/仓位）、入场条件提示、风险提示。
+| 评级 | 分数范围 | 含义 |
+|------|----------|------|
+| Buy | 75-100 | 强烈买入 |
+| Overweight | 60-74 | 优于大盘 |
+| Hold | 40-59 | 持有观望 |
+| Underweight | 25-39 | 弱于大盘 |
+| Sell | 0-24 | 建议卖出 |
 
-### scan 输出示例
-```
-============================================================
-  每日股票推荐报告  2026-08-16
-============================================================
-  扫描时间: 2026-08-16 21:46:38
-  分析 347 只 | 推荐 5 只 | 观察 0 只
-
-────────────────────────────────────────────────────────────
-  美股
-────────────────────────────────────────────────────────────
-  推荐（5只）:
-  1. US.MU 美光科技 · 存储芯片  现价: 971.66
-      评级: Overweight (偏多) · 分: 63.5 · 共振: 共振看多
-      入场: 961.94 (-1.0%) [现价附近入场]  止损: 889.80 (-7.5%)
-      目标1: 1132.16 (+16.5%)  目标2: 1327.07 (+36.6%)
-      风险回报: 5.1:1  仓位建议: 3.0%
-      等待条件: MACD金叉确认，多头动能较强 | OBV资金持续流入
-      指标: MA5/MA10 金叉, MACD 金叉, OBV 上升，资金流入
-```
-
----
-
-## 每日使用流程
-
-```bash
-# 1. 扫描推荐
-python -m stock_signals.cli scan --markets US --min-score 55 --max-picks 5
-
-# 2. 深入分析感兴趣的股票
-python -m stock_signals.cli analyze US.QCOM
-python -m stock_signals.cli analyze US.MU --timeframe 1w
-
-# 3. 保存报告
-python -m stock_signals.cli scan --markets US --json --output daily_scan.json
-```
-
----
-
-## 技术架构
+## 项目结构
 
 ```
 stock_signals/
-├── __init__.py          # 包入口，版本 v2.10.0
-├── cli.py               # 命令行接口 (analyze/scan)
-├── indicators.py        # 技术指标计算
-├── scoring.py           # 五维评分引擎
-├── screener.py          # 筛选引擎 (股票池+热门股+黑名单)
-├── reporter.py          # 报告生成器
-├── _sr.py               # 支撑阻力位 + 交易计划
-├── _resonance.py        # 多时间框架共振
-├── _vcp.py              # VCP 波动率收缩检测
-├── _episodic_pivot.py   # Episodic Pivot 检测
-├── _info.py             # 股票信息库 (中文名/板块/简介)
-└── config.py            # 配置管理
+├── indicators.py    # K线获取+指标计算
+├── hot_fetcher.py   # 热门股获取
+├── scoring.py       # 评分引擎
+├── screener.py      # 扫描引擎
+├── config.py        # 配置
+└── data_sources.py  # 数据源接口
 ```
 
----
+## 变更日志
 
-## 常见问题
+### v2.1 (2026-08-18)
+- 移除Futu OpenAPI依赖（CET兼容问题）
+- 使用Sina+akshare双数据源
+- 添加内存缓存机制
+- 优化热门股获取：A股使用雪球热度榜
+- 修复扫描速度问题
 
-**Q: 连接失败 `Connection refused to 127.0.0.1:11111`**
-A: 启动富途 OpenD 服务。
+### v2.0
+- 支持三市场扫描
+- 使用Futu OpenAPI获取K线
 
-**Q: API 限流**
-A: 增加 `--delay` 参数，如 `--delay 1.5`。
+## 许可证
 
-**Q: 无推荐股票**
-A: 降低 `--min-score` 到 50 或扫描更大范围。
-
-**Q: 热门股获取失败**
-A: 自动降级到静态池，不影响扫描。
-
----
-
-## 免责声明
-
-本工具仅供技术参考，不构成任何投资建议。股票市场存在风险，投资需谨慎。
+MIT
