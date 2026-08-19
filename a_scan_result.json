@@ -1,0 +1,157 @@
+{
+  "date": "2026-08-19",
+  "summary": {
+    "scan_time": "2026-08-19 21:20:08",
+    "total_analyzed": 300,
+    "total_picks": 3,
+    "total_watchlist": 3,
+    "markets_scanned": [
+      "A"
+    ]
+  },
+  "picks": {
+    "A": [
+      {
+        "code": "SH.601919",
+        "score": 61.2,
+        "rating": "Overweight",
+        "rating_cn": "偏多",
+        "trend_phase": "unknown",
+        "trend_phase_cn": "未知",
+        "alignment": "aligned",
+        "alignment_cn": "共振看多",
+        "entry": 15.89,
+        "stop_loss": 15.46,
+        "target_1": 17.17,
+        "target_2": 18.28,
+        "risk_reward": 2.93,
+        "position_pct": 1.4,
+        "reasons": [
+          "MA5>MA10",
+          "MACD金叉",
+          "放量",
+          "RR=2.9:1"
+        ],
+        "holding_period": "日内(1天)",
+        "last_close": 16.55
+      },
+      {
+        "code": "SH.601988",
+        "score": 60.4,
+        "rating": "Overweight",
+        "rating_cn": "偏多",
+        "trend_phase": "unknown",
+        "trend_phase_cn": "未知",
+        "alignment": "aligned",
+        "alignment_cn": "共振看多",
+        "entry": 6.02,
+        "stop_loss": 5.85,
+        "target_1": 6.5,
+        "target_2": 6.92,
+        "risk_reward": 2.77,
+        "position_pct": 1.4,
+        "reasons": [
+          "MA5>MA10",
+          "MACD金叉",
+          "放量",
+          "RR=2.8:1"
+        ],
+        "holding_period": "日内(1天)",
+        "last_close": 6.08
+      },
+      {
+        "code": "SH.601328",
+        "score": 58.9,
+        "rating": "Hold",
+        "rating_cn": "观望",
+        "trend_phase": "unknown",
+        "trend_phase_cn": "未知",
+        "alignment": "mixed",
+        "alignment_cn": "分歧",
+        "entry": 6.97,
+        "stop_loss": 6.79,
+        "target_1": 7.53,
+        "target_2": 8.02,
+        "risk_reward": 3.1,
+        "position_pct": 1.3,
+        "reasons": [
+          "MA5>MA10",
+          "放量",
+          "RR=3.1:1"
+        ],
+        "holding_period": "日内(1天)",
+        "last_close": 7.15
+      }
+    ]
+  },
+  "watchlist": {
+    "A": [
+      {
+        "code": "SZ.000001",
+        "score": 54.8,
+        "rating": "Hold",
+        "rating_cn": "观望",
+        "trend_phase": "unknown",
+        "trend_phase_cn": "未知",
+        "alignment": "mixed",
+        "alignment_cn": "分歧",
+        "entry": 11.16,
+        "stop_loss": 10.89,
+        "target_1": 12.05,
+        "target_2": 12.83,
+        "risk_reward": 3.37,
+        "position_pct": 1.2,
+        "reasons": [
+          "放量",
+          "RR=3.4:1"
+        ],
+        "holding_period": "日内(1天)",
+        "last_close": 11.27
+      },
+      {
+        "code": "SH.600019",
+        "score": 53.9,
+        "rating": "Hold",
+        "rating_cn": "观望",
+        "trend_phase": "unknown",
+        "trend_phase_cn": "未知",
+        "alignment": "mixed",
+        "alignment_cn": "分歧",
+        "entry": 5.78,
+        "stop_loss": 5.61,
+        "target_1": 6.24,
+        "target_2": 6.65,
+        "risk_reward": 2.65,
+        "position_pct": 1.5,
+        "reasons": [
+          "MA5>MA10",
+          "RR=2.6:1"
+        ],
+        "holding_period": "日内(1天)",
+        "last_close": 5.91
+      },
+      {
+        "code": "SH.600674",
+        "score": 53.9,
+        "rating": "Hold",
+        "rating_cn": "观望",
+        "trend_phase": "unknown",
+        "trend_phase_cn": "未知",
+        "alignment": "mixed",
+        "alignment_cn": "分歧",
+        "entry": 15.24,
+        "stop_loss": 14.78,
+        "target_1": 16.46,
+        "target_2": 17.53,
+        "risk_reward": 2.63,
+        "position_pct": 1.5,
+        "reasons": [
+          "MA5>MA10",
+          "RR=2.6:1"
+        ],
+        "holding_period": "日内(1天)",
+        "last_close": 15.55
+      }
+    ]
+  }
+}

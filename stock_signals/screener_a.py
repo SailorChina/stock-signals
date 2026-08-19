@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging, time, json
 from dataclasses import dataclass, field
 from typing import List, Optional
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger("stock-signals")
 
@@ -73,29 +74,39 @@ def _analyze_one_a(code, delay=0.1):
     except Exception as e:
         logger.warning(f"分析{code}失败: {e}"); return None
 
-def scan_a(markets=None, config=None, output_json=False, output_file=""):
-    from .config import ScanConfig
-    from .hot_fetcher import fetch_a_hot_stocks
-    if config is None: config = ScanConfig()
-    codes = fetch_a_hot_stocks(300)
-    logger.info(f"A股候选: {len(codes)}只")
-    picks, watchlist, total_analyzed = [], [], 0
-    for code in codes:
-        result = _analyze_one_a(code, delay=config.max_delay); total_analyzed += 1
-        if result is None: continue
-        if result.score >= 55: picks.append(result)
-        elif result.score >= 45: watchlist.append(result)
-        if len(picks) > config.max_per_market * 3: picks = picks[:config.max_per_market * 3]
-        if total_analyzed % 50 == 0: logger.info(f"A股: 已处理 {total_analyzed}/{len(codes)}")
-    picks.sort(key=lambda x: x.score, reverse=True)
-    watchlist.sort(key=lambda x: x.score, reverse=True)
-    final_picks = picks[:config.max_per_market]; final_watch = watchlist[:config.max_per_market]
-    summary = {"scan_time": time.strftime("%Y-%m-%d %H:%M:%S"), "total_analyzed": total_analyzed, "total_picks": len(final_picks), "total_watchlist": len(final_watch), "markets_scanned": ["A"]}
-    output = {"date": time.strftime("%Y-%m-%d"), "summary": summary, "picks": [{"code": p.code, "score": p.score, "rating": p.rating, "rating_cn": p.rating_cn, "trend_phase": p.trend_phase, "trend_phase_cn": p.trend_phase_cn, "alignment": p.alignment, "alignment_cn": p.alignment_cn, "entry": p.entry, "stop_loss": p.stop_loss, "target_1": p.target_1, "target_2": p.target_2, "risk_reward": p.risk_reward, "position_pct": p.position_pct, "reasons": p.reasons, "holding_period": p.holding_period, "last_close": p.last_close} for p in final_picks], "watchlist": [{"code": w.code, "score": w.score, "rating": w.rating, "rating_cn": w.rating_cn, "trend_phase": w.trend_phase, "trend_phase_cn": w.trend_phase_cn, "alignment": w.alignment, "alignment_cn": w.alignment_cn, "entry": w.entry, "stop_loss": w.stop_loss, "target_1": w.target_1, "target_2": w.target_2, "risk_reward": w.risk_reward, "position_pct": w.position_pct, "reasons": w.reasons, "holding_period": w.holding_period, "last_close": w.last_close} for w in final_watch]}
-    if output_json or output_file:
-        json_output = json.dumps(output, ensure_ascii=False, indent=2)
-        if output_json: print(json_output)
-        if output_file:
-            with open(output_file, "w", encoding="utf-8") as f: f.write(json_output)
-    logger.info(f"A股扫描完成: 分析{total_analyzed}只, 推荐{len(final_picks)}只, 观察{len(final_watch)}只")
-    return output
+def scan_a(markets=None, config=None, output_json=False, output_file=""): 
+    from .screener import ScanConfig 
+    from .hot_fetcher import fetch_a_hot_stocks 
+    if config is None: config = ScanConfig() 
+    codes = fetch_a_hot_stocks(300) 
+    logger.info(f"A股预选: {len(codes)}只") 
+    picks, watchlist, total_analyzed = [], [], 0 
+    batch_size = 30 
+    for i in range(0, len(codes), batch_size): 
+        batch = codes[i:i+batch_size] 
+        batch_results = [] 
+        with ThreadPoolExecutor(max_workers=4) as executor: 
+            futures = {executor.submit(_analyze_one_a, code, delay=0.05): code for code in batch} 
+            for future in as_completed(futures): 
+                try: 
+                    r = future.result(); total_analyzed += 1 
+                    if r is not None: batch_results.append(r) 
+                except Exception as e: 
+                    logger.warning(f"并行分析失败: {futures[future]} - {e}") 
+        for result in batch_results: 
+            if result.score >= 55: picks.append(result) 
+            elif result.score >= 45: watchlist.append(result) 
+        if len(picks) > config.max_per_market * 3: picks = picks[:config.max_per_market * 3] 
+        logger.info(f"A股: 已处理 {min(i+batch_size, len(codes))}/{len(codes)}") 
+    picks.sort(key=lambda x: x.score, reverse=True) 
+    watchlist.sort(key=lambda x: x.score, reverse=True) 
+    final_picks = picks[:config.max_per_market]; final_watch = watchlist[:config.max_per_market] 
+    summary = {"scan_time": time.strftime("%Y-%m-%d %H:%M:%S"), "total_analyzed": total_analyzed, "total_picks": len(final_picks), "total_watchlist": len(final_watch), "markets_scanned": ["A"]} 
+    output = {"date": time.strftime("%Y-%m-%d"), "summary": summary, "picks": {"A": [{"code": p.code, "score": p.score, "rating": p.rating, "rating_cn": p.rating_cn, "trend_phase": p.trend_phase, "trend_phase_cn": p.trend_phase_cn, "alignment": p.alignment, "alignment_cn": p.alignment_cn, "entry": p.entry, "stop_loss": p.stop_loss, "target_1": p.target_1, "target_2": p.target_2, "risk_reward": p.risk_reward, "position_pct": p.position_pct, "reasons": list(p.reasons) if p.reasons else [], "holding_period": p.holding_period, "last_close": p.last_close} for p in final_picks]}, "watchlist": {"A": [{"code": w.code, "score": w.score, "rating": w.rating, "rating_cn": w.rating_cn, "trend_phase": w.trend_phase, "trend_phase_cn": w.trend_phase_cn, "alignment": w.alignment, "alignment_cn": w.alignment_cn, "entry": w.entry, "stop_loss": w.stop_loss, "target_1": w.target_1, "target_2": w.target_2, "risk_reward": w.risk_reward, "position_pct": w.position_pct, "reasons": list(w.reasons) if w.reasons else [], "holding_period": w.holding_period, "last_close": w.last_close} for w in final_watch]}} 
+    if output_json or output_file: 
+        json_output = json.dumps(output, ensure_ascii=False, indent=2) 
+        if output_json: print(json_output) 
+        if output_file: 
+            with open(output_file, "w", encoding="utf-8") as f: f.write(json_output) 
+    logger.info(f"A股扫描完成: 分析{total_analyzed}只, 推荐{len(final_picks)}只, 观察{len(final_watch)}只") 
+    return output 

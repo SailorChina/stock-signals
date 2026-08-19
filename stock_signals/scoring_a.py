@@ -43,7 +43,7 @@ def _turnover(ind):
     elif tr < 1: s -= 5
     return max(0, min(100, s))
 
-def _capital(ind, capital):
+def _capital(ind):
     s = 50
     if ind.north_flow > 0: s += 15
     elif ind.north_flow < -0.5: s -= 10

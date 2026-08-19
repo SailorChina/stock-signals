@@ -8,6 +8,14 @@ from ._info import get_stock_info
 
 logger = logging.getLogger("stock-signals")
 
+
+def _to_obj(d):
+    if hasattr(d, 'code'): return d
+    class _O: pass
+    o = _O()
+    for k, v in d.items(): setattr(o, k, v)
+    return o
+
 RATING_CN = {
     "Buy": "买入", "Overweight": "偏多", "Hold": "观望",
     "Underweight": "偏空", "Sell": "卖出",
@@ -179,6 +187,7 @@ def _gen_risk_warnings(r) -> List[str]:
 
 
 def _print_stock(r, index: int, watch: bool = False):
+    r = _to_obj(r)
     rating_cn = RATING_CN.get(r.rating, r.rating)
     align_cn = ALIGN_CN.get(r.alignment, r.alignment)
     phase_cn = PHASE_CN.get(r.trend_phase, r.trend_phase)
