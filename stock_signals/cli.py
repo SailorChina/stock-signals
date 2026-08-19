@@ -21,6 +21,7 @@ try:
     from stock_signals._resonance import compute_timeframe_resonance
     from stock_signals._sr import compute_support_resistance, generate_trade_plan, compute_trend_phase
     from stock_signals.screener import scan_parallel, ScanConfig
+    from stock_signals.screener_a import scan_a
     from stock_signals.reporter import print_scan_report
 except ImportError:
     pass
@@ -417,6 +418,7 @@ def main():
     p_scan.add_argument("--json", "-j", action="store_true", help="JSON output")
     p_scan.add_argument("--output", "-o", type=str, help="保存结果到文件")
     p_scan.add_argument("--log-level", default="INFO", choices=["DEBUG","INFO","WARNING","ERROR"])
+    p_scan.add_argument("--strategy", "-s", default="auto", choices=["auto", "us", "a"], help="策略: auto=自动, us=美股, a=A股")
     p_scan.add_argument("--parallel", "-p", action="store_true", help="并行扫描（速度提升3-5倍）")
     p_scan.add_argument("--log-file", type=str, help="日志文件路径")
 
@@ -453,7 +455,11 @@ def main():
             max_per_market=args.max_picks,
             max_delay=args.delay,
         )
-        result = scan_parallel(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
+        strategy = getattr(args, "strategy", "auto")
+        if strategy == "a":
+            result = scan_a(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
+        else:
+            result = scan_parallel(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
         if not args.json:
             print_scan_report(result)
         sys.exit(0)
