@@ -332,7 +332,24 @@ class ScanResult:
     reasons: List[str] = field(default_factory=list)
     trade_plan: Optional[dict] = None
     pullback_score: int = 0
+    holding_period: str = ""
 
+
+
+def compute_holding_period(entry: float, target_1: float, target_2: float, stop: float, atr: float, alignment: str, trend_phase: str) -> str:
+    """根据ATR距离、多周期共振、趋势阶段计算建议持仓周期"""
+    if entry <= 0 or atr <= 0:
+        return "未知"
+    risk = entry - stop if entry > stop else atr * 1.5
+    reward1 = target_1 - entry if target_1 > entry else atr * 2
+    atr_dist_1 = reward1 / risk if risk > 0 else 0
+    align_w = {"strong_up": 1.0, "aligned": 0.5, "mixed": 0.0, "aligned_down": -0.5, "strong_down": -1.0}.get(alignment, 0)
+    phase_adj = {"early_rally": 0, "rally": 0.5, "accumulation": -0.3, "distribution": -0.5, "decline": -1.0}.get(trend_phase, 0)
+    score = atr_dist_1 + align_w * 2 + phase_adj * 2
+    if score >= 8: return "中线(1-3月)"
+    elif score >= 5: return "波段(1-4周)"
+    elif score >= 2: return "短线(1-2周)"
+    else: return "超短(1-5天)"
 
 def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
 
@@ -441,6 +458,14 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
                 "risk_reward": tp.risk_reward if tp else 0.0,
                 "position_pct": tp.position_size_pct if tp else 0.0,
             } if tp else None,
+            holding_period=compute_holding_period(
+                tp.entry_zone if tp else 0.0,
+                tp.target_1 if tp else 0.0,
+                tp.target_2 if tp else 0.0,
+                tp.stop_loss if tp else 0.0,
+                getattr(ind, "atr_14", 0),
+                resonance.alignment, phase,
+            ),
         )
     except Exception as e:
         err_str = str(e)
@@ -686,6 +711,7 @@ def _serialize(obj):
             "rating_cn": RATING_CN.get(obj.rating, obj.rating),
             "trend_phase_cn": PHASE_CN.get(obj.trend_phase, obj.trend_phase),
             "alignment_cn": ALIGN_CN.get(obj.alignment, obj.alignment),
+            "holding_period": obj.holding_period,
         }
     if isinstance(obj, dict):
         return {k: _serialize(v) for k, v in obj.items()}

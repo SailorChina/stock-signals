@@ -211,6 +211,8 @@ def _print_stock(r, index: int, watch: bool = False):
         print(f"      入场: {r.entry:.2f} ({dist_entry}){entry_type}  止损: {r.stop_loss:.2f} ({dist_sl})")
         print(f"      目标1: {r.target_1:.2f} ({dist_t1})  目标2: {r.target_2:.2f} ({dist_t2})")
         print(f"      风险回报: {r.risk_reward:.1f}:1  仓位建议: {r.position_pct:.1f}%")
+        if getattr(r, "holding_period", ""):
+            print(f"      持仓周期: {r.holding_period}")
 
     # 入场条件 & 风险提示（推荐和观察都显示）
     conditions = _gen_entry_conditions(r)
