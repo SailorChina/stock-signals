@@ -28,17 +28,23 @@ def get_a_trade_plan(ind, entry):
     pos_pct = min(3.0, (risk / entry * 100) * 0.5) if risk > 0 else 1.0
     return {"entry_zone": round(entry, 2), "stop_loss": round(stop, 2), "target_1": round(target_1, 2), "target_2": round(target_2, 2), "risk_reward": round(rr, 2), "position_pct": round(pos_pct, 1)}
 
-def compute_a_holding_period(entry, target_1, target_2, stop, atr, alignment, trend_phase):
-    if entry <= 0 or atr <= 0: return "未知"
-    risk = entry - stop if entry > stop else atr * 1.5
-    reward = target_1 - entry if target_1 > entry else atr * 2
-    atr_dist = reward / risk if risk > 0 else 0
-    align_w = {"strong_up": 1.0, "aligned": 0.5, "mixed": 0.0}.get(alignment, 0)
-    phase_adj = {"early_rally": 0, "rally": 0.5, "accumulation": -0.3, "distribution": -0.5, "decline": -1.0}.get(trend_phase, 0)
-    score = atr_dist + align_w * 2 + phase_adj * 2
-    if score >= 8: return "短线(3-5天)"
-    elif score >= 5: return "超短(1-3天)"
-    elif score >= 2: return "日内(1天)"
+def compute_a_holding_period(ind, entry, target_1, stop, alignment, trend_phase):
+    if entry <= 0 or ind.atr_14 <= 0: return "未知"
+    risk = entry - stop if entry > stop else ind.atr_14 * 1.5
+    reward = target_1 - entry if target_1 > entry else ind.atr_14 * 2
+    rr = reward / risk if risk > 0 else 0
+    trend_strength = 3 if ind.ma5 > ind.ma10 > ind.ma20 else (2 if ind.ma5 > ind.ma10 else (1 if ind.ma5 > ind.ma20 else 0))
+    atr_pct = ind.atr_14 / entry * 100 if entry > 0 else 5
+    vol_adj = min(2, max(-2, (10 - atr_pct)))
+    j = getattr(ind, 'kdj_j', 50)
+    kdj_adj = 1 if 30 < j < 70 else (2 if j < 20 else (-1 if j > 80 else 0))
+    phase_map = {"early_rally": 1, "rally": 2, "accumulation": 0, "distribution": -1, "decline": -2, "unknown": 0}
+    align_map = {"aligned": 1, "mixed": 0, "strong_up": 2, "none": -1}
+    score = rr * 1.5 + trend_strength * 1.5 + vol_adj + kdj_adj + phase_map.get(trend_phase, 0) + align_map.get(alignment, 0)
+    if score >= 9: return "波段(5-10天)"
+    elif score >= 6: return "短线(3-5天)"
+    elif score >= 3: return "超短(1-3天)"
+    elif score >= 0: return "日内(1天)"
     else: return "观望"
 
 def _analyze_one_a(code, delay=0.1):
@@ -51,22 +57,39 @@ def _analyze_one_a(code, delay=0.1):
         from .scoring_a import compute_a_rating
         rating_result = compute_a_rating(ind)
         score = rating_result["score"]; rating = rating_result["rating"]
+        # P0: 涨跌停保护
+        if getattr(ind, 'is_limit_up', False): return None
+        if getattr(ind, 'is_limit_down', False): return None
+        # P0: KDJ超买过滤
+        if getattr(ind, 'kdj_j', 50) > 100: return None
         if ind.day_change_pct > 5: return None
         if ind.rsi_14 > 75: return None
         if ind.vol_ratio < 0.8: return None
-        entry = ind.ma5 if ind.last_close > ind.ma5 * 1.02 else ind.last_close * 0.99
+        # P0: 改进入场价逻辑
+        if ind.last_close < ind.ma5 * 1.02:
+            entry = ind.ma5
+        elif ind.last_close < ind.ma10 * 1.05:
+            entry = ind.ma10
+        else:
+            entry = ind.last_close * 0.995
+        # P0: 偏离MA20过大则跳过
+        if getattr(ind, 'price_vs_ma20', 0) > 15: return None
         tp = get_a_trade_plan(ind, entry)
         if tp["risk_reward"] < 2.5: return None
         reasons = []
         if ind.ma5 > ind.ma10: reasons.append("MA5>MA10")
         if ind.macd_dif > ind.macd_dea: reasons.append("MACD金叉")
         if ind.vol_ratio > 1.5: reasons.append("放量")
+        j_val = getattr(ind, 'kdj_j', 50)
+        if j_val < 20: reasons.append(f"KDJ超卖(J={j_val:.0f})")
+        elif j_val > 80: reasons.append(f"KDJ超买(J={j_val:.0f})")
+        if getattr(ind, 'is_limit_up', False): reasons.append("涨停(不可追)")
         reasons.append(f"RR={tp['risk_reward']:.1f}:1")
         from ._sr import compute_trend_phase
         try: phase = compute_trend_phase(df, ind)
         except: phase = "unknown"
         alignment = "aligned" if score >= 60 else "mixed"
-        holding_period = compute_a_holding_period(tp["entry_zone"], tp["target_1"], tp["target_2"], tp["stop_loss"], ind.atr_14, alignment, phase)
+        holding_period = compute_a_holding_period(ind, tp["entry_zone"], tp["target_1"], tp["stop_loss"], alignment, phase)
         cn_r = {"Buy": "买入", "Overweight": "偏多", "Hold": "观望", "Underweight": "偏空", "Sell": "卖出"}.get(rating, rating)
         cn_p = {"accumulation": "吸筹阶段", "early_rally": "上涨早期", "rally": "上涨阶段", "distribution": "派发阶段", "decline": "下跌阶段", "unknown": "未知"}.get(phase, phase)
         cn_a = {"strong_up": "强共振看多", "aligned": "共振看多", "mixed": "分歧", "none": "无"}.get(alignment, alignment)

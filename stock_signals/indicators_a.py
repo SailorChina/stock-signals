@@ -14,8 +14,14 @@ class IndicatorsA:
     turnover_rate: float = 0.0; north_flow: float = 0.0
     is_longhubang: bool = False; is_sector_leader: bool = False
     limit_up_prob: float = 0.0; sector_change: float = 0.0
-    price_vs_ma5: float = 0.0; price_vs_ma10: float = 0.0; price_vs_ma20: float = 0.0
-    
+    # KDJ
+    kdj_k: float = 0.0; kdj_d: float = 0.0; kdj_j: float = 0.0
+    # 涨跌停保护
+    is_limit_up: bool = False; is_limit_down: bool = False
+    change_pct_5d: float = 0.0
+    price_vs_ma20: float = 0.0
+    price_vs_ma5: float = 0.0; price_vs_ma10: float = 0.0
+
     def update(self, df, code=""):
         close = df["close"].values.astype(float)
         high = df["high"].values.astype(float)
@@ -39,7 +45,7 @@ class IndicatorsA:
             self.macd_dif = float(dif[-1]) if len(dif) > 0 else 0
             self.macd_dea = float(self._ema(np.array(dif), 9)[-1]) if len(dif) > 0 else 0
         if len(high) >= 15:
-            tr_vals = [max(high[i]-low[i], abs(high[i]-close[i-1]) if i>-1 else 0, abs(low[i]-close[i-1]) if i>-1 else 0) for i in range(-14, 0)]
+            tr_vals = [max(high[i]-low[i], abs(high[i]-close[i-1]) if i > -len(close) else 0, abs(low[i]-close[i-1]) if i > -len(close) else 0) for i in range(-14, 0)]
             self.atr_14 = float(np.mean(tr_vals))
         if len(volume) >= 6:
             self.vol_ratio = float(volume[-1] / np.mean(volume[-6:-1])) if np.mean(volume[-6:-1]) > 0 else 1.0
@@ -49,7 +55,47 @@ class IndicatorsA:
         if len(close) >= 6:
             obv = sum(volume[i] if close[i] > close[i-1] else (-volume[i] if close[i] < close[i-1] else 0) for i in range(-5, 0))
             self.obv_trend = "up" if obv > 0 else "down" if obv < 0 else "flat"
-    
+        self.update_kdj_and_limits(df, code)
+
+    def update_kdj_and_limits(self, df, code=""):
+        """Calculate KDJ and limit up/down protection"""
+        close = df["close"].values.astype(float)
+        high = df["high"].values.astype(float)
+        low = df["low"].values.astype(float)
+
+        if len(close) >= 9:
+            # Calculate KDJ using proper 9-period rolling window
+            n = len(close)
+            rsv_list = []
+            for i in range(8, n):
+                window = close[i-8:i+1]
+                h_window = high[i-8:i+1]
+                l_window = low[i-8:i+1]
+                h9 = float(np.max(h_window))
+                l9 = float(np.min(l_window))
+                if h9 == l9:
+                    rsv_list.append(50.0)
+                else:
+                    rsv_list.append((close[i] - l9) / (h9 - l9) * 100)
+            if rsv_list:
+                k_vals = [rsv_list[0]]
+                for i in range(1, len(rsv_list)):
+                    k_vals.append(k_vals[-1] * 2/3 + rsv_list[i] * 1/3)
+                d_vals = [k_vals[0]]
+                for i in range(1, len(k_vals)):
+                    d_vals.append(d_vals[-1] * 2/3 + k_vals[i] * 1/3)
+                self.kdj_k = k_vals[-1]
+                self.kdj_d = d_vals[-1]
+                self.kdj_j = 3 * self.kdj_k - 2 * self.kdj_d
+
+        if len(close) >= 2:
+            daily_change = (close[-1] - close[-2]) / close[-2] * 100
+            self.is_limit_up = daily_change >= 9.5
+            self.is_limit_down = daily_change <= -9.5
+
+        if len(close) >= 6:
+            self.change_pct_5d = (close[-1] - close[-6]) / close[-6] * 100
+
     def _ema(self, data, period):
         if len(data) < period: return data
         m = 2 / (period + 1); ema = np.empty_like(data); ema[0] = data[0]

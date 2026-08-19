@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """A股专属评分模块"""
 from __future__ import annotations
-A_DIM_WEIGHTS = {"volume": 0.25, "turnover": 0.15, "capital": 0.15, "trend": 0.20, "momentum": 0.10, "sentiment": 0.10}
+A_DIM_WEIGHTS = {"trend": 0.15, "momentum": 0.15, "volume": 0.15, "turnover": 0.10, "capital": 0.20, "sentiment": 0.25}
 A_MIN_SCORE = 55; A_WATCHLIST_MIN = 45
 
 def compute_a_rating(ind, capital=None, short_pct=None):
-    scores = {"trend": _trend(ind), "momentum": _momentum(ind), "volume": _volume(ind), "turnover": _turnover(ind), "capital": _capital(ind), "sentiment": _sentiment(ind)}
+    scores = {"trend": _trend(ind), "momentum": _momentum(ind), "volume": _volume(ind), "turnover": _turnover(ind), "capital": _capital(ind), "sentiment": _sentiment(ind), "kdj": _kdj(ind), "limit_prot": _limit_protection(ind)}
     total = sum(scores[k] * v for k, v in A_DIM_WEIGHTS.items())
     rating = "Buy" if total >= 70 else "Overweight" if total >= 60 else "Hold" if total >= 50 else "Underweight" if total >= 40 else "Sell"
     confidence = "high" if total >= 70 else "medium" if total >= 60 else "low"
@@ -56,3 +56,25 @@ def _sentiment(ind):
     if ind.limit_up_prob > 0.5: s += 10
     if ind.sector_change > 2: s += 5
     return max(0, min(100, s))
+
+def _kdj(ind):
+    s = 50
+    j = getattr(ind, 'kdj_j', 50)
+    k = getattr(ind, 'kdj_k', 50)
+    if j > 100: s -= 20
+    elif j > 80: s -= 10
+    elif j < 0: s += 20
+    elif j < 20: s += 10
+    if 40 < k < 60: s += 5
+    return max(0, min(100, s))
+
+def _limit_protection(ind):
+    s = 50
+    if getattr(ind, 'is_limit_up', False): s -= 30
+    elif getattr(ind, 'is_limit_down', False): s -= 20
+    change5 = getattr(ind, 'change_pct_5d', 0)
+    if change5 > 15: s -= 15
+    elif change5 > 10: s -= 8
+    elif change5 < -10: s += 5
+    return max(0, min(100, s))
+

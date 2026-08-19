@@ -32,8 +32,8 @@ PHASE_CN = {
     "decline": "下跌阶段", "unknown": "未知",
 }
 MARKET_NAMES = {
-    "SH": "¥A股（沪）", "SZ": "¥A股（深）",
-    "HK": "¥香港", "US": "¥美股", "A": "¥A股",
+    "SH": "YA股（沪）", "SZ": "YA股（深）",
+    "HK": "Y香港", "US": "Y美股", "A": "YA股",
 }
 
 
@@ -45,7 +45,7 @@ def print_scan_report(result: Dict) -> None:
     watchlist = result.get("watchlist", {})
     sep = "=" * 60
     print(f"\n{sep}")
-    print(f"  ¥每日股票推荐报告  {date}")
+    print(f"  Y每日股票推荐报告  {date}")
     print(sep)
     print(f"  扫描时间: {summary.get('scan_time', '未知')}")
     print(f"  分析 {summary.get('total_analyzed', 0)} 只 | 推荐 {summary.get('total_picks', 0)} 只 | 观察 {summary.get('total_watchlist', 0)} 只")
@@ -60,12 +60,12 @@ def print_scan_report(result: Dict) -> None:
         print(f"  {mname}")
         print(f"{'─' * 60}")
         if market_picks:
-            print(f"  ¥推荐（{len(market_picks)}只）:")
+            print(f"  Y推荐（{len(market_picks)}只）:")
             for i, r in enumerate(market_picks, 1):
                 _print_stock(r, i)
             print()
         if market_watch:
-            print(f"  ¥观察（候选）（{len(market_watch)}只）:")
+            print(f"  Y观察（候选）（{len(market_watch)}只）:")
             for i, r in enumerate(market_watch, 1):
                 _print_stock(r, i, watch=True)
             print()
@@ -237,7 +237,7 @@ def _print_stock(r, index: int, watch: bool = False):
 
 
 def get_summary_text(result: Dict) -> str:
-    lines = [f"¥每日股票推荐 {result.get('date', '')}"]
+    lines = [f"Y每日股票推荐 {result.get('date', '')}"]
     for market in ["A", "HK", "US"]:
         picks = result.get("picks", {}).get(market, [])
         if picks:
