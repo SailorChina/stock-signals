@@ -19,7 +19,7 @@ try:
         get_capital_data, get_short_data,
     )
     from stock_signals._resonance import compute_timeframe_resonance
-    from stock_signals._sr import compute_support_resistance, generate_trade_plan
+    from stock_signals._sr import compute_support_resistance, generate_trade_plan, compute_trend_phase
     from stock_signals.screener import scan_parallel, ScanConfig
     from stock_signals.reporter import print_scan_report
 except ImportError:
@@ -262,7 +262,7 @@ def analyze(code, timeframe="1d", output_json=False):
 
     resonance = compute_timeframe_resonance(code, ind, capital, short_pct)
     sr = compute_support_resistance(df)
-    trend_phase = ind.trend_phase
+    trend_phase = compute_trend_phase(df, ind)
     trade_plan = generate_trade_plan(ind, sr, trend_phase)
 
     result = {
@@ -309,7 +309,7 @@ def analyze(code, timeframe="1d", output_json=False):
             "kdj_k": ind.kdj_k, "kdj_d": ind.kdj_d, "kdj_j": ind.kdj_j,
             "boll_mid": ind.boll_mid, "boll_upper": ind.boll_upper,
             "boll_lower": ind.boll_lower, "boll_width": ind.boll_width,
-            "atr_14": ind.atr_14, "atr_14_pct": ind.atr_14_pct,
+            "atr_14": ind.atr_14, "atr_14_pct": (ind.atr_14 / ind.last_close * 100 if ind.last_close > 0 else 0),
             "obv_trend": ind.obv_trend, "vol_ratio": ind.vol_ratio, "vwma_20": ind.vwma_20,
             "adx": ind.adx, "plus_di": ind.plus_di, "minus_di": ind.minus_di,
             "macd_divergence": ind.macd_divergence,

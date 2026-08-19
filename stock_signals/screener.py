@@ -116,6 +116,11 @@ BLACKLIST = {
 
     "SH.601398", "SH.601288", "SH.601166", "SH.600030", "SH.600036", "SH.601818", "SH.601881", "SH.600016", "SZ.000001", "SZ.000002", "SZ.002142", "SZ.000776", "SZ.002807", "SZ.001227", "HK.00005", "HK.02388", "HK.03968", "HK.00939", "HK.01288", "HK.03988", "HK.02888",}
 
+
+RATING_CN = {"Buy": "买入", "Overweight": "偏多", "Hold": "观望", "Underweight": "偏空", "Sell": "卖出"}
+PHASE_CN = {"accumulation": "吸筹阶段", "early_rally": "上涨早期", "rally": "上涨阶段", "distribution": "派发阶段", "decline": "下跌阶段", "unknown": "未知"}
+ALIGN_CN = {"strong_up": "强共振看多", "aligned": "共振看多", "mixed": "分歧", "aligned_down": "共振看空", "strong_down": "强共振看空", "none": "无"}
+
 def _is_blacklisted(code: str) -> bool:
     # v2.7 黑名单过滤：银行/ETF
     return code in BLACKLIST
@@ -678,6 +683,9 @@ def _serialize(obj):
             "stop_loss": obj.stop_loss, "target_1": obj.target_1,
             "target_2": obj.target_2, "risk_reward": obj.risk_reward,
             "position_pct": obj.position_pct, "reasons": obj.reasons,
+            "rating_cn": RATING_CN.get(obj.rating, obj.rating),
+            "trend_phase_cn": PHASE_CN.get(obj.trend_phase, obj.trend_phase),
+            "alignment_cn": ALIGN_CN.get(obj.alignment, obj.alignment),
         }
     if isinstance(obj, dict):
         return {k: _serialize(v) for k, v in obj.items()}
