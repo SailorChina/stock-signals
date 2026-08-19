@@ -49,6 +49,27 @@ def fetch_a_hot_stocks(top_n=300):
             return codes
         except Exception as e2:
             logger.warning(f"  Sina排行也失败: {e2}")
+    # Try 东方财富热股榜 as fallback
+    try:
+        t2 = time.time()
+        url2 = "http://qt.gtimg.cn/q/sh600519"  # Test if API works
+        req2 = urllib.request.Request(url2, headers={"User-Agent":"Mozilla/5.0"})
+        resp2 = urllib.request.urlopen(req2, timeout=5)
+        # Get hot stocks from eastmoney
+        url3 = "http://push2.eastmoney.com/api/qt/clist/get?pn=1&pz=200&po=1&np=1&fltt=2&invt=2&fid=f3&fs=m:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23&fields=f12,f14,f2,f3"
+        req3 = urllib.request.Request(url3, headers={"User-Agent":"Mozilla/5.0","Referer":"http://quote.eastmoney.com/"})
+        resp3 = urllib.request.urlopen(req3, timeout=8)
+        data3 = json.loads(resp3.read().decode('utf-8'))
+        if data3.get('data') and data3['data'].get('diff'):
+            for item in data3['data']['diff'][:top_n]:
+                code_str = item.get('f12','')
+                parsed = _parse_a_code(code_str)
+                if parsed and parsed not in codes:
+                    codes.append(parsed)
+            logger.info(f"  A股热门(东财): {len(codes)}只 ({time.time()-t2:.1f}s)")
+            return codes
+    except Exception as e3:
+        logger.warning(f"  东财热股获取失败: {e3}")
     logger.warning("  A股热门获取失败,使用静态池")
     return codes
 

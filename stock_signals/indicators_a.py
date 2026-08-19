@@ -21,6 +21,10 @@ class IndicatorsA:
     change_pct_5d: float = 0.0
     price_vs_ma20: float = 0.0
     price_vs_ma5: float = 0.0; price_vs_ma10: float = 0.0
+    # BOLL布林带
+    bb_upper: float = 0.0; bb_middle: float = 0.0; bb_lower: float = 0.0
+    bb_width: float = 0.0
+    price_vs_bb: str = "middle"
 
     def update(self, df, code=""):
         close = df["close"].values.astype(float)
@@ -55,7 +59,27 @@ class IndicatorsA:
         if len(close) >= 6:
             obv = sum(volume[i] if close[i] > close[i-1] else (-volume[i] if close[i] < close[i-1] else 0) for i in range(-5, 0))
             self.obv_trend = "up" if obv > 0 else "down" if obv < 0 else "flat"
+        self.update_boll(df)
         self.update_kdj_and_limits(df, code)
+
+    def update_boll(self, df):
+        """Calculate Bollinger Bands (20-day, 2 std)"""
+        close = df["close"].values.astype(float)
+        if len(close) < 20: return
+        mid = float(np.mean(close[-20:]))
+        std = float(np.std(close[-20:]))
+        self.bb_upper = mid + 2 * std
+        self.bb_middle = mid
+        self.bb_lower = mid - 2 * std
+        self.bb_width = (self.bb_upper - self.bb_lower) / mid * 100 if mid > 0 else 0
+        if self.last_close > self.bb_upper:
+            self.price_vs_bb = "above"
+        elif self.last_close > self.bb_middle:
+            self.price_vs_bb = "upper_half"
+        elif self.last_close > self.bb_lower:
+            self.price_vs_bb = "lower_half"
+        else:
+            self.price_vs_bb = "below"
 
     def update_kdj_and_limits(self, df, code=""):
         """Calculate KDJ and limit up/down protection"""
@@ -64,7 +88,6 @@ class IndicatorsA:
         low = df["low"].values.astype(float)
 
         if len(close) >= 9:
-            # Calculate KDJ using proper 9-period rolling window
             n = len(close)
             rsv_list = []
             for i in range(8, n):

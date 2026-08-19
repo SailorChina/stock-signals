@@ -16,7 +16,7 @@ class AScanResult:
     risk_reward: float = 0.0; position_pct: float = 0.0; last_close: float = 0.0
     reasons: List[str] = field(default_factory=list)
     holding_period: str = ""; trade_plan: Optional[dict] = None
-    rating_cn: str = ""; trend_phase_cn: str = ""; alignment_cn: str = ""
+    rating_cn: str = ""; trend_phase_cn: str = ""; alignment_cn: str = ""; operable: str = ""
 
 def get_a_trade_plan(ind, entry):
     atr = getattr(ind, 'atr_14', 1.5)
@@ -85,15 +85,43 @@ def _analyze_one_a(code, delay=0.1):
         elif j_val > 80: reasons.append(f"KDJ超买(J={j_val:.0f})")
         if getattr(ind, 'is_limit_up', False): reasons.append("涨停(不可追)")
         reasons.append(f"RR={tp['risk_reward']:.1f}:1")
+        # P1: BOLL位置
+        bb_pos = getattr(ind, "price_vs_bb", "middle")
+        if bb_pos == "lower_half": reasons.append("布林下轨支撑")
+        elif bb_pos == "above": reasons.append("突破上轨")
+        # P1: 板块联动
+        chg5 = getattr(ind, "change_pct_5d", 0)
+        if 3 < chg5 < 8: reasons.append(f"5日涨{chg5:.1f}%板块联动")
+        elif chg5 > 10: reasons.append(f"5日涨{chg5:.1f}%警惕追高")
         from ._sr import compute_trend_phase
         try: phase = compute_trend_phase(df, ind)
         except: phase = "unknown"
         alignment = "aligned" if score >= 60 else "mixed"
+        # P1: 可操作标记
+        j_val = getattr(ind, "kdj_j", 50)
+        limit_up = getattr(ind, "is_limit_up", False)
+        limit_down = getattr(ind, "is_limit_down", False)
+        bb_pos = getattr(ind, "price_vs_bb", "middle")
+        chg5 = getattr(ind, "change_pct_5d", 0)
+        if limit_up:
+            operable = "涨停不可入"
+        elif limit_down:
+            operable = "跌停有风险"
+        elif j_val > 100:
+            operable = "KDJ严重超买"
+        elif j_val < 20 and chg5 < -5:
+            operable = "KDJ超卖+超跌反弹"
+        elif chg5 > 15:
+            operable = "5日涨幅过大"
+        elif bb_pos == "above" and j_val > 80:
+            operable = "突破上轨+超买"
+        else:
+            operable = "可操作"
         holding_period = compute_a_holding_period(ind, tp["entry_zone"], tp["target_1"], tp["stop_loss"], alignment, phase)
         cn_r = {"Buy": "买入", "Overweight": "偏多", "Hold": "观望", "Underweight": "偏空", "Sell": "卖出"}.get(rating, rating)
         cn_p = {"accumulation": "吸筹阶段", "early_rally": "上涨早期", "rally": "上涨阶段", "distribution": "派发阶段", "decline": "下跌阶段", "unknown": "未知"}.get(phase, phase)
         cn_a = {"strong_up": "强共振看多", "aligned": "共振看多", "mixed": "分歧", "none": "无"}.get(alignment, alignment)
-        return AScanResult(code=code, score=score, rating=rating, alignment=alignment, trend_phase=phase, entry=tp["entry_zone"], stop_loss=tp["stop_loss"], target_1=tp["target_1"], target_2=tp["target_2"], risk_reward=tp["risk_reward"], position_pct=tp["position_pct"], last_close=ind.last_close, reasons=reasons, holding_period=holding_period, trade_plan=tp, rating_cn=cn_r, trend_phase_cn=cn_p, alignment_cn=cn_a)
+        return AScanResult(code=code, score=score, rating=rating, alignment=alignment, trend_phase=phase, entry=tp["entry_zone"], stop_loss=tp["stop_loss"], target_1=tp["target_1"], target_2=tp["target_2"], risk_reward=tp["risk_reward"], position_pct=tp["position_pct"], last_close=ind.last_close, reasons=reasons, holding_period=holding_period, trade_plan=tp, rating_cn=cn_r, trend_phase_cn=cn_p, alignment_cn=cn_a, operable=operable)
     except Exception as e:
         logger.warning(f"分析{code}失败: {e}"); return None
 

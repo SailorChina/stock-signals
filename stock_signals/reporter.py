@@ -222,6 +222,12 @@ def _print_stock(r, index: int, watch: bool = False):
         print(f"      风险回报: {r.risk_reward:.1f}:1  仓位建议: {r.position_pct:.1f}%")
         if getattr(r, "holding_period", ""):
             print(f"      持仓周期: {r.holding_period}")
+        # P1: 可操作标记
+        operable = getattr(r, "operable", "")
+        if operable:
+            op_color = "green" if operable == "可操作" else "yellow" if "超买" in operable or "涨幅" in operable else "red"
+            from cli import _color
+            print(f"      可操作: {_color(operable, op_color, True)}")
 
     # 入场条件 & 风险提示（推荐和观察都显示）
     conditions = _gen_entry_conditions(r)
