@@ -1,17 +1,13 @@
 import sys,time,json,logging
 logging.basicConfig(level=logging.WARNING)
-sys.path.insert(0,r'D:\Backup\Documents\ChatGPT\AI\stock-signals')
+sys.path.insert(0,r'D:\\Backup\\Documents\\ChatGPT\\AI\\stock-signals')
 from stock_signals.indicators import fetch_kline,compute_indicators
 from stock_signals.scoring import compute_rating
 from stock_signals._sr import compute_support_resistance,generate_trade_plan,compute_trend_phase
 from stock_signals._vcp import detect_vcp
 RATING_CN={'Buy':'买入','Overweight':'偏多','Hold':'观望','Underweight':'偏空','Sell':'卖出'}
 PHASE_CN={'accumulation':'吸筹阶段','early_rally':'上涨早期','rally':'上涨阶段','distribution':'派发阶段','decline':'下跌阶段','unknown':'未知'}
-import json as _json
-reg=_json.load(open(r'D:\Backup\Documents\ChatGPT\AI\stock-signals\stock_signals\.hot_registry.json','r',encoding='utf-8'))
-us_codes=list(reg.keys())
-us_codes=[c for c in us_codes if c.startswith('US.')]
-codes=us_codes[:80]
+codes=["US.SGMO","US.INTC","US.NVDA","US.AAL","US.NKE","US.AAPL","US.RIG","US.HL","US.MU","US.GRAB","US.PFE","US.NFLX","US.TSLA","US.AMZN","US.META","US.PLTR","US.RIVN","US.AMD","US.CDE","US.NIO","US.ORCL","US.AVGO","US.NOW","US.MSFT","US.WMT","US.JBLU","US.GOOGL","US.DVN","US.XOM","US.UBER"]
 results=[]
 t=time.time()
 for code in codes:
@@ -36,7 +32,8 @@ for code in codes:
     except: pass
 results.sort(key=lambda x:x['score'],reverse=True)
 out={'date':'2026-08-19','summary':{'scan_time':time.strftime('%Y-%m-%d %H:%M:%S'),'total_analyzed':len(codes),'total_picks':len(results)},'picks':{'US':results}}
-_json.dump(out,open(r'D:\Backup\Documents\ChatGPT\AI\stock-signals\scan_result.json','w',encoding='utf-8'),indent=2,ensure_ascii=False)
-print(f'Done: {len(codes)} scanned {len(results)} picks | Top5:')
+with open(r'D:\Backup\Documents\ChatGPT\AI\stock-signals\scan_result.json','w',encoding='utf-8') as f:
+    json.dump(out,f,indent=2,ensure_ascii=False)
+print(f'Done: {len(codes)} scanned {len(results)} picks')
 for i,r in enumerate(results[:5],1):
-    print(f"  {i}. {r['code']} {r['rating_cn']}({r['rating']}) score={r['score']} RR={r['risk_reward']}:1 {r['trend_phase_cn']}({r['trend_phase']}) price={r['last_close']:.2f} entry={r['entry']:.2f} SL={r['stop_loss']:.2f} T1={r['target_1']:.2f}")
+    print(f"  {i}. {r['code']} {r['rating_cn']}({r['rating']}) score={r['score']} RR={r['risk_reward']}:1 {r['trend_phase_cn']}({r['trend_phase']}) price={r['last_close']:.2f} entry={r['entry']:.2f} SL={r['stop_loss']:.2f}")

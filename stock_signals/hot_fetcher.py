@@ -10,14 +10,12 @@ os.environ.setdefault('no_proxy', '*')
 os.environ.setdefault('NO_PROXY', '*')
 
 def _parse_a_code(raw):
-    """将 SH600519 -> SH.600519, SZ000858 -> SZ.000858"""
     if len(raw) < 3: return ""
     prefix = raw[:2].upper(); num = raw[2:]
     if prefix in ("SH", "SZ", "BJ"): return f"{prefix}.{num}"
     return ""
 
 def fetch_a_hot_stocks(top_n=300):
-    """获取A股热门股 - akshare雪球热度榜"""
     codes = []
     try:
         import akshare as ak
@@ -31,7 +29,6 @@ def fetch_a_hot_stocks(top_n=300):
         return codes
     except Exception as e:
         logger.warning(f"  雪球热门获取失败: {e}")
-        # Fallback to Sina
         try:
             t = time.time()
             all_items = []
@@ -56,7 +53,6 @@ def fetch_a_hot_stocks(top_n=300):
     return codes
 
 def fetch_hk_hot_stocks(top_n=300):
-    """港股热门股 - 使用Tencent实时行情验证静态池"""
     static_pool = [
         "HK.00700", "HK.09988", "HK.00001", "HK.02382", "HK.03690",
         "HK.09888", "HK.02015", "HK.02359", "HK.00686", "HK.00291",
@@ -71,11 +67,11 @@ def fetch_hk_hot_stocks(top_n=300):
         resp = urllib.request.urlopen(req, timeout=10)
         data = resp.read().decode('gbk')
         valid = []
-        for line in data.strip().split('\n'):
+        for line in data.strip().split(chr(10)):
             if '~' in line and 'none_match' not in line:
                 parts = line.split('=')
                 if len(parts) >= 2:
-                    vals = parts[-1].strip('\"').split('~')
+                    vals = parts[-1].strip('"').split('~')
                     if len(vals) > 2 and vals[2]:
                         valid.append(f"HK.{vals[2].zfill(5)}")
         codes = valid[:top_n]
@@ -86,17 +82,116 @@ def fetch_hk_hot_stocks(top_n=300):
     logger.info("  港股: 使用静态池")
     return static_pool[:top_n]
 
+# 美股静态池 300+只，覆盖SP500主流标的
+_US_STATIC_POOL = [
+    "AAPL","MSFT","NVDA","AMZN","META","GOOG","GOOGL","TSLA","AVGO","CSCO",
+    "ORCL","AMD","INTC","QCOM","MU","NXPI","AMAT","LRCX","ASML","TXN",
+    "NOW","CRM","ADBE","PANW","PLTR","SNPS","CDNS","MCHP","IDXX",
+    "ZBRA","HOLX","DXCM","ILMN","MRNA","VTRS","REGN","BIIB","BMRN",
+    "CELG","CERN","VRTX","ISRG","ZTS","AMGN","GILD","LLY","ABBV","JNJ",
+    "MRK","PFE","BMY","UNH","HUM","CVS","SYK","BSX","TMO","DHR","ABT",
+    "JPM","BAC","WFC","C","GS","MS","BK","PNC","USB","TFC","COF","AXP",
+    "BRK-B","V","MA","PYPL","SQ","FIS","FISV","GPN","STT","NTRS",
+    "CBOE","ICE","MCO","SPGI","AON","AJG","TRV","HIG","ALL","AIG",
+    "PGR","CINF","L","BLK","SCHW","MMC","WTW","SLP","FHN","SWK","RF",
+    "WMT","COST","TGT","HD","LOW","TJX","BKNG","MCD","NKE","LULU",
+    "SBUX","DIS","NFLX","CMCSA","PARA","WBD","YUM","QSR","CMG","DPW",
+    "DCH","MDLZ","HSY","CL","UL","GIS","KHC","K","SYZ","HST",
+    "ANN","AHT","DRH","RHP","PEAK","VTR","PSA","ESS","AMT","EXR",
+    "HON","CAT","DE","BA","GE","UNP","UPS","LMT","NOC","GD","ETN",
+    "PHI","ROK","IID","JEC","JBHT","ODFL","CHRW","XPO","KNX","APD",
+    "BKR","EMR","RTX","FCX","NEM","COP","XOM","OXY","DVN","EOG",
+    "PXD","MPC","VLO","TSO","CTRA","WLL","PR","RRC","THO","EQT",
+    "LIN","DD","NUE","STLD","CLF","CVV","RS","PKG","VMC","ML","AA","X","SM",
+    "JNJ","PFE","UNH","LLY","ABBV","MRK","BMY","AMGN","GILD","BIIB",
+    "BMRN","ILMN","MRNA","VTRS","REGN","VRTX","ISRG","ZTS","AMGN","SYK",
+    "BSX","TMO","DHR","ABT","BAX","DXCM","HOLX","IDXX","ZBRA","ALGN",
+    "MOH","UHS","HCAT","ALGN","INCY","MRVI","SRPT","NBIX","SGMO","BNTX",
+    "NVAX","SRNE","SRRK","KPTI","ACAD","CRSP","EDIT","BEAM","NTLA","VERV",
+    "MO","PM","BTI","MDLZ","HSY","GIS","K","CPB","CAG","KHC",
+    "PEP","KO","MCD","YUM","QSR","CMG","SBUX","MDLZ","HSY","CLX",
+    "KMB","ADM","BG","TSN","HPQ","DE","CAT","FCX","NEM","AA",
+    "NUE","STLD","CLF","X","CMC","PKG","VMC","MLM","BHI","RIG",
+    "SLB","OXY","DVN","EOG","PXD","MPC","VLO","PSX","HES","FANG",
+    "COP","XOM","OXY","DVN","EOG","PXD","MPC","VLO","PSX","HES",
+    "FANG","MRO","APA","RRC","SWN","CNX","EQT","AR","GPOR","PARR",
+    "HAL","BKR","FTI","NOV","SLB","OII","CHX","PII","RIG","VAL",
+    "HP","NE","CTRA","OVV","PR","MUR","WTI","SWN","RNG","AR",
+    "CHK","RRC","PRT","MGY","CRK","LGP","FANG","CNQ","TCM","NLP",
+    "BTO","WEP","MEG","TGNA","CVCO","GMS","MGC","NAT","TGP","PAA",
+    "WMB","EQT","NBL","AR","LPL","MTDR","SWN","RRC","CTRA","WPX",
+    "RPTX","GPOR","GEL","NBR","SM","CNP","ET","LNG","MPLX","PAGP",
+    "WES","OKE","TECK","FCX","WPM","AEM","KGE","GLDG","AU","NEM",
+    "GOLD","FNV","WPM","AU","KGE","GLDG","HL","CDE","AG","MAG",
+    "SAND","PAAS","EXK","SLRC","EPRT","REI","CDZI","MAG","SAND","PAAS",
+    "GLAD","CARS","FRO","EURN","TORM","INSW","STNG","FAL","NAVG","NMM",
+    "SBLK","CMCGK","DHT","GRIM","LPG","TGP","PAGP","GATX","JJSF","SAIA",
+    "EXPD","CHRW","XPO","LSTR","KNX","ODFL","JBHT","ARCB","WERN","SAIC",
+    "UI","HTLD","IMII","CRUK","MRTN","PCAR","SANM","WAB","GT","ALK",
+    "LUV","DAL","AAL","UAL","SKYW","JBLU","HA","SAVE","MESA","AIR",
+    "MAR","HLT","IHG","H", "WH","RHP","PEAK","DRH","APLE","XHR","RIVN",
+    "LCID","NIO","XPEV","LI","FSR","GOEV","RIDE","WKHS","BLNK","CHPT",
+    "EVGO","SPCC","HTHP","FIVN","GRAB","DASH","UBER","LYFT","ABNB","BKNG",
+    "EXPE","TCOM","MMYT","TRIP","EXPD","CHRW","XPO","LSTR","KNX","ODFL",
+    "JBHT","ARCB","WERN","SAIC","UI","HTLD","IMII","CRUK","MRTN","PCAR",
+    "SANM","WAB","GT","ALK","LUV","DAL","AAL","UAL","SKYW","JBLU",
+    "HA","SAVE","MESA","AIR","MAR","HLT","IHG","H","WH","RHP",
+    "PEAK","DRH","APLE","XHR","RIVN","LCID","NIO","XPEV","LI","FSR",
+]
+
+def _fetch_us_quotes_from_sina(ticker_list, batch_size=80):
+    """通过Sina GB接口批量获取美股实时报价"""
+    all_stocks = []
+    for i in range(0, len(ticker_list), batch_size):
+        batch = ticker_list[i:i+batch_size]
+        tickers = ','.join([f'gb_{t.lower()}' for t in batch])
+        url = f'http://hq.sinajs.cn/list={tickers}'
+        try:
+            req = urllib.request.Request(url, headers={
+                'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer':'http://finance.sina.com.cn/'
+            })
+            resp = urllib.request.urlopen(req, timeout=10)
+            data = resp.read().decode('gbk', errors='replace')
+            for line in data.strip().split(chr(10)):
+                if 'hq_str_gb_' not in line:
+                    continue
+                parts = line.split('="')
+                if len(parts) < 2:
+                    continue
+                ticker = parts[0].replace('var hq_str_gb_','').strip().upper()
+                vals = parts[1].split(',')
+                if len(vals) < 11:
+                    continue
+                try:
+                    price = float(vals[1])
+                    vol = int(float(vals[10])) if vals[10] else 0
+                    if price > 0 and vol > 0:
+                        all_stocks.append({'ticker': ticker, 'price': price, 'volume': vol})
+                except Exception:
+                    continue
+        except Exception as e:
+            logger.warning(f"  Sina批次请求失败: {e}")
+    return all_stocks
+
 def fetch_us_hot_stocks(top_n=300):
-    """美股热门股 - 使用静态池"""
-    static_pool = [
-        "US.AAPL", "US.MSFT", "US.GOOGL", "US.TSLA", "US.AMZN",
-        "US.NVDA", "US.META", "US.NFLX", "US.AMD", "US.INTC",
-        "US.JNJ", "US.PFE", "US.UNH", "US.LLY", "US.ABBV",
-        "US.MRK", "US.BMY", "US.AMGN", "US.GILD", "US.HON",
-        "US.CAT", "US.BA", "US.FCX", "US.XOM", "US.COP",
-    ]
-    logger.info(f"  美股热门: 静态池 {len(static_pool)}只")
-    return static_pool[:top_n]
+    """美股热门股 - 基于Sina实时报价按成交量排序"""
+    pool = list(dict.fromkeys(_US_STATIC_POOL))
+    logger.info(f"  美股静态池: {len(pool)}只")
+    try:
+        t = time.time()
+        quotes = _fetch_us_quotes_from_sina(pool)
+        if quotes:
+            quotes.sort(key=lambda x: x['volume'], reverse=True)
+            codes = ['US.' + s['ticker'] for s in quotes[:top_n]]
+            logger.info(f"  美股热门(成交量排序): {len(codes)}只 ({time.time()-t:.1f}s)")
+            return codes
+        else:
+            logger.warning("  Sina报价无有效数据")
+    except Exception as e:
+        logger.warning(f"  美股热门获取失败: {e}")
+    logger.info("  美股: 使用静态池")
+    return ['US.' + t for t in pool[:top_n]]
 
 def fetch_hot_stocks(market, top_n=300):
     """统一入口"""

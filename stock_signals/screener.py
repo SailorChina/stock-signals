@@ -362,8 +362,8 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
             logger.warning(f"  {code} VCP模式但成交量未萎缩，跳过")
             return None
         # v2.4: 扩展度过滤 - 距高点太近则跳过
-        dist_to_high = getattr(ind, 'price_to_high_pct', 0)
-        if dist_to_high > -8:
+        dist_to_high = getattr(ind, 'distance_from_52w_high', 0)
+        if dist_to_high < 8:
             logger.warning(f"  {code} 距高点仅{abs(dist_to_high):.1f}%，跳过(追高风险)")
             return None
         # v2.4.1: 风险收益比硬过滤(RR<2.0跳过)
@@ -384,7 +384,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
             logger.warning(f"  {code} K线形态{ind.candle_pattern_name}，看跌，跳过")
             return None
         # v2.4: MA5与MA20过度延伸检查
-        ma_gap = getattr(ind, 'ma5_ma20_gap', 0)
+        ma_gap = ind.ma5 / ind.ma20 - 1 if ind.ma20 > 0 else 0
         if ma_gap > 8:
             logger.warning(f"  {code} MA5偏离MA20 {ma_gap:.1f}%，过度延伸，跳过")
             return None
@@ -394,7 +394,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
         if getattr(ind, "rsi_14", 50) > 75:
             logger.warning(f"  {code} RSI={ind.rsi_14:.1f} 极端超买，跳过")
             return None
-        if -15 <= dist_to_high <= -5 and ind.rsi_14 < 65:
+        if 5 <= dist_to_high <= 15 and ind.rsi_14 < 65:
             pullback_score = 5  # 回调到位 + RSI不超买
         elif -30 <= dist_to_high <= -15 and ind.rsi_14 < 55:
             pullback_score = 10  # 健康回调 + RSI中性
@@ -522,7 +522,7 @@ def scan(markets=None, config=None, output_json=False, output_file=""):
 def _analyze_batch(codes, delay):
     """并行分析一批股票"""
     results = []
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         futures = {executor.submit(_analyze_one, code, delay=delay): code for code in codes}
         for future in as_completed(futures):
             try:
@@ -631,13 +631,21 @@ def _get_market_codes(market: str) -> List[str]:
     
     # 实时获取今日热门股并更新注册表
     try:
-        today_hot = _fetch_hot_stocks(market, top_n=100)
+        today_hot = _fetch_hot_stocks(market, top_n=300)
         if today_hot:
             _update_hot_registry(today_hot)
     except Exception as e:
         logger.warning(f"  热门股实时更新异常: {e}")
     
-    codes = codes[:30]
+    # 加入今日实时热门股
+    if today_hot:
+        existing = set(codes)
+        for hc in today_hot:
+            if hc not in existing:
+                codes.append(hc)
+                existing.add(hc)
+        logger.info(f"  今日热门股: +{len(today_hot)} 只 (总计 {len(codes)} 只)")
+    codes = codes[:300]
     return codes
 
 

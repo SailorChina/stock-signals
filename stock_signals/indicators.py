@@ -281,6 +281,13 @@ def compute_indicators(df, code="", ktype="1d"):
     high = df["high"].values.astype(float)
     low = df["low"].values.astype(float)
     volume = df["volume"].values.astype(float)
+    # 过滤负价格脏数据（akshare美股数据有时含拆股调整导致的负值）
+    valid = (close > 0) & (high > 0) & (low > 0) & (volume >= 0)
+    if not valid.all():
+        close = close[valid]; high = high[valid]; low = low[valid]; volume = volume[valid]
+        n = len(close)
+        if n < 60:
+            return Indicators(code=code, ktype=ktype)
     n = len(close)
     last = n - 1
     ind.last_close = float(close[last])
@@ -379,6 +386,27 @@ def compute_indicators(df, code="", ktype="1d"):
         high_52w = float(np.max(high)); low_52w = float(np.min(low))
         ind.distance_from_52w_high = (high_52w - ind.last_close) / high_52w * 100 if high_52w > 0 else 0
         ind.distance_from_52w_low = (ind.last_close - low_52w) / low_52w * 100 if low_52w > 0 else 0
+    # 相对强度 (RS) 评分
+    _52w = min(252, n)
+    if n >= 20:
+        _recent_high = float(np.max(high[-_52w:]))
+        _recent_low = float(np.min(low[-_52w:]))
+        if _recent_high > 0:
+            ind.distance_from_52w_high = round((_recent_high - ind.last_close) / _recent_high * 100, 2)
+            ind.distance_from_52w_low = round((ind.last_close - _recent_low) / _recent_low * 100, 2) if _recent_low > 0 else 0
+            ind.rs_percentile = round((ind.last_close - _recent_low) / (_recent_high - _recent_low) * 100, 1) if _recent_high > _recent_low else 50.0
+            ind.rs_rating = int(ind.rs_percentile)
+    # Trend Template 验证 (Minervini 8点模板)
+    _passed = True
+    if ind.ma200 > 0:
+        if ind.last_close <= ind.ma20: _passed = False
+        if ind.last_close <= ind.ma60: _passed = False
+        if ind.last_close <= ind.ma200: _passed = False
+        if ind.ma60 <= ind.ma200: _passed = False
+        if n >= 200:
+            _ma200_prev = float(np.mean(close[-201:-1]))
+            if ind.ma200 <= _ma200_prev: _passed = False
+    ind.trend_template_pass = _passed
     return ind
 
 def signal_summary(ind):
