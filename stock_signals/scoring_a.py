@@ -79,6 +79,7 @@ def _limit_protection(ind):
     if change5 > 15: s -= 15
     elif change5 > 10: s -= 8
     elif change5 < -10: s += 5
+    return max(0, min(100, s))
 
 def _sector(ind):
     """板块联动评分 - A股核心: 板块涨个股跟涨是最佳形态"""
@@ -100,7 +101,5 @@ def _boll(ind):
     elif pos == 'above': s -= 10  # 突破上轨可能过热
     if width < 3: s += 5  # 布林带收口预示突破
     elif width > 10: s -= 5  # 波动率过大
-    return max(0, min(100, s))
-
     return max(0, min(100, s))
 
