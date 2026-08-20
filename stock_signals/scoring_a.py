@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """A股专属评分模块"""
 from __future__ import annotations
-A_DIM_WEIGHTS = {"trend": 0.12, "momentum": 0.12, "volume": 0.12, "turnover": 0.08, "capital": 0.15, "sentiment": 0.15, "kdj": 0.13, "limit_prot": 0.13}
+A_DIM_WEIGHTS = {"trend": 0.10, "momentum": 0.10, "volume": 0.10, "turnover": 0.07, "capital": 0.12, "sentiment": 0.12, "kdj": 0.12, "limit_prot": 0.12, "sector": 0.12, "boll": 0.05}
 A_MIN_SCORE = 55; A_WATCHLIST_MIN = 45
 
 def compute_a_rating(ind, capital=None, short_pct=None):
