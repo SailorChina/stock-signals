@@ -4,6 +4,7 @@ import numpy as np
 import pandas as pd
 
 sys.stdout.reconfigure(encoding="utf-8")
+
 START="2024-01-01"; END="2026-08-15"
 CAPITAL=1000000; POS_PCT=0.20; MAX_HOLD=5
 THRESHOLD=46; MIN_RR=1.5
