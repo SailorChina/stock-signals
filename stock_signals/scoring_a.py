@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """A股专属评分模块"""
 from __future__ import annotations
-A_DIM_WEIGHTS = {"trend": 0.10, "momentum": 0.10, "volume": 0.10, "turnover": 0.07, "capital": 0.12, "sentiment": 0.12, "kdj": 0.12, "limit_prot": 0.12, "sector": 0.11, "boll": 0.04}
+A_DIM_WEIGHTS = {"trend": 0.09, "momentum": 0.09, "volume": 0.09, "turnover": 0.06, "capital": 0.10, "sentiment": 0.10, "kdj": 0.10, "limit_prot": 0.10, "sector": 0.10, "boll": 0.04, "longhubang": 0.11, "north_flow": 0.02}
 A_MIN_SCORE = 55; A_WATCHLIST_MIN = 45
 
 def compute_a_rating(ind, capital=None, short_pct=None):
-    scores = {"trend": _trend(ind), "momentum": _momentum(ind), "volume": _volume(ind), "turnover": _turnover(ind), "capital": _capital(ind), "sentiment": _sentiment(ind), "kdj": _kdj(ind), "limit_prot": _limit_protection(ind), "sector": _sector(ind), "boll": _boll(ind)}
+    scores = {"trend": _trend(ind), "momentum": _momentum(ind), "volume": _volume(ind), "turnover": _turnover(ind), "capital": _capital(ind), "sentiment": _sentiment(ind), "kdj": _kdj(ind), "limit_prot": _limit_protection(ind), "sector": _sector(ind), "boll": _boll(ind), "longhubang": _longhubang(ind), "north_flow": _north_flow(ind)}
     total = sum(scores[k] * v for k, v in A_DIM_WEIGHTS.items())
     rating = "Buy" if total >= 70 else "Overweight" if total >= 60 else "Hold" if total >= 50 else "Underweight" if total >= 40 else "Sell"
     confidence = "high" if total >= 70 else "medium" if total >= 60 else "low"
@@ -103,3 +103,22 @@ def _boll(ind):
     elif width > 10: s -= 5  # 波动率过大
     return max(0, min(100, s))
 
+def _longhubang(ind):
+    """龙虎榜评分"""
+    s = 50
+    if getattr(ind, 'is_longhubang', False):
+        net = getattr(ind, 'longhubang_net', 0)
+        if net > 0: s += 20
+        elif net > -0.5: s += 10
+        else: s -= 10
+    return max(0, min(100, s))
+
+def _north_flow(ind):
+    """北向资金评分"""
+    s = 50
+    flow = getattr(ind, 'north_flow_daily', 0)
+    if flow > 50: s += 20
+    elif flow > 0: s += 10
+    elif flow < -30: s -= 15
+    elif flow < 0: s -= 8
+    return max(0, min(100, s))

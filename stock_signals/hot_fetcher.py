@@ -3,6 +3,7 @@
 from __future__ import annotations
 import logging, time, os, urllib.request, json
 from typing import List
+import pandas as pd
 logger = logging.getLogger("stock-signals")
 for _k in list(os.environ.keys()):
     if 'proxy' in _k.lower(): os.environ.pop(_k, None)
@@ -220,3 +221,54 @@ def fetch_hot_stocks(market, top_n=300):
     elif market == "HK": return fetch_hk_hot_stocks(top_n)
     elif market == "US": return fetch_us_hot_stocks(top_n)
     return []
+
+
+def fetch_longhubang(top_n=50):
+    try:
+        import akshare as ak
+        t = time.time()
+        df = ak.stock_lhb_detail_em(start_date=time.strftime("%Y%m%d"), end_date=time.strftime("%Y%m%d"))
+        if df is not None and not df.empty:
+            result = {}
+            for _, row in df.head(top_n).iterrows():
+                code = str(row.get("code", ""))
+                if len(code) == 6:
+                    prefix = "SH" if code.startswith(("6", "9")) else "SZ"
+                    result[f"{prefix}.{code}"] = {"name": str(row.get("name", "")), "net_amount": float(row.get("net", 0)) if pd.notna(row.get("net")) else 0}
+            logger.info(f"  龙虎榜: {len(result)}只 ({time.time()-t:.1f}s)")
+            return result
+        return {}
+    except Exception as e:
+        logger.warning(f"  龙虎榜获取失败: {e}")
+        return {}
+
+def fetch_sector_heat(top_n=20):
+    try:
+        import akshare as ak
+        t = time.time()
+        df = ak.stock_board_industry_name_em()
+        if df is not None and not df.empty:
+            result = {}
+            for _, row in df.head(top_n).iterrows():
+                name = str(row.get("sector_name", ""))
+                change = float(row.get("change_pct", 0)) if pd.notna(row.get("change_pct")) else 0
+                result[name] = {"change": change, "rank": len(result) + 1}
+            logger.info(f"  板块热度: {len(result)}个 ({time.time()-t:.1f}s)")
+            return result
+        return {}
+    except Exception as e:
+        logger.warning(f"  板块热度获取失败: {e}")
+        return {}
+
+def fetch_north_flow():
+    try:
+        import akshare as ak
+        t = time.time()
+        df = ak.stock_hsgt_hist_em(symbol="north")
+        if df is not None and not df.empty:
+            latest = df.iloc[-1]
+            return {"date": str(latest.get("date", "")), "north_flow": float(latest.get("north_flow", 0)) if pd.notna(latest.get("north_flow")) else 0}
+        return {}
+    except Exception as e:
+        logger.warning(f"  北向资金获取失败: {e}")
+        return {}

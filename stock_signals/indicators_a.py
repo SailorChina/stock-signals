@@ -25,6 +25,9 @@ class IndicatorsA:
     bb_upper: float = 0.0; bb_middle: float = 0.0; bb_lower: float = 0.0
     bb_width: float = 0.0
     price_vs_bb: str = "middle"
+    is_longhubang: bool = False
+    longhubang_net: float = 0.0
+    north_flow_daily: float = 0.0
 
     def update(self, df, code=""):
         close = df["close"].values.astype(float)
@@ -118,6 +121,16 @@ class IndicatorsA:
 
         if len(close) >= 6:
             self.change_pct_5d = (close[-1] - close[-6]) / close[-6] * 100
+
+    def update_north_flow(self, north_data):
+        if north_data and 'north_flow' in north_data:
+            self.north_flow_daily = float(north_data['north_flow'])
+            self.north_flow = self.north_flow_daily / 100.0
+
+    def update_longhubang(self, lh_data, code):
+        if lh_data and code in lh_data:
+            self.is_longhubang = True
+            self.longhubang_net = float(lh_data[code].get('net_amount', 0))
 
     def _ema(self, data, period):
         if len(data) < period: return data

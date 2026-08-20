@@ -250,3 +250,31 @@ def get_summary_text(result: Dict) -> str:
             names = [f"{p.code}({p.rating})" for p in picks[:3]]
             lines.append(f"  {MARKET_NAMES.get(market, market)}: {', '.join(names)}")
     return "\n".join(lines)
+
+def print_a_scan_report(result, title="A\u80a1\u6279\u53d1"):
+    from cli import _color
+    picks = result.get("picks", {}).get("A", [])
+    watchlist = result.get("watchlist", {}).get("A", [])
+    summary = result.get("summary", {})
+    print(f"\n{_color(title, 'cyan', True)}")
+    print(f"  \u65e5\u671f: {result.get('date', 'N/A')}  |  \u626b\u63cf\u65f6\u95f4: {summary.get('scan_time', 'N/A')}")
+    print(f"  \u5206\u6790: {summary.get('total_analyzed', 0)}\u53ea  |  \u63a8\u8350: {summary.get('total_picks', 0)}\u53ea  |  \u89c2\u5bdf: {summary.get('total_watchlist', 0)}\u53ea")
+    if not picks:
+        print("  \u672a\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u80a1\u7968")
+        return
+    print(f"\n  {'='*50}")
+    for i, r in enumerate(picks, 1):
+        print(f"\n  {_color(f'#{i} {r.code}', 'bold')}")
+        print(f"    \u8bc4\u7ea7: {_color(r.rating_cn, 'green' if r.score >= 70 else 'yellow', True)} (\u5206\u6570: {r.score:.1f})  |  \u8d8b\u52bf: {r.trend_phase_cn}  |  \u534f\u540c: {r.alignment_cn}")
+        print(f"    \u53ef\u64cd\u4f5c: {_color(r.operable, 'green' if r.operable == '\u53ef\u64cd\u4f5c' else 'yellow')}")
+        print(f"    \u5f53\u524d\u4ef7: {r.last_close:.2f}  |  \u5165\u573a: {r.entry:.2f}  |  \u6b62\u635f: {r.stop_loss:.2f}")
+        print(f"    \u76ee\u68071: {r.target_1:.2f} (+{(r.target_1/r.last_close-1)*100:.1f}%)  |  \u76ee\u68072: {r.target_2:.2f} (+{(r.target_2/r.last_close-1)*100:.1f}%)")
+        print(f"    \u98ce\u9669\u62a5\u916c: {r.risk_reward:.1f}:1  |  \u4ed3\u4f4d: {r.position_pct:.1f}%  |  \u6301\u4ed3: {r.holding_period}")
+        if r.reasons:
+            print(f"    \u6307\u6807: {', '.join(r.reasons[:6])}")
+    if watchlist:
+        print(f"\n  {'='*50}")
+        print(f"  {_color('\u89c2\u5bdf\u6c60 (' + str(len(watchlist)) + '\u53ea)', 'yellow')}")
+        for i, w in enumerate(watchlist[:5], 1):
+            print(f"    #{i+5} {w.code} \u5206\u6570={w.score:.1f} \u8bc4\u7ea7={w.rating_cn} \u53ef\u64cd\u4f5c={w.operable}")
+

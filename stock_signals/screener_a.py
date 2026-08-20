@@ -47,13 +47,15 @@ def compute_a_holding_period(ind, entry, target_1, stop, alignment, trend_phase)
     elif score >= 0: return "日内(1天)"
     else: return "观望"
 
-def _analyze_one_a(code, delay=0.1):
+def _analyze_one_a(code, delay=0.1, north_data=None, lh_data=None):
     try:
         from .indicators import fetch_kline
         df = fetch_kline(code, "1d", num=120); time.sleep(delay)
         if df is None or df.empty or len(df) < 60: return None
         from .indicators_a import IndicatorsA
         ind = IndicatorsA(); ind.update(df, code)
+        ind.update_north_flow(north_data)
+        ind.update_longhubang(lh_data, code)
         from .scoring_a import compute_a_rating
         rating_result = compute_a_rating(ind)
         score = rating_result["score"]; rating = rating_result["rating"]
@@ -127,9 +129,12 @@ def _analyze_one_a(code, delay=0.1):
 
 def scan_a(markets=None, config=None, output_json=False, output_file=""): 
     from .screener import ScanConfig 
-    from .hot_fetcher import fetch_a_hot_stocks 
+    from .hot_fetcher import fetch_a_hot_stocks, fetch_longhubang, fetch_sector_heat, fetch_north_flow 
     if config is None: config = ScanConfig() 
-    codes = fetch_a_hot_stocks(300) 
+    codes = fetch_a_hot_stocks(300)
+    north_data = fetch_north_flow()
+    lh_data = fetch_longhubang(50)
+    sector_data = fetch_sector_heat(20)
     logger.info(f"A股预选: {len(codes)}只") 
     picks, watchlist, total_analyzed = [], [], 0 
     batch_size = 30 
@@ -137,7 +142,7 @@ def scan_a(markets=None, config=None, output_json=False, output_file=""):
         batch = codes[i:i+batch_size] 
         batch_results = [] 
         with ThreadPoolExecutor(max_workers=4) as executor: 
-            futures = {executor.submit(_analyze_one_a, code, delay=0.05): code for code in batch} 
+            futures = {executor.submit(_analyze_one_a, code, delay=0.05, north_data=north_data, lh_data=lh_data): code for code in batch} 
             for future in as_completed(futures): 
                 try: 
                     r = future.result(); total_analyzed += 1 
