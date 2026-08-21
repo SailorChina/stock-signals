@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""stock_signals package v2.8.4"""
+"""stock_signals package v2.10.1"""
 __version__ = "2.10.1"
 __author__ = "SailorChina"
 

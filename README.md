@@ -45,7 +45,7 @@
 | 数据 | 来源 |
 |------|------|
 | K 线 | akshare (daily/weekly/monthly) |
-| 热门股 | Sina 成交量排序，静态池 371 只蓝筹 |
+| 热门股 | Sina 成交量排序，静态池 300 只蓝筹 |
 | 资金/卖空 | futu-api (可选) |
 
 内存缓存：K 线按 `{code}_{num}` 缓存，命中 ~0.2s。
@@ -61,19 +61,24 @@ stock_signals/
 +- _vcp.py                # VCP 波动率收缩检测
 +- _episodic_pivot.py     # 事件驱动拐点检测
 +- indicators.py          # 通用指标计算 (MA/MACD/RSI/KDJ/BOLL/ATR/OBV/VWMA/ADX)
-+- indicators_us.py       # 美股专用指标
 +- scoring.py             # 通用评分引擎（趋势/动量/量能/波动/资金，5 维加权）
-+- screener.py            # 并行扫描引擎
-+- hot_fetcher.py         # 热门股获取
++- screener.py            # 并行扫描引擎（43 只静态池 + 300 只热股）
++- hot_fetcher.py         # 热门股获取（Sina 成交量排序）
 +- cli.py                 # CLI 入口 (analyze/scan 子命令)
 +- reporter.py            # 中文扫描报告输出
 +- config.py              # 配置管理（缓存/TTL/重试）
 +- data_sources.py        # 数据源接口封装
 +- dynamic_pool.py        # 动态股票池管理
-+- us/                    # 美股子模块 (回测/评分/扫描/优化封装)
++- us/                    # 美股子模块
+   +- indicators_us.py     # 美股专用指标
+   +- scoring_us.py        # 美股专用评分
+   +- screener_us.py       # 美股专用扫描
+   +- backtest_us.py       # 美股回测
+   +- optimize_us.py       # 参数优化
+   +- us_pool_full.txt     # 300 只蓝筹完整列表
 tests/
 +- test_stock_signals.py  # 单元测试
-backtest_v2.py             # 全市场回测脚本
+backtest_v2.py             # 独立回测脚本
 pyproject.toml             # 项目配置
 ```
 
@@ -87,7 +92,7 @@ pip install -e .
 - Python >= 3.10
 - pandas >= 2.0
 - numpy >= 1.24
-- akshare >= 1.18（K 线数据）
+- akshare >= 1.18（K 线数据，必须）
 - futu-api >= 10.4.6408（资金/卖空数据，可选）
 
 ## 使用
@@ -166,7 +171,10 @@ python -m pytest tests/ -v
 ## 更新日志
 
 ### v2.10.1 (2026-08-21)
-- 美股缓存修复，美股池扩展至 371 只
+- 移除 A 股和港股支持，专注美股
+- 美股热股池 300 只蓝筹，静态池 43 只精选
+- 清理所有 A 股/港股相关代码和文档
+- CLI 简化：去掉 --strategy 选项，默认美股扫描
 
 ### v2.8.5
 - CLI 支持并行扫描（--parallel 提速 3-5 倍）
@@ -181,10 +189,6 @@ python -m pytest tests/ -v
 ### v2.1
 - 移除 Futu OpenAPI K 线依赖，改用 Sina+akshare 双数据源
 - 新增内存缓存机制（命中率 ~0.2s）
-
-### v2.0
-- 支持三市场扫描
-- 使用 Futu OpenAPI 获取 K 线数据
 
 ## 免责声明
 

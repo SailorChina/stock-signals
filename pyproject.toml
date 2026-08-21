@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [{name = "SailorChina"}]
-keywords = ["stock", "technical-analysis", "signals", "futu", "trading"]
+keywords = ["stock", "technical-analysis", "signals", "trading"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -23,10 +23,11 @@ classifiers = [
 dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
-    "futu-api>=10.4.6408",
+    "akshare>=1.18",
 ]
 
 [project.optional-dependencies]
+futu = ["futu-api>=10.4.6408"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
