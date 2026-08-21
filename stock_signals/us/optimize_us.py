@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 美股策略参数优化 - Walk-Forward Validation
-独立文件，不改动A股策略
+独立文件，独立策略
 """
 import sys, io, os, json, time, pickle
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')

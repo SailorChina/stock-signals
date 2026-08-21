@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 美股技术指标分析模块
-数据源: akshare stock_us_daily (与 A股 indicators.py 保持一致)
-完全独立于 A股模块，不依赖 py_mini_racer
+数据源: akshare stock_us_daily (与主模块 indicators.py 保持一致)
+完全独立模块，不依赖 py_mini_racer
 """
 from __future__ import annotations
 import logging

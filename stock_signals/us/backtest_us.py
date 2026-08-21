@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-美股策略回测 - 独立于A股策略
+美股策略回测 - 独立策略
 单仓位管理，不做空
 """
 import sys, io, os, json, time, pickle

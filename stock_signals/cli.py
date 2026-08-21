@@ -392,14 +392,14 @@ def _export_csv(results, path):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="股票技术分析 & 买卖信号生成器 (美股/A股/港股)")
+    parser = argparse.ArgumentParser(description="美股技术分析 & 买卖信号生成器")
 
     # Subcommands
     sub = parser.add_subparsers(dest="cmd")
 
     # --- analyze subcommand ---
     p_analyze = sub.add_parser("analyze", help="分析单只/多只股票")
-    p_analyze.add_argument("codes", nargs="+", help="股票代码，如 US.NVDA / US.NVDA")
+    p_analyze.add_argument("codes", nargs="+", help="股票代码，如 US.NVDA")
     p_analyze.add_argument("--timeframe", "-t", default="1d", choices=["1d", "1w", "1m"])
     p_analyze.add_argument("--json", "-j", action="store_true", help="JSON output")
     p_analyze.add_argument("--num", "-n", type=int, default=300, help="K线根数")
@@ -410,7 +410,7 @@ def main():
 
     # --- scan subcommand ---
     p_scan = sub.add_parser("scan", help="扫描多市场推荐股票")
-    p_scan.add_argument("--markets", "-m", default="A,US,HK", help="市场: A,US,HK")
+    p_scan.add_argument("--markets", "-m", default="US", help="市场: US")
     p_scan.add_argument("--min-score", type=float, default=60.0, help="最低评分门槛")
     p_scan.add_argument("--max-picks", type=int, default=3, help="每市场最多推荐数")
     p_scan.add_argument("--delay", type=float, default=0.3, help="请求间隔(秒)，并行模式建议0.3-0.5")
@@ -435,19 +435,7 @@ def main():
         if markets_input:
             markets = [m.strip() for m in markets_input.split(",")]
         else:
-            print()
-            print("  请选择扫描市场:")
-            print("  [1] A股（沪深核心龙头）")
-            print("  [2] 港股（恒生+恒生科技）")
-            print("  [3] 美股（道指+标普500+纳指）")
-            print("  [4] 全部市场")
-            print()
-            choice = input("  输入选项 (1/2/3/4): ").strip()
-            market_map = {"1": ["A"], "2": ["HK"], "3": ["US"], "4": ["A", "HK", "US"]}
-            markets = market_map.get(choice, ["A"])
-            print(f"  已选择: {markets}")
-            print()
-
+            markets = ["US"]
         cfg = ScanConfig(
             min_score=args.min_score,
             max_per_market=args.max_picks,
@@ -462,7 +450,7 @@ def main():
     for code in args.codes:
         code = code.strip()
         if "." not in code:
-            logger.error(f"股票代码格式错误: {code}，示例: US.NVDA / US.NVDA")
+            logger.error(f"股票代码格式错误: {code}，示例: US.NVDA")
             sys.exit(1)
         analyze(code, args.timeframe, args.json)
 

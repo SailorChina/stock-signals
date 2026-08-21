@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 股票技术指标分析模块
-数据源: A股=Sina+akshare fallback, HK/US=akshare daily
+数据源: US=akshare stock_us_daily
 """
 from __future__ import annotations
 import sys, os, time, logging
@@ -30,8 +30,7 @@ def _code_to_akshare(symbol, market):
     parts = symbol.split('.')
     if len(parts) != 2: return ""
     _, n = parts
-    if market == 'HK': return n.zfill(5)
-    elif market == 'US': return n.upper()
+    if market == 'US': return n.upper()
     return ""
 
 def _fetch_sina_kline(sina_symbol, num=300):
@@ -62,9 +61,7 @@ def _fetch_akshare_kline(symbol, market, num=300):
     ak_code = _code_to_akshare(symbol, market)
     if not ak_code: return pd.DataFrame()
     try:
-        if market == "HK":
-            df = ak.stock_hk_daily(symbol=ak_code, adjust="qfq")
-        elif market == "US":
+        if market == "US":
             df = ak.stock_us_daily(symbol=ak_code, adjust="qfq")
         else:
             return pd.DataFrame()
@@ -101,50 +98,10 @@ def fetch_kline(code, ktype="1d", num=300):
     if len(parts) != 2:
         return pd.DataFrame()
     market, num_str = parts[0].upper(), parts[1]
-    try:
-        if market in ("SH", "SZ", "BJ", "A"):
-            sina_sym = _code_to_sina(code)
-            if sina_sym:
-                df = _fetch_sina_kline(sina_sym, num)
-                if not df.empty:
-                    _kline_cache[cache_key] = df
-                    return df
-            # Fallback to akshare
-            try:
-                import akshare as ak
-                t0 = time.time()
-                df = ak.stock_zh_a_daily(symbol=sina_sym or code.replace('.',''), adjust='qfq')
-                dt = time.time() - t0
-                if df is not None and not df.empty:
-                    col_map = {}
-                    for c in df.columns:
-                        cl = str(c).lower().strip()
-                        if cl in ('date','datetime'): col_map[c] = 'time'
-                        elif cl in ('open','开盘'): col_map[c] = 'open'
-                        elif cl in ('high','最高'): col_map[c] = 'high'
-                        elif cl in ('low','最低'): col_map[c] = 'low'
-                        elif cl in ('close','收盘'): col_map[c] = 'close'
-                        elif cl in ('volume','成交量'): col_map[c] = 'volume'
-                    if col_map: df = df.rename(columns=col_map)
-                    for col in ('open','high','low','close','volume'):
-                        if col in df.columns: df[col] = pd.to_numeric(df[col], errors='coerce')
-                        else: df[col] = 0.0
-                    if 'time' not in df.columns: df['time'] = df.index.astype(str)
-                    df = df[["time","open","high","low","close","volume"]].sort_values("time").reset_index(drop=True)
-                    _kline_cache[cache_key] = df
-                    return df
-            except Exception as e2:
-                logger.debug(f"  akshare A fallback failed {code}: {e2}")
-        elif market == "HK":
-            df = _fetch_akshare_kline(code, "HK", num)
-            _kline_cache[cache_key] = df
-            if not df.empty: return df
-        elif market == "US":
-            df = _fetch_akshare_kline(code, "US", num)
-            _kline_cache[cache_key] = df
-            if not df.empty: return df
-    except Exception as e:
-        logger.error(f"[ERROR] K线获取失败 {code}: {e}")
+    if market == "US":
+        df = _fetch_akshare_kline(code, "US", num)
+        _kline_cache[cache_key] = df
+        if not df.empty: return df
     return pd.DataFrame()
 
 def fetch_realtime(code):
@@ -152,30 +109,7 @@ def fetch_realtime(code):
     if len(parts) != 2: return {}
     market, num = parts[0].upper(), parts[1]
     try:
-        if market in ("SH","SZ","BJ","A"):
-            sina_sym = _code_to_sina(code)
-            if sina_sym:
-                import urllib.request
-                url = f"https://hq.sinajs.cn/list={sina_sym}"
-                req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
-                resp = urllib.request.urlopen(req, timeout=5)
-                data = resp.read().decode('gbk')
-                if '=' in data and '"' in data:
-                    vals = data.split('="')[-1].strip().rstrip(';"').split(',')
-                    if len(vals) > 3:
-                        return {"code":code,"name":vals[0],"price":float(vals[3]) if vals[3] else 0}
-        elif market == "HK":
-            import urllib.request
-            hk_sym = num.zfill(5)
-            url = f"https://qt.gtimg.cn/q=hk{hk_sym}"
-            req = urllib.request.Request(url, headers={"User-Agent":"Mozilla/5.0"})
-            resp = urllib.request.urlopen(req, timeout=5)
-            data = resp.read().decode('gbk')
-            if '~' in data and 'none_match' not in data:
-                parts_d = data.split('=')[-1].strip('\"').split('~')
-                if len(parts_d) > 3:
-                    return {"code":code,"name":parts_d[1],"price":float(parts_d[3]) if parts_d[3] else 0}
-        elif market == "US":
+        if market == "US":
             import urllib.request
             us_sym = num.lower()
             url = f"https://qt.gtimg.cn/q=us_{us_sym}"

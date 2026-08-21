@@ -2,7 +2,7 @@
 """
 美股独立评分引擎
 4维度: trend(35%) + momentum(30%) + volume(20%) + volatility(15%)
-不含 capital/short 维度(A股特有)
+不含 capital/short 维度(仅US)
 """
 from __future__ import annotations
 import sys

@@ -53,8 +53,6 @@ STOCK_POOLS: Dict[str, List[str]] = {
 
 # +--- 黑名单：银行/金融/ETF（用户明确要求过滤） ---+
 BLACKLIST = {
-    # A股银行/金融
-    # 港股银行
     # 美股银行/金融
     "US.JPM", "US.BAC", "US.WFC", "US.C", "US.GS", "US.MS",
     "US.USB", "US.PNC", "US.TFC", "US.BK", "US.AXP",
@@ -378,13 +376,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
 
 
 def _code_market(code):
-    if code.startswith("SH") or code.startswith("SZ"):
-        return "A"
-    elif code.startswith("HK"):
-        return "HK"
-    elif code.startswith("US"):
-        return "US"
-    return "unknown"
+    return "US" if code.startswith("US") else "unknown"
 
 
 def scan(markets=None, config=None, output_json=False, output_file=""):
@@ -554,6 +546,7 @@ def _get_market_codes(market: str) -> List[str]:
         logger.info(f"  热门股注册表: +{len(hot_registry)} 只 (总计 {len(codes)} 只)")
     
     # 实时获取今日热门股并更新注册表
+    today_hot = []
     try:
         today_hot = _fetch_hot_stocks(market, top_n=300)
         if today_hot:
