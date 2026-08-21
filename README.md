@@ -28,16 +28,6 @@ US stock technical analysis & buy/sell signal generator
 | **Trend Phase Classification** | Accumulation / Early Rally / Rally / Distribution / Decline |
 | **Trade Plan Generation** | Entry zone, stop-loss, dual targets, risk-reward ratio, position sizing |
 
-### A-Share Specific
-| Feature | Description |
-|------|------|
-| Limit-up/Down Protection | Auto-filters stocks hitting limit-up or limit-down |
-| KDJ Overbought Filter | J>100 auto-intercept |
-| Longhu Bang (Dragon Tiger List) | Institutional buy/sell direction + net amount |
-| Northbound Capital | Real-time net inflow/outflow |
-| Sector Heat | Industry linkage scoring |
-| Bollinger Position | Lower band support / Upper band breakout |
-
 ### Smart Filtering (v2.5.0+)
 - RSI(14) > 75 -> hard intercept for chasing highs
 - Distance from high > -2% -> intercept chasing
