@@ -1,42 +1,64 @@
 # stock-signals Skill
 
-股票买卖信号分析系统 — 三市场（A股/港股/美股）技术指标扫描
+> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.10.1
 
-## 概述
+基于技术指标（MA/MACD/RSI/KDJ/BOLL/ATR/OBV/ADX）+ 高级形态识别（VCP/事件驱动拐点/TD序列/多周期共振），自动生成评级、入场点、止损位和目标价。
 
-本项目是一个股票技术指标分析系统，支持A股、港股、美股三个市场的扫描和信号识别。
+**适用市场：美股 (US) — 已移除 A 股和港股支持**
 
-## 核心功能
+## 功能
 
-1. **热门股获取**: 自动获取各市场热门股列表
-2. **K线数据**: 获取日K线数据（支持复权）
-3. **技术指标**: 计算MA/MACD/RSI/KDJ/BOLL/ATR/OBV等
-4. **信号识别**: 识别金叉/死叉、超买/超卖、突破等信号
-5. **智能评分**: 综合评分给出5级评级
+1. **K 线获取**: akshare 获取美股日/周/月 K 线数据（支持前复权）
+2. **技术指标计算**: MA/MACD/RSI/KDJ/BOLL/ATR/OBV/VWMA/ADX
+3. **信号识别**: VCP 波动率收缩、事件驱动拐点、TD 序列、多周期共振
+4. **交易计划**: 支撑阻力聚类 + 入场区间 + 止损 + 双目标 + 风险回报比
+5. **评分引擎**: 5 维加权（趋势/动量/量能/波动/卖空）+ 动态权重
 
-## 数据源 (v2.1)
+## 数据源
 
-- **A股**: Sina K线API + akshare fallback
-- **港股**: akshare daily
-- **美股**: akshare daily
+- **K 线**: akshare `stock_us_daily`
+- **热门股**: Sina 成交量排序，静态池 300 只蓝筹
+- **卖空比例**: futu-api（可选）
 
 ## 使用方式
 
 ```bash
-# 运行扫描
-python run_scan.py
+# 安装
+pip install -e .
 
+# 分析单只股票
+python -m stock_signals.cli analyze US.NVDA
+python -m stock_signals.cli analyze US.AAPL --timeframe 1w
+
+# 全市场扫描
+python -m stock_signals.cli scan
+python -m stock_signals.cli scan --min-score 55 --max-picks 5 --parallel
+
+# 导出
+python -m stock_signals.cli scan --json --output report.json
+python -m stock_signals.cli analyze US.NVDA --csv results.csv
+```
+
+```python
 # Python API
-from stock_signals.hot_fetcher import fetch_hot_stocks
 from stock_signals.indicators import fetch_kline, compute_indicators
 from stock_signals.scoring import compute_rating
+from stock_signals._resonance import compute_timeframe_resonance
+from stock_signals._sr import compute_support_resistance, generate_trade_plan
+
+df = fetch_kline('US.NVDA', '1d', 300)
+ind = compute_indicators(df, 'US.NVDA', '1d')
+result = compute_rating(ind)
+resonance = compute_timeframe_resonance('US.NVDA', ind)
+sr = compute_support_resistance(df)
+plan = generate_trade_plan(ind, sr)
 ```
 
 ## 性能
 
-- 300只A股扫描: ~75秒
-- 缓存命中: ~0.2秒 (17倍加速)
-- 无外部API Key依赖
+- 扫描 300 只热股: ~2-5 分钟（串行）/ ~30-60 秒（并行）
+- 单只分析: ~0.2s（缓存命中）
+- 无需外部 API Key
 
 ## 依赖
 
