@@ -1,181 +1,191 @@
 # stock-signals
 
-US stock technical analysis & buy/sell signal generator
+美股技术分析 & 买卖信号生成器
 
-## Core Features
+基于技术指标（MA/MACD/RSI/KDJ/BOLL/ATR/OBV等）+ 高级形态识别（VCP/事件驱动拐点/时序共振），自动生成评级、入场点、止损位和目标价。
 
-### Technical Indicators (Universal Engine)
-| Indicator | Description |
+## 核心功能
+
+### 技术指标引擎
+
+| 指标 | 说明 |
 |------|------|
-| MA/EMA | 5/10/20/60/120/200 day moving averages, golden/death cross detection |
-| MACD | DIF/DEA/Hist, golden/death cross, divergence detection |
-| RSI | 6/12/14/24 periods, overbought/oversold judgment |
-| KDJ | K/D/J three lines, overbought/oversold |
-| BOLL | Bollinger upper/mid/lower bands + width |
-| ATR | 14-period true range, dynamic stop-loss |
-| OBV | On-balance volume, capital flow direction |
-| VWMA | Volume-weighted moving average |
-| ADX | Trend strength, +DI/-DI direction |
+| MA/EMA | 5/10/20/60/120/200 日均线，金叉/死叉检测 |
+| MACD | DIF/DEA/柱状图，金叉/死叉，背离检测 |
+| RSI | 6/12/14/24 周期，超买超卖判断 |
+| KDJ | K/D/J 三线，超买超卖 |
+| BOLL | 布林带上中下轨 + 宽度 |
+| ATR | 14 周期真实波幅，动态止损 |
+| OBV | 能量潮，资金流向判断 |
+| VWMA | 成交量加权均线 |
+| ADX | 趋势强度，+DI/-DI 方向 |
 
-### Advanced Signals
-| Signal | Description |
+### 高级信号
+
+| 信号 | 说明 |
 |------|------|
-| **VCP** Volatility Contraction | Mark Minervini SEPA strategy, detects 2-6 contraction cycles |
-| **Episodic Pivot** Event-driven reversal | Kristjan Qullamaggie strategy, gap-up + volume spike breakout |
-| **TD Sequential** 9-turn signal | 9 consecutive down bars buy / 9 consecutive up bars sell |
-| **Multi-timeframe Resonance** | Daily/weekly/monthly alignment scoring with confidence boost |
-| **Support & Resistance** | Swing point clustering + BOLL + MA clusters + VWAP |
-| **Trend Phase Classification** | Accumulation / Early Rally / Rally / Distribution / Decline |
-| **Trade Plan Generation** | Entry zone, stop-loss, dual targets, risk-reward ratio, position sizing |
+| **VCP** 波动率收缩 | Mark Minervini SEPA 策略，检测 2-6 次收缩周期 |
+| **事件驱动拐点** | Kristjan Qullamaggie 策略，跳空高开 + 放量突破 |
+| **TD 序列** | 9 连跌买入 / 9 连涨卖出 |
+| **多周期共振** | 日/周/月线对齐评分，置信度加成 |
+| **支撑/阻力** | swing point 聚类 + BOLL + MA 聚类 + VWAP |
+| **趋势阶段分类** | 吸筹 / 上涨早期 / 上涨阶段 / 派发 / 下跌 |
+| **交易计划生成** | 入场区间、止损、双目标、风险回报比、仓位建议 |
 
-### Smart Filtering (v2.5.0+)
-- RSI(14) > 75 -> hard intercept for chasing highs
-- Distance from high > -2% -> intercept chasing
-- MA5/MA20 deviation > 8% -> score reduction
-- MACD golden cross maturity -> bonus/penalty
-- Pullback entry scoring -> pullback_score priority sorting
+### 智能过滤 (v2.5.0+)
 
-## Data Sources
+- RSI(14) > 75 → 追高硬拦截
+- 距高点距离 > -2% → 拦截追高
+- MA5/MA20 偏离 > 8% → 评分下调
+- MACD 金叉成熟度 → 加分/扣分
+- 回踩入场评分 → pullback_score 优先级排序
 
-| Market | K-line Data | Hot Stocks | Special Data |
-|------|---------|--------|----------|
-| A-share | Sina primary -> akshare fallback | Snowball heat ranking -> Sina -> Eastmoney | Longhu Board / Northbound flow / Sector heat |
-| HK | akshare daily -> Tencent verify | Hang Seng + Hang Seng Tech static pool | Tencent real-time verification |
-| US | akshare daily | Sina quotes sorted by volume | 371 blue-chip static pool |
+## 数据源
 
-Memory cache: K-line data cached by {code}_{num}, cache hit ~0.2s, first run ~75s (300 A-shares).
+| 数据 | 来源 |
+|------|------|
+| K 线 | akshare (daily/weekly/monthly) |
+| 热门股 | Sina 成交量排序，静态池 371 只蓝筹 |
+| 资金/卖空 | futu-api (可选) |
 
-## Project Structure
+内存缓存：K 线按 `{code}_{num}` 缓存，命中 ~0.2s。
 
+## 项目结构
+
+```
 stock_signals/
-+- __init__.py            # v2.10.1, exports core API
-+- _info.py               # Stock info database (Chinese name/sector/description)
-+- _resonance.py          # Multi-timeframe resonance analysis (daily/weekly/monthly)
-+- _sr.py                 # Support/resistance calculation + trade plan generation
-+- _vcp.py                # VCP volatility contraction pattern detection
-+- _episodic_pivot.py     # Episodic Pivot event-driven reversal detection
-+- indicators.py          # Universal indicator calculation (MA/MACD/RSI/KDJ/BOLL/ATR/OBV/VWMA/ADX)
-+- indicators_a.py        # A-share specific indicators (limit/counter/KDJ/Boll/KDJ_J/Longhu/North)
-+- indicators_us.py       # US market specific indicators
-+- scoring.py             # Universal scoring engine (trend/momentum/volume/volatility/capital, 5-dim weighted)
-+- scoring_a.py           # A-share specific scoring (12 dimensions)
-+- scoring_us.py          # US market specific scoring
-+- screener.py            # Multimarket parallel scanning engine
-+- screener_a.py          # A-share specific scanner
-+- hot_fetcher.py         # Hot stock fetching (Snowball/Sina/Eastmoney/Tencent fallback chain)
-+- cli.py                 # CLI entry (analyze/scan subcommands)
-+- reporter.py            # Chinese scan report output
-+- config.py              # Configuration management (memory cache/TTL/retry)
-+- data_sources.py        # Data source interface wrapper
-+- dynamic_pool.py        # Dynamic stock pool management
-+- a_share/               # A-share submodules (backtest/scoring/screener wrappers)
-+- us/                    # US submodules (backtest/scoring/screener/optimize wrappers)
++- __init__.py            # v2.10.1，核心 API 导出
++- _info.py               # 股票信息库（英文名/行业/描述）
++- _resonance.py          # 多周期共振分析（日/周/月）
++- _sr.py                 # 支撑阻力计算 + 交易计划生成
++- _vcp.py                # VCP 波动率收缩检测
++- _episodic_pivot.py     # 事件驱动拐点检测
++- indicators.py          # 通用指标计算 (MA/MACD/RSI/KDJ/BOLL/ATR/OBV/VWMA/ADX)
++- indicators_us.py       # 美股专用指标
++- scoring.py             # 通用评分引擎（趋势/动量/量能/波动/资金，5 维加权）
++- screener.py            # 并行扫描引擎
++- hot_fetcher.py         # 热门股获取
++- cli.py                 # CLI 入口 (analyze/scan 子命令)
++- reporter.py            # 中文扫描报告输出
++- config.py              # 配置管理（缓存/TTL/重试）
++- data_sources.py        # 数据源接口封装
++- dynamic_pool.py        # 动态股票池管理
++- us/                    # 美股子模块 (回测/评分/扫描/优化封装)
 tests/
-+- test_stock_signals.py  # Unit tests
-backtest_v2.py             # Full market backtest script
-pyproject.toml             # Project config
++- test_stock_signals.py  # 单元测试
+backtest_v2.py             # 全市场回测脚本
+pyproject.toml             # 项目配置
+```
 
-## Installation
+## 安装
 
-\\ash
+```bash
 pip install -e .
+```
 
-Dependencies:
+依赖：
 - Python >= 3.10
 - pandas >= 2.0
 - numpy >= 1.24
-- akshare >= 1.18 (K-line data)
-- futu-api >= 10.4.6408 (capital/short data, optional)
+- akshare >= 1.18（K 线数据）
+- futu-api >= 10.4.6408（资金/卖空数据，可选）
 
-## Usage
+## 使用
 
 ### CLI
 
-\\ash
-# Analyze single stock
+```bash
+# 分析单只股票
 python -m stock_signals.cli analyze US.NVDA
-python -m stock_signals.cli analyze US.NVDA
-python -m stock_signals.cli analyze US.AAPL
-
-# Multi-timeframe analysis
-python -m stock_signals.cli analyze US.NVDA --timeframe 1w
+python -m stock_signals.cli analyze US.AAPL --timeframe 1w
 python -m stock_signals.cli analyze US.NVDA --timeframe 1m
 
-# Full market scan
-python -m stock_signals.cli scan                    # interactive market selection
-python -m stock_signals.cli scan --markets US       # US only
-python -m stock_signals.cli scan --markets A        # A-share only
-python -m stock_signals.cli scan --markets A,US,HK  # all markets
+# 全市场扫描（默认美股）
+python -m stock_signals.cli scan
+python -m stock_signals.cli scan --markets US
 python -m stock_signals.cli scan --min-score 55 --max-picks 5 --parallel
 
-# Export
-python -m stock_signals.cli scan --markets US --json --output report.json
+# 导出
+python -m stock_signals.cli scan --json --output report.json
 python -m stock_signals.cli analyze US.NVDA --csv results.csv
+```
 
 ### Python API
 
-\\python
+```python
 from stock_signals.indicators import fetch_kline, compute_indicators
 from stock_signals.scoring import compute_rating
 from stock_signals._resonance import compute_timeframe_resonance
 from stock_signals._sr import compute_support_resistance, generate_trade_plan
 from stock_signals.screener import scan_parallel, ScanConfig
 
+# 获取 K 线
 df = fetch_kline('US.NVDA', ktype='1d', num=300)
+
+# 计算指标
 ind = compute_indicators(df, 'US.NVDA', '1d')
+
+# 评分
 result = compute_rating(ind)
-print('Rating:', result['rating'], 'Score:', result['score'])
+print(f"评级: {result['rating']}, 评分: {result['score']:.1f}")
+
+# 多周期共振
 resonance = compute_timeframe_resonance('US.NVDA', ind)
-print('Resonance:', resonance.alignment, 'Boost:', resonance.confidence_boost)
-\
-## Rating Scale
+print(f"共振: {resonance.alignment}, 置信度加成: {resonance.confidence_boost}")
 
-| Rating | Score Range | Meaning |
+# 支撑阻力 + 交易计划
+sr = compute_support_resistance(df, ind)
+plan = generate_trade_plan(ind, sr)
+print(f"入场: {plan['entry']:.2f}, 止损: {plan['stop_loss']:.2f}")
+print(f"目标1: {plan['target_1']:.2f}, 目标2: {plan['target_2']:.2f}")
+print(f"风险回报比: {plan['risk_reward']:.1f}:1")
+```
+
+## 评级体系
+
+| 评级 | 分数区间 | 含义 |
 |------|----------|------|
-| Buy | 75-100 | Strong buy |
-| Overweight | 60-74 | Better than market |
-| Hold | 40-59 | Hold/watch |
-| Underweight | 25-39 | Weaker than market |
-| Sell | 0-24 | Sell recommended |
+| Buy | 75-100 | 强力买入 |
+| Overweight | 60-74 | 优于大盘 |
+| Hold | 40-59 | 观望持有 |
+| Underweight | 25-39 | 弱于大盘 |
+| Sell | 0-24 | 建议卖出 |
 
-## Dynamic Weights (v2.6.0+)
+## 动态权重 (v2.6.0+)
 
-Automatically adjusts dimension weights based on volatility regime:
-- Low volatility: momentum/volume weights increase, trend weight decreases
-- High volatility: trend/momentum weights increase, volume/capital weights decrease
+根据波动率 regime 自动调整维度权重：
+- 低波动：动量/量能权重增加，趋势权重降低
+- 高波动：趋势/动量权重增加，量能/资金权重降低
 
-## Tests
+## 测试
 
-\\ash
-pytest tests/ -v
+```bash
+python -m pytest tests/ -v
+```
 
-## Changelog
+## 更新日志
 
 ### v2.10.1 (2026-08-21)
-- Restructured A-share/US strategies into independent submodules (a_share/, us/)
-- Fixed US cache bug, expanded US stock pool to 371 stocks
-- Fixed A-share backtest index bug
+- 美股缓存修复，美股池扩展至 371 只
 
 ### v2.8.5
-- CLI supports parallel scanning (--parallel 3-5x speed boost)
-- Smart filtering system: RSI/deviation/MACD maturity/pullback entry
-- A-share scanner integrated Longhu Board + Northbound flow + Sector heat
+- CLI 支持并行扫描（--parallel 提速 3-5 倍）
+- 智能过滤系统：RSI/偏离/MACD 成熟度/回踩入场
 
 ### v2.5.0
-- VCP volatility contraction detection (Minervini SEPA)
-- Episodic Pivot event-driven reversal detection (Qullamaggie)
-- Multi-timeframe resonance analysis (daily/weekly/monthly alignment)
-- Support/resistance clustering + trade plan generation
+- VCP 波动率收缩检测（Minervini SEPA）
+- 事件驱动拐点检测（Qullamaggie）
+- 多周期共振分析（日/周/月对齐）
+- 支撑阻力聚类 + 交易计划生成
 
 ### v2.1
-- Removed Futu OpenAPI K-line dependency, using Sina+akshare dual data sources
-- Added memory cache mechanism (cache hit ~0.2s)
-- A-share hot stock: Snowball heat ranking -> Sina -> Eastmoney fallback
+- 移除 Futu OpenAPI K 线依赖，改用 Sina+akshare 双数据源
+- 新增内存缓存机制（命中率 ~0.2s）
 
 ### v2.0
-- Supports three-market scanning
-- Uses Futu OpenAPI for K-line data
+- 支持三市场扫描
+- 使用 Futu OpenAPI 获取 K 线数据
 
-## Disclaimer
+## 免责声明
 
-This tool is for technical reference only and does not constitute investment advice. Stock market investment carries risks. Please make decisions based on your own risk tolerance and comprehensive analysis.
+本工具仅供技术分析参考，不构成投资建议。股市投资有风险，请根据自身风险承受能力综合判断，独立决策。
