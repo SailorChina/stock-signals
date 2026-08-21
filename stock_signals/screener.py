@@ -391,7 +391,7 @@ def scan(markets=None, config=None, output_json=False, output_file=""):
     if config is None:
         config = ScanConfig()
     if markets is None:
-        markets = ["A", "HK", "US"]
+        markets = ["US"]
     picks = {m: [] for m in markets}
     watchlist = {m: [] for m in markets}
     total_analyzed = 0
@@ -468,7 +468,7 @@ def scan_parallel(markets=None, config=None, output_json=False, output_file=""):
     if config is None:
         config = ScanConfig()
     if markets is None:
-        markets = ["A", "HK", "US"]
+        markets = ["US"]
     
     picks = {m: [] for m in markets}
     watchlist = {m: [] for m in markets}

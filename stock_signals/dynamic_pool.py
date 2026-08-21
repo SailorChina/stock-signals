@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""动态获取指数成分股 - 混合方案D"""
+"""动态股票池管理 - 美股专用"""
 from __future__ import annotations
 import logging
 import time
@@ -22,7 +22,7 @@ def _load_cache(market: str) -> Optional[List[str]]:
             with open(path, "r", encoding="utf-8") as f:
                 data = json.load(f)
             if time.time() - data.get("time", 0) < _CACHE_TTL:
-                logger.info(f"  使用缓存: {market} {len(data.get('codes', []))} 只")
+                logger.info(f"  使用缓存: {market} {len(data.get(chr(99)+chr(111)+chr(100)+chr(101)+chr(115), []))} 只")
                 return data.get("codes", [])
     except Exception as ex:
         logger.warning(f"  加载缓存失败 {market}: {ex}")
@@ -37,54 +37,6 @@ def _save_cache(market: str, codes: List[str]):
     except Exception as ex:
         logger.warning(f"  保存缓存失败 {market}: {ex}")
 
-def get_a_share_constituents() -> List[str]:
-    """获取A股指数成分股（沪深300 + 中证500）"""
-    cached = _load_cache("A")
-    if cached:
-        return cached
-    codes: List[str] = []
-    try:
-        try:
-        import akshare as ak
-        AKSHARE_AVAILABLE = True
-    except ImportError:
-        AKSHARE_AVAILABLE = False
-        try:
-            df = ak.index_stock_cons_csindex(symbol="000300")
-            sh = [f"SH.{c}" for c in df["成分券代码"].tolist() if str(c).startswith("6")]
-            sz = [f"SZ.{c}" for c in df["成分券代码"].tolist() if str(c).startswith("0") or str(c).startswith("3")]
-            codes.extend(sh + sz)
-            logger.info(f"  AkShare沪深300: {len(sh)}沪 + {len(sz)}深")
-        except Exception as e:
-            logger.warning(f"  AkShare沪深300失败: {e}")
-        try:
-            df = ak.index_stock_cons_csindex(symbol="000905")
-            sh = [f"SH.{c}" for c in df["成分券代码"].tolist() if str(c).startswith("6")]
-            sz = [f"SZ.{c}" for c in df["成分券代码"].tolist() if str(c).startswith("0") or str(c).startswith("3")]
-            codes.extend(sh + sz)
-            logger.info(f"  AkShare中证500: {len(sh)}沪 + {len(sz)}深")
-        except Exception as e:
-            logger.warning(f"  AkShare中证500失败: {e}")
-    except ImportError:
-        logger.warning("  AkShare未安装，跳过动态获取")
-    return list(dict.fromkeys(codes))
-
-def get_hk_constituents() -> List[str]:
-    """获取港股指数成分股"""
-    # 港股动态获取暂不可用，使用静态池
-    logger.warning("  港股动态获取暂不可用，使用静态池")
-    return []
-
 def get_us_constituents() -> List[str]:
-    """获取美股指数成分股（使用静态池为主）"""
-    return []
-
-def get_constituents(market: str) -> List[str]:
-    """获取指定市场的成分股"""
-    if market == "A":
-        return get_a_share_constituents()
-    elif market == "HK":
-        return get_hk_constituents()
-    elif market == "US":
-        return get_us_constituents()
+    """获取美股成分股（使用静态池为主）"""
     return []
