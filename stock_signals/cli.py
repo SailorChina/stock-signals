@@ -5,7 +5,6 @@
 from __future__ import annotations
 
 
-
 import sys
 
 import os
@@ -23,7 +22,6 @@ import sys
 from datetime import datetime
 
 from typing import List, Optional
-
 
 
 try:
@@ -53,9 +51,6 @@ except ImportError:
     pass
 
 
-
-
-
 def setup_logging(log_level="INFO", log_file=""):
 
     level = getattr(logging, log_level.upper(), logging.INFO)
@@ -75,16 +70,10 @@ def setup_logging(log_level="INFO", log_file=""):
     logging.basicConfig(level=level, handlers=handlers)
 
 
-
-
-
 logger = logging.getLogger("stock-signals")
 if sys.platform == "win32":
     try: sys.stdout.reconfigure(encoding="utf-8")
     except Exception: pass
-
-
-
 
 
 # ── Rating color & Chinese label maps ──────────────────────────────
@@ -98,17 +87,14 @@ RATING_CN = {"Buy": "买入", "Overweight": "偏多", "Hold": "观望",
              "Underweight": "偏空", "Sell": "卖出"}
 
 
-
 # ── Confidence Chinese labels ──────────────────────────────────────
 
 CONF_CN = {"high": "高", "medium": "中", "low": "低"}
 
 
-
 # ── OBV trend Chinese labels ───────────────────────────────────────
 
 OBV_CN = {"up": "上升", "down": "下降"}
-
 
 
 # ── Resonance alignment colors & Chinese labels ────────────────────
@@ -120,11 +106,6 @@ ALIGN_COLOR = {"strong_up": "green", "aligned": "green", "mixed": "yellow",
 ALIGN_CN = {"strong_up": "强共振看多", "aligned": "共振看多", "mixed": "分歧",
 
             "aligned_down": "共振看空", "strong_down": "强共振看空", "none": "无"}
-
-
-
-
-
 
 
 def _color(text, color, bold=False):
@@ -140,17 +121,11 @@ def _color(text, color, bold=False):
     return f"[{c}m{text}[0m" if c else text
 
 
-
-
-
 def _bar(value, width=20):
 
     filled = int(width * value / 100)
 
     return f"[" + "#" * filled + "-" * (width - filled) + f"] {value:.0f}"
-
-
-
 
 
 def print_text_report(result, code):
@@ -164,7 +139,6 @@ def print_text_report(result, code):
     rating_cn_label = RATING_CN.get(rating, "")
 
     rc = RC_COLOR.get(rating, "white")
-
 
 
     print()
@@ -198,7 +172,6 @@ def print_text_report(result, code):
     print()
 
 
-
     print("  各维度评分")
 
     dims = result.get("dimensions", {})
@@ -228,7 +201,6 @@ def print_text_report(result, code):
             print(f"      {_color(dr, 'dim')}")
 
     print()
-
 
 
     ta = result.get("technical_analysis", {})
@@ -306,7 +278,6 @@ def print_text_report(result, code):
     print()
 
 
-
     signals = result.get("signals", [])
 
     if signals:
@@ -344,7 +315,6 @@ def print_text_report(result, code):
         print()
 
 
-
     summary = result.get("summary", [])
 
     if summary:
@@ -358,7 +328,6 @@ def print_text_report(result, code):
         print()
 
 
-
     res = result.get("resonance")
 
     if res:
@@ -366,7 +335,6 @@ def print_text_report(result, code):
         print("  多时间框架共振")
 
         ac = ALIGN_COLOR.get(res["alignment"], "white")
-
 
 
         _dr=res["daily_rating"]; _wr=res["weekly_rating"]; _mr=res["monthly_rating"]
@@ -388,7 +356,6 @@ def print_text_report(result, code):
             print(f"    {_color(res['details'], 'dim')}")
 
         print()
-
 
 
     sr = result.get("support_resistance")
@@ -418,7 +385,6 @@ def print_text_report(result, code):
         print()
 
 
-
     tp = result.get("trade_plan")
 
     if tp and tp.get("entry_zone", 0) > 0:
@@ -444,7 +410,6 @@ def print_text_report(result, code):
         print()
 
 
-
     # 波动率市况
 
     vol_regime = ta.get("vol_regime", "normal")
@@ -458,7 +423,6 @@ def print_text_report(result, code):
     print(f"  市况分类: {_color(regime_labels.get(vol_regime, vol_regime), rc)}  (ATR%={ta.get("atr_14_pct", 0):.2f}%)")
 
     print()
-
 
 
     trend = result.get("trend_phase")
@@ -478,9 +442,6 @@ def print_text_report(result, code):
     print("=" * 64)
 
     print()
-
-
-
 
 
 def analyze(code, timeframe="1d", output_json=False):
@@ -504,11 +465,9 @@ def analyze(code, timeframe="1d", output_json=False):
         return result
 
 
-
     logger.info("计算技术指标...")
 
     ind = compute_indicators(df, code, timeframe)
-
 
 
     logger.info("获取资金/卖空数据...")
@@ -516,7 +475,6 @@ def analyze(code, timeframe="1d", output_json=False):
     capital = get_capital_data(code)
 
     short_pct = get_short_data(code) if code.startswith("US.") else None
-
 
 
     logger.info("计算评级 & 生成信号...")
@@ -528,7 +486,6 @@ def analyze(code, timeframe="1d", output_json=False):
     summary = signal_summary(ind)
 
 
-
     resonance = compute_timeframe_resonance(code, ind, capital, short_pct)
 
     sr = compute_support_resistance(df)
@@ -536,7 +493,6 @@ def analyze(code, timeframe="1d", output_json=False):
     trend_phase = compute_trend_phase(df, ind)
 
     trade_plan = generate_trade_plan(ind, sr, trend_phase)
-
 
 
     result = {
@@ -662,7 +618,6 @@ def analyze(code, timeframe="1d", output_json=False):
     }
 
 
-
     if output_json:
 
         print(json.dumps(result, ensure_ascii=False, indent=2))
@@ -672,9 +627,6 @@ def analyze(code, timeframe="1d", output_json=False):
         print_text_report(result, code)
 
     return result
-
-
-
 
 
 def batch_analyze(codes, timeframe="1d", output_csv=None, output_json=False):
@@ -708,9 +660,6 @@ def batch_analyze(codes, timeframe="1d", output_csv=None, output_json=False):
         _export_csv(results, output_csv)
 
     return results
-
-
-
 
 
 def _export_csv(results, path):
@@ -788,19 +737,14 @@ def _export_csv(results, path):
     logger.info(f"CSV 已导出: {path} ({len(results)} rows)")
 
 
-
-
-
 def main():
 
     parser = argparse.ArgumentParser(description="美股技术分析 & 买卖信号生成器")
 
 
-
     # Subcommands
 
     sub = parser.add_subparsers(dest="cmd")
-
 
 
     # --- analyze subcommand ---
@@ -822,7 +766,6 @@ def main():
     p_analyze.add_argument("--log-file", type=str, help="日志文件路径")
 
     p_analyze.add_argument("--config", type=str, help="配置文件路径(JSON)")
-
 
 
     # --- scan subcommand ---
@@ -848,9 +791,7 @@ def main():
     p_scan.add_argument("--log-file", type=str, help="日志文件路径")
 
 
-
     args = parser.parse_args()
-
 
 
     if not args.cmd:
@@ -860,11 +801,9 @@ def main():
         sys.exit(0)
 
 
-
     setup_logging(getattr(args, "log_level", "INFO"), getattr(args, "log_file", ""))
 
     logger.info("stock-signals v2.10.1 启动")
-
 
 
     if args.cmd == "scan":
@@ -900,7 +839,6 @@ def main():
         sys.exit(0)
 
 
-
     # analyze mode
 
     for code in args.codes:
@@ -916,11 +854,9 @@ def main():
         analyze(code, args.timeframe, args.json)
 
 
-
     if getattr(args, "csv", None):
 
         logger.warning("--csv 需要多只股票批量模式")
-
 
 
 if __name__ == "__main__":
