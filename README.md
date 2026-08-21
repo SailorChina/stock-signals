@@ -1,6 +1,6 @@
 # stock-signals
 
-Multi-market stock technical analysis & buy/sell signal generator - A-share / HK / US
+US stock technical analysis & buy/sell signal generator
 
 ## Core Features
 
@@ -104,12 +104,12 @@ Dependencies:
 \\ash
 # Analyze single stock
 python -m stock_signals.cli analyze US.NVDA
-python -m stock_signals.cli analyze SH.600519
-python -m stock_signals.cli analyze HK.00700
+python -m stock_signals.cli analyze US.NVDA
+python -m stock_signals.cli analyze US.AAPL
 
 # Multi-timeframe analysis
 python -m stock_signals.cli analyze US.NVDA --timeframe 1w
-python -m stock_signals.cli analyze SH.600519 --timeframe 1m
+python -m stock_signals.cli analyze US.NVDA --timeframe 1m
 
 # Full market scan
 python -m stock_signals.cli scan                    # interactive market selection
@@ -131,11 +131,11 @@ from stock_signals._resonance import compute_timeframe_resonance
 from stock_signals._sr import compute_support_resistance, generate_trade_plan
 from stock_signals.screener import scan_parallel, ScanConfig
 
-df = fetch_kline('SH.600519', ktype='1d', num=300)
-ind = compute_indicators(df, 'SH.600519', '1d')
+df = fetch_kline('US.NVDA', ktype='1d', num=300)
+ind = compute_indicators(df, 'US.NVDA', '1d')
 result = compute_rating(ind)
 print('Rating:', result['rating'], 'Score:', result['score'])
-resonance = compute_timeframe_resonance('SH.600519', ind)
+resonance = compute_timeframe_resonance('US.NVDA', ind)
 print('Resonance:', resonance.alignment, 'Boost:', resonance.confidence_boost)
 \
 ## Rating Scale

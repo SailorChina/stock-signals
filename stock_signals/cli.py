@@ -21,7 +21,6 @@ try:
     from stock_signals._resonance import compute_timeframe_resonance
     from stock_signals._sr import compute_support_resistance, generate_trade_plan, compute_trend_phase
     from stock_signals.screener import scan_parallel, ScanConfig
-    from stock_signals.screener_a import scan_a
     from stock_signals.reporter import print_scan_report
 except ImportError:
     pass
@@ -254,7 +253,7 @@ def analyze(code, timeframe="1d", output_json=False):
 
     logger.info("获取资金/卖空数据...")
     capital = get_capital_data(code)
-    short_pct = get_short_data(code) if code.startswith(("US.", "HK.")) else None
+    short_pct = get_short_data(code) if code.startswith("US.") else None
 
     logger.info("计算评级 & 生成信号...")
     rating_result = compute_rating(ind, capital, short_pct)
@@ -400,7 +399,7 @@ def main():
 
     # --- analyze subcommand ---
     p_analyze = sub.add_parser("analyze", help="分析单只/多只股票")
-    p_analyze.add_argument("codes", nargs="+", help="股票代码，如 US.NVDA / SH.600519 / HK.00700")
+    p_analyze.add_argument("codes", nargs="+", help="股票代码，如 US.NVDA / US.NVDA")
     p_analyze.add_argument("--timeframe", "-t", default="1d", choices=["1d", "1w", "1m"])
     p_analyze.add_argument("--json", "-j", action="store_true", help="JSON output")
     p_analyze.add_argument("--num", "-n", type=int, default=300, help="K线根数")
@@ -418,7 +417,6 @@ def main():
     p_scan.add_argument("--json", "-j", action="store_true", help="JSON output")
     p_scan.add_argument("--output", "-o", type=str, help="保存结果到文件")
     p_scan.add_argument("--log-level", default="INFO", choices=["DEBUG","INFO","WARNING","ERROR"])
-    p_scan.add_argument("--strategy", "-s", default="auto", choices=["auto", "us", "a"], help="策略: auto=自动, us=美股, a=A股")
     p_scan.add_argument("--parallel", "-p", action="store_true", help="并行扫描（速度提升3-5倍）")
     p_scan.add_argument("--log-file", type=str, help="日志文件路径")
 
@@ -455,11 +453,7 @@ def main():
             max_per_market=args.max_picks,
             max_delay=args.delay,
         )
-        strategy = getattr(args, "strategy", "auto")
-        if strategy == "a":
-            result = scan_a(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
-        else:
-            result = scan_parallel(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
+        result = scan_parallel(markets=markets, config=cfg, output_json=args.json, output_file=getattr(args, "output", ""))
         if not args.json:
             print_scan_report(result)
         sys.exit(0)
@@ -468,7 +462,7 @@ def main():
     for code in args.codes:
         code = code.strip()
         if "." not in code:
-            logger.error(f"股票代码格式错误: {code}，示例: US.NVDA / SH.600519 / HK.00700")
+            logger.error(f"股票代码格式错误: {code}，示例: US.NVDA / US.NVDA")
             sys.exit(1)
         analyze(code, args.timeframe, args.json)
 

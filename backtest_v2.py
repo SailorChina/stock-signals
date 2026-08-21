@@ -114,15 +114,15 @@ def calc_score(ind):
     s+=50*0.17
     return round(s,1)
 
-codes=["SH.600519","SH.601318","SH.600036","SH.601398","SH.601288",
-       "SH.600028","SH.600030","SH.600048","SH.601166","SH.601328",
-       "SH.600276","SH.600887","SH.601012","SH.601088","SH.601857",
-       "SH.600585","SH.600089","SH.600309","SH.600900","SH.600009",
-       "SZ.000858","SZ.000333","SZ.002594","SZ.002415","SZ.002475",
-       "SZ.000001","SZ.000002","SZ.000063","SZ.002460","SZ.002714",
-       "SZ.300750","SZ.300059","SZ.300015","SZ.300124","SZ.300122",
-       "SH.688981","SH.688012","SH.688396","SH.688111","SH.688256",
-       "SH.603288","SH.603259","SH.603899","SH.600104","SH.603160"]
+codes=["US.NVDA","US.AAPL","US.MSFT","US.GOOG","US.AMZN",
+"US.META","US.TSLA","US.AVGO","US.CSCO","US.ORCL",
+"US.AMAT","US.LRCX","US.ASML","US.INTC","US.QCOM",
+"US.MU","US.NXPI","US.MCD","US.NKE","US.TGT",
+"US.KO","US.PEP","US.WMT","US.COST",
+"US.JNJ","US.PFE","US.UNH","US.LLY","US.ABBV",
+"US.MRK","US.BMY","US.AMGN","US.GILD",
+"US.HON","US.CAT","US.BA","US.DE",
+"US.FCX","US.NEM","US.XOM","US.COP"]
 
 print(f"回测开始: {len(codes)}只, {START}~{END}")
 trades=[]; equity=CAPITAL; eq_hist=[]; pos=None; tdays=0; stocks_ok=0
@@ -189,7 +189,7 @@ else:
     rets=[(eqs[i]-eqs[i-1])/eqs[i-1] for i in range(1,len(eqs)) if eqs[i-1]>0]
     sharpe=(np.mean(rets)/np.std(rets)*np.sqrt(252)) if rets and np.std(rets)>0 else 0
     print("\n"+"="*60)
-    print(f"  A股策略回测报告 ({START}~{END})")
+    print(f"  美股策略回测报告 ({START}~{END})")
     print("="*60)
     print(f"  股票: {len(codes)}只 (有数据: {stocks_ok})")
     print(f"  资金: RMB{CAPITAL:,} -> ¥{final_eq:,.0f}")

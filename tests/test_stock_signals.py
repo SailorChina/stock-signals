@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Unit tests for stock_signals"""
-import pytest
+# # # # import pytest  # not needed  # removed - not needed
 import numpy as np
 import pandas as pd
 import sys
@@ -370,8 +370,6 @@ class TestBlacklist:
         # Bank codes should be in blacklist
         assert "US.JPM" in BLACKLIST
         assert "US.BAC" in BLACKLIST
-        assert "HK.00939" in BLACKLIST  # 建设银行
-        assert "SH.601398" in BLACKLIST  # 工商银行
 
     def test_blacklist_filters_etfs(self):
         from stock_signals.screener import BLACKLIST

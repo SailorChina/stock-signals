@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "stock-signals"
 version = "2.10.1"
-description = "Multi-market stock technical analysis and buy/sell signal generator"
+description = "US stock technical analysis and buy/sell signal generator"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
