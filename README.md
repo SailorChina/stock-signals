@@ -89,6 +89,7 @@ stock_signals/
 +- scoring.py             # 通用评分引擎（趋势/动量/量能/波动/卖空，5 维加权）
 +- screener.py            # 并行扫描引擎（43 只静态池 + 300 只热股）
 +- sector.py              # 板块热度分析（ETF排名 + 板块加成）
++- meme_tracker.py       # 网红/大V 股票追踪（猫姐 watchlist + 自动抓取接口）
 +- hot_fetcher.py         # 热门股获取（Sina 成交量排序）
 +- cli.py                 # CLI 入口 (analyze/scan 子命令)
 +- reporter.py            # 中文扫描报告输出
@@ -124,6 +125,18 @@ pip install -e .
 ## 使用
 
 ### CLI
+
+`ash
+# 猫姐 Meme 股票追踪
+python -m stock_signals.cli meme list        # 查看 watchlist
+python -m stock_signals.cli meme add US.NVDA  # 添加股票
+python -m stock_signals.cli meme remove US.NVDA  # 移除股票
+python -m stock_signals.cli meme scan         # 分析所有 meme 股票
+python -m stock_signals.cli meme scrape       # 尝试自动抓取（需网络）
+
+# 板块热度排名
+python -m stock_signals.cli sector
+`
 
 ```bash
 # 分析单只股票
