@@ -21,6 +21,7 @@ from ._vcp import detect_vcp
 from ._episodic_pivot import detect_episodic_pivot
 from .config import config
 from .hot_fetcher import fetch_hot_stocks as _fetch_hot_stocks_live
+from .sector import get_sector_ranking, get_sector_bonus
 
 
 
@@ -248,7 +249,7 @@ def compute_holding_period(entry: float, target_1: float, target_2: float, stop:
     elif score >= 2: return "短线(1-2周)"
     else: return "超短(1-5天)"
 
-def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
+def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0):
 
     try:
         # v2.7: 黑名单过滤
@@ -264,6 +265,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0):
         rating = compute_rating(ind, capital, short_pct)
         time.sleep(0.2)
         score = rating["score"]
+        score = score * sector_bonus
         r_name = rating["rating"]
         resonance = compute_timeframe_resonance(code, ind, capital, short_pct)
         time.sleep(0.2)
@@ -440,11 +442,11 @@ def scan(markets=None, config=None, output_json=False, output_file=""):
     return output
 
 
-def _analyze_batch(codes, delay):
+def _analyze_batch(codes, delay, sector_bonus=1.0):
     """并行分析一批股票"""
     results = []
     with ThreadPoolExecutor(max_workers=2) as executor:
-        futures = {executor.submit(_analyze_one, code, delay=delay): code for code in codes}
+        futures = {executor.submit(_analyze_one, code, delay=delay, sector_bonus=sector_bonus): code for code in codes}
         for future in as_completed(futures):
             try:
                 result = future.result()
@@ -473,6 +475,8 @@ def scan_parallel(markets=None, config=None, output_json=False, output_file=""):
         market_codes = _get_market_codes(market)
         logger.info(f"  {MARKET_NAMES.get(market, market)}: {len(market_codes)} 只候选")
         
+        # 获取板块热度排名（每个市场只计算一次）
+        sector_ranking = get_sector_ranking()
         batch_size = 100
         for i in range(0, len(market_codes), batch_size):
             batch = market_codes[i:i+batch_size]

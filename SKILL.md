@@ -1,10 +1,10 @@
 # stock-signals Skill
 
-> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.10.1
+> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.11.0
 
 基于技术指标（MA/MACD/RSI/KDJ/BOLL/ATR/OBV/ADX）+ 高级形态识别（VCP/事件驱动拐点/TD序列/多周期共振），自动生成评级、入场点、止损位和目标价。
 
-**适用市场：美股 (US) — 已移除 A 股和港股支持**
+**适用市场：美股 (US) — 已移除 A 股和港股支持\n\n## 板块热度分析\n\n`ash\n# 查看板块热度排名\npython -m stock_signals.cli sector\npython -m stock_signals.cli sector --top 10 --json\n`\n\n- 21个美股板块ETF实时热度排名\n- 热门板块股票评分加成 +10%，冷僻板块 -5%\n- 数据源: Sina 实时报价 + akshare 历史K线**
 
 ## 功能
 

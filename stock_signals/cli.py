@@ -45,6 +45,7 @@ try:
     from stock_signals.screener import scan_parallel, ScanConfig
 
     from stock_signals.reporter import print_scan_report
+    from stock_signals.sector import get_sector_ranking, get_sector_ranking_for_display
 
 except ImportError:
 
@@ -737,6 +738,45 @@ def _export_csv(results, path):
     logger.info(f"CSV 已导出: {path} ({len(results)} rows)")
 
 
+def _print_sector_report(ranks, top_n=10):
+    """打印板块热度排名报告"""
+    from stock_signals.cli import _color, _bar
+    print()
+    print("=" * 72)
+    print("  美股板块热度排名")
+    print("  " + chr(124430) + " " + __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M'))
+    print("=" * 72)
+    print()
+    print(f"  {chr(7203) + chr(23383):6s}  {chr(26032) + chr(31238):8s}  {chr(26435) + chr(21517):8s}  {chr(26412) + chr(26631):>8s}  {chr(19968) + chr(19968):>8s}  {chr(49) + chr(12461):>8s}  {chr(53) + chr(12461):>8s}  {chr(50) + chr(48) + chr(12461):>8s}  {chr(54) + chr(48) + chr(12461):>8s}  {chr(32918) + chr(30780) + chr(31867):>8s}")
+    print("  " + "-" * 68)
+    for i, r in enumerate(ranks[:top_n], 1):
+        heat_color = "green" if r.heat_score > 3 else ("red" if r.heat_score < -3 else "yellow")
+        heat_str = _color(f"{r.heat_score:+.1f}", heat_color, True)
+        chg_1d_color = "green" if r.chg_1d >= 0 else "red"
+        chg_5d_color = "green" if r.chg_5d >= 0 else "red"
+        chg_20d_color = "green" if r.chg_20d >= 0 else "red"
+        chg_60d_color = "green" if r.chg_60d >= 0 else "red"
+        print(f"  {i:>3d}. {r.ticker:6s}  {r.cn_name:8s}    "
+              f"{_color(f'{r.chg_1d:+.1f}%', chg_1d_color):>8s}  "
+              f"{_color(f'{r.chg_5d:+.1f}%', chg_5d_color):>8s}  "
+              f"{_color(f'{r.chg_20d:+.1f}%', chg_20d_color):>8s}  "
+              f"{_color(f'{r.chg_60d:+.1f}%', chg_60d_color):>8s}  "
+              f"{heat_str:>8s}")
+    print()
+    # Show hot sectors
+    hot = [r for r in ranks if r.heat_score > 3]
+    cold = [r for r in ranks if r.heat_score < -3]
+    if hot:
+        print("  " + _color("热门板块:", "green", True))
+        for r in hot[:3]:
+            print(f"    {_color(r.ticker, 'green')} {r.cn_name}  heat={r.heat_score:+.1f}")
+    if cold:
+        print("  " + _color("冷僻板块:", "red", True))
+        for r in cold[:3]:
+            print(f"    {_color(r.ticker, 'red')} {r.cn_name}  heat={r.heat_score:+.1f}")
+    print()
+
+
 def main():
 
     parser = argparse.ArgumentParser(description="美股技术分析 & 买卖信号生成器")
@@ -791,6 +831,11 @@ def main():
     p_scan.add_argument("--log-file", type=str, help="日志文件路径")
 
 
+    # --- sector subcommand ---
+    p_sector = sub.add_parser("sector", help="板块热度排名")
+    p_sector.add_argument("--json", "-j", action="store_true", help="JSON output")
+    p_sector.add_argument("--top", "-t", type=int, default=10, help="显示前N个板块")
+
     args = parser.parse_args()
 
 
@@ -805,6 +850,16 @@ def main():
 
     logger.info("stock-signals v2.10.1 启动")
 
+
+    if args.cmd == "sector":
+        ranks = get_sector_ranking()
+        if args.json:
+            import json
+            display = get_sector_ranking_for_display(ranks)
+            print(json.dumps(display, ensure_ascii=False, indent=2))
+        else:
+            _print_sector_report(ranks, top_n=getattr(args, "top", 10))
+        sys.exit(0)
 
     if args.cmd == "scan":
 

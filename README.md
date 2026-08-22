@@ -13,7 +13,7 @@
 python -m stock_signals.cli analyze US.NVDA
 python -m stock_signals.cli analyze US.AAPL --timeframe 1w
 
-# 全市场扫描（默认43只精选 + 300只热股）
+# 全市场扫描（默认43只精选 + 300只热股 + 板块热度分析）
 python -m stock_signals.cli scan
 python -m stock_signals.cli scan --min-score 55 --max-picks 5 --parallel
 
@@ -50,6 +50,13 @@ python -m stock_signals.cli analyze US.NVDA --csv results.csv
 | **趋势阶段分类** | 吸筹 / 上涨早期 / 上涨阶段 / 派发 / 下跌 |
 | **交易计划生成** | 入场区间、止损、双目标、风险回报比、仓位建议 |
 
+### 板块热度分析 (v2.11.0)
+
+- 21个美股板块ETF实时热度排名
+- 基于1d/5d/20d/60d涨幅加权计算热度分
+- 热门板块加成（+10%）、冷僻板块扣分（-5%）
+- 自动识别股票所属板块
+
 ### 智能过滤 (v2.5.0+)
 
 - RSI(14) > 75 → 追高硬拦截
@@ -72,7 +79,7 @@ python -m stock_signals.cli analyze US.NVDA --csv results.csv
 
 ```
 stock_signals/
-+- __init__.py            # v2.10.1，核心 API 导出
++- __init__.py            # v2.11.0，核心 API 导出
 +- _info.py               # 股票信息库（英文名/行业/描述）
 +- _resonance.py          # 多周期共振分析（日/周/月）
 +- _sr.py                 # 支撑阻力计算 + 交易计划生成
@@ -81,6 +88,7 @@ stock_signals/
 +- indicators.py          # 通用指标计算 (MA/MACD/RSI/KDJ/BOLL/ATR/OBV/VWMA/ADX)
 +- scoring.py             # 通用评分引擎（趋势/动量/量能/波动/卖空，5 维加权）
 +- screener.py            # 并行扫描引擎（43 只静态池 + 300 只热股）
++- sector.py              # 板块热度分析（ETF排名 + 板块加成）
 +- hot_fetcher.py         # 热门股获取（Sina 成交量排序）
 +- cli.py                 # CLI 入口 (analyze/scan 子命令)
 +- reporter.py            # 中文扫描报告输出
@@ -188,7 +196,7 @@ python -m unittest tests.test_stock_signals
 
 ## 更新日志
 
-### v2.10.1 (2026-08-21)
+### v2.11.0 (2026-08-21)
 - **移除 A 股和港股支持，专注美股**
 - 修复 `today_hot` UnboundLocalError BUG（扫描崩溃）
 - 修复 `fetch_realtime` 语法错误（删除 A/HK 分支后遗留 elif）
