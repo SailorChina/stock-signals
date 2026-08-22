@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 # -*- coding: utf-8 -*-
 import numpy as np
+import logging
+
+logger = logging.getLogger("stock-signals")
 from dataclasses import dataclass
 from typing import Optional
 
@@ -20,17 +23,21 @@ def compute_support_resistance(df, n=20):
     close = df["close"].values.astype(float)
     high = df["high"].values.astype(float)
     low = df["low"].values.astype(float)
-    recent_high = float(high[-n:].max())
-    recent_low = float(low[-n:].min())
-    pn = min(60, n)
+    lookback = min(120, len(close))
+    c = close[-lookback:]
+    h = high[-lookback:]
+    l = low[-lookback:]
+    recent_high = float(h.max())
+    recent_low = float(l.min())
+    pn = min(10, n)
     swings_high, swings_low = [], []
-    for i in range(pn, len(close) - pn):
-        wh = high[i-pn:i+pn+1]
-        wl = low[i-pn:i+pn+1]
-        if high[i] >= wh.max() * 0.95:
-            swings_high.append(close[i])
-        if low[i] <= wl.min() * 1.10:
-            swings_low.append(close[i])
+    for i2 in range(pn, len(c) - pn):
+        wh = h[i2-pn:i2+pn+1]
+        wl = l[i2-pn:i2+pn+1]
+        if c[i2] >= wh.max() * 0.97:
+            swings_high.append(c[i2])
+        if c[i2] <= wl.min() * 1.03:
+            swings_low.append(c[i2])
     def _cluster(vals, tol=0.02):
         if not vals: return []
         vals = sorted(vals, reverse=True)
@@ -45,23 +52,21 @@ def compute_support_resistance(df, n=20):
         return clusters
     resists = _cluster(swings_high)
     supports = _cluster(swings_low)
-    ma20 = float(np.mean(close[-20:]))
-    std20 = float(np.std(close[-20:], ddof=1))
+    ma20 = float(np.mean(c[-20:]))
+    std20 = float(np.std(c[-20:], ddof=1))
     boll_up = ma20 + 2 * std20
     boll_lo = ma20 - 2 * std20
     ma_vals = []
     for pp in (20, 50, 100, 200):
-        if len(close) >= pp: ma_vals.append(float(np.mean(close[-pp:])))
+        if len(c) >= pp: ma_vals.append(float(np.mean(c[-pp:])))
     ma_clusters = sorted(set(round(m, 2) for m in ma_vals), reverse=True)
     vol = df["volume"].values.astype(float)
-    if n >= 20:
-        vs = float(np.sum(vol[-n:]))
-        tp = (high[-n:] + low[-n:]) / 2
-        tv = float(np.sum(tp * vol[-n:]))
-        vwap = tv / vs if vs > 0 else ma20
-    else:
-        vwap = ma20
-    cur = float(close[-1])
+    lb_vol = min(20, len(c))
+    vs = float(np.sum(vol[-lb_vol:]))
+    tp = (h[-lb_vol:] + l[-lb_vol:]) / 2
+    tv = float(np.sum(tp * vol[-lb_vol:]))
+    vwap = tv / vs if vs > 0 else ma20
+    cur = float(c[-1])
     resists_above = [v for v in resists if v > cur]
     supports_below = [v for v in supports if v < cur]
     if not resists_above:
@@ -104,7 +109,7 @@ def compute_trend_phase(df, ind):
     if ind.ma20 < ind.ma60 < ma200: return "decline"
     return "accumulation"
 
-def generate_trade_plan(ind, sr, trend_phase, vcp_result=None):
+def generate_trade_plan(code, ind, sr, trend_phase, vcp_result=None):
     """生成交易计划，支持 ATR 动态止损和 VCP pivot 入场"""
     price = ind.last_close
     atr = ind.atr_14
@@ -161,6 +166,19 @@ def generate_trade_plan(ind, sr, trend_phase, vcp_result=None):
     if vcp_result and vcp_result.quality == "strong":
         tgt2 = tgt1 * 1.15
     
+    # v2.12: cap target prices
+    cap1 = entry * 1.30
+    cap2 = entry * 1.50
+    if tgt1 > cap1:
+        logger.warning(str(code) + ": target_1 " + str(round(tgt1,2)) + " capped to " + str(round(cap1,2)))
+        tgt1 = cap1
+    if tgt2 > cap2:
+        logger.warning(str(code) + ": target_2 " + str(round(tgt2,2)) + " capped to " + str(round(cap2,2)))
+        tgt2 = cap2
+    if tgt1 > price * 1.30:
+        tgt1 = price * 1.25
+    if tgt2 > price * 1.50:
+        tgt2 = price * 1.45
     risk = entry - stop if entry > stop else atr * 1.5
     reward = tgt2 - entry if tgt2 > entry else atr * 2
     rr = reward / risk if risk > 0 else 0

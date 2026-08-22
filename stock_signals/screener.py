@@ -277,7 +277,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0
         sr = compute_support_resistance(df)
         vcp_res = detect_vcp(df, lookback=100)
         ep_res = detect_episodic_pivot(df, lookback=60)
-        tp = generate_trade_plan(ind, sr, phase, vcp_res)
+        tp = generate_trade_plan(code, ind, sr, phase, vcp_res)
         # v2.5: VCP 模式增强 - 成交量确认
         if vcp_res.detected and not vcp_res.volume_drying:
             logger.warning(f"  {code} VCP模式但成交量未萎缩，跳过")
