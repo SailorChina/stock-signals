@@ -1,6 +1,6 @@
 # stock-signals Skill
 
-> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.11.0
+> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.11.1
 
 基于技术指标（MA/MACD/RSI/KDJ/BOLL/ATR/OBV/ADX）+ 高级形态识别（VCP/事件驱动拐点/TD序列/多周期共振），自动生成评级、入场点、止损位和目标价。
 
@@ -13,6 +13,18 @@
 3. **信号识别**: VCP 波动率收缩、事件驱动拐点、TD 序列、多周期共振
 4. **交易计划**: 支撑阻力聚类 + 入场区间 + 止损 + 双目标 + 风险回报比
 5. **评分引擎**: 5 维加权（趋势/动量/量能/波动/卖空）+ 动态权重
+
+## Meme 股票追踪 (v2.11.1)
+
+`ash
+python -m stock_signals.cli meme list
+python -m stock_signals.cli meme add US.NVDA
+python -m stock_signals.cli meme scan
+`
+
+- 默认 watchlist 包含猫姐常提的10只股票
+- meme 股票评分加成 +5%
+- 自动抓取接口预留（X/Twitter + YouTube）
 
 ## 数据源
 
