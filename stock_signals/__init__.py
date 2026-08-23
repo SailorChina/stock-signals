@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""stock_signals package v2.10.1"""
-__version__ = "2.10.1"
+"""stock_signals package v2.13.2"""
+__version__ = "2.13.2"
 __author__ = "SailorChina"
 
 from .indicators import fetch_kline, compute_indicators, Indicators, signal_summary
@@ -15,3 +15,4 @@ __all__ = [
     "compute_timeframe_resonance",
     "compute_support_resistance", "generate_trade_plan", "compute_trend_phase",
 ]
+
