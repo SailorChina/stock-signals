@@ -41,10 +41,7 @@ def fetch_fundamental(symbol: str) -> Optional[FundamentalData]:
         gross = row.get("GROSS_PROFIT_RATIO", 0)
         net = row.get("NET_PROFIT_RATIO", 0)
         rev_growth = row.get("OPERATE_INCOME_YOY", 0)
-        if gross == 100.0:
-            gross = 0
-        if net == 100.0:
-            net = 0
+
         data = FundamentalData(
             gross_margin=float(gross) if gross else 0,
             net_margin=float(net) if net else 0,
