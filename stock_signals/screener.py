@@ -317,9 +317,10 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0
         if resonance.alignment == "strong_down":
             logger.warning(f"  " + code + " 强下跌对齐，过滤")
             return None
-        # v2.13: RSI超卖接飞刀过滤
-        if ind.rsi_14 < 30:
-            logger.warning(f"  " + code + " RSI=" + ".1f" + " 超卖接飞刀，过滤")
+        # v2.13: RSI超卖接飞刀过滤 - 大盘股跳过,中盘放宽,小盘严格
+        mc = MKT_CAP.get(code.replace("US.",""), 0)
+        if mc < 500e9 and ind.rsi_14 < (25 if mc >= 100e9 else 30):
+            logger.warning("  " + code + " RSI=" + str(round(ind.rsi_14,1)) + " 超卖接飞刀，过滤")
             return None
         # v2.13: 价格远离MA200过滤
         if ind.ma200 > 0:
