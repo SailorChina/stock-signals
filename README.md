@@ -207,6 +207,15 @@ print(f"风险回报比: {plan['risk_reward']:.1f}:1")
 python -m unittest tests.test_stock_signals
 ```
 
+## v2.13.0 (2026-08-23)
+- **趋势质量硬过滤**: 新增 4 项过滤规则，过滤下跌趋势股票
+  - phase=decline 的硬过滤（价格远低于MA200的下跌阶段）
+  - lignment=strong_down 的硬过滤（多头排列被破坏）
+  - RSI<30 的硬过滤（超卖接飞刀风险）
+  - 价格低于MA200超过20% 的硬过滤（趋势过弱）
+- 过滤效果: 删除 FMC/HST/POOL/ZTS 等下跌趋势股票推荐
+- 推荐质量提升: 所有推荐股票均为 accumulation/early_rally 阶段，strong_up 对齐
+
 ## 更新日志
 
 ### v2.11.0 (2026-08-21)
