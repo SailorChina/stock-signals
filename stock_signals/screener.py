@@ -21,6 +21,7 @@ from ._vcp import detect_vcp
 from ._episodic_pivot import detect_episodic_pivot
 from .config import config
 from .hot_fetcher import fetch_hot_stocks as _fetch_hot_stocks_live, MKT_CAP, MIN_MARKET_CAP
+from .fundamental import check_fundamental
 from .sector import get_sector_ranking, get_sector_bonus
 
 
