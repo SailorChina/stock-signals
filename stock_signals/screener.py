@@ -20,7 +20,7 @@ from ._sr import compute_support_resistance, generate_trade_plan
 from ._vcp import detect_vcp
 from ._episodic_pivot import detect_episodic_pivot
 from .config import config
-from .hot_fetcher import fetch_hot_stocks as _fetch_hot_stocks_live
+from .hot_fetcher import fetch_hot_stocks as _fetch_hot_stocks_live, MKT_CAP, MIN_MARKET_CAP
 from .sector import get_sector_ranking, get_sector_bonus
 
 
@@ -309,6 +309,24 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0
         if ma_gap > 8:
             logger.warning(f"  {code} MA5偏离MA20 {ma_gap:.1f}%，过度延伸，跳过")
             return None
+        # v2.13: 下跌阶段硬过滤 - 专业交易员不接飞刀
+        if phase == "decline":
+            logger.warning(f"  " + code + " 处于下跌阶段，过滤")
+            return None
+        # v2.13: 强下跌对齐过滤
+        if resonance.alignment == "strong_down":
+            logger.warning(f"  " + code + " 强下跌对齐，过滤")
+            return None
+        # v2.13: RSI超卖接飞刀过滤
+        if ind.rsi_14 < 30:
+            logger.warning(f"  " + code + " RSI=" + ".1f" + " 超卖接飞刀，过滤")
+            return None
+        # v2.13: 价格远离MA200过滤
+        if ind.ma200 > 0:
+            dist_ma200 = (ind.last_close - ind.ma200) / ind.ma200 * 100
+            if dist_ma200 < -20:
+                logger.warning(f"  " + code + " 价格低于MA200 " + ".1f" + "%，趋势过弱，过滤")
+                return None
         reasons = []
         pullback_score = 0
         # v2.4: RSI极端超买硬过滤
@@ -566,6 +584,8 @@ def _get_market_codes(market: str) -> List[str]:
                 codes.append(hc)
                 existing.add(hc)
         logger.info(f"  今日热门股: +{len(today_hot)} 只 (总计 {len(codes)} 只)")
+    # v2.12: filter by market cap >= 10B
+    codes = [c for c in codes if MKT_CAP.get(c.replace("US.",""), 0) >= MIN_MARKET_CAP]
     codes = codes[:300]
     return codes
 
