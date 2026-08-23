@@ -325,7 +325,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0
         # v2.13: 价格远离MA200过滤
         if ind.ma200 > 0:
             dist_ma200 = (ind.last_close - ind.ma200) / ind.ma200 * 100
-            if dist_ma200 < -20:
+            if dist_ma200 < -10:
                 logger.warning(f"  " + code + " 价格低于MA200 " + ".1f" + "%，趋势过弱，过滤")
                 return None
         reasons = []
