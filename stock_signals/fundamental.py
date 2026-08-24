@@ -34,7 +34,8 @@ def fetch_fundamental(symbol: str) -> Optional[FundamentalData]:
     if symbol in _fundamental_cache:
         return _fundamental_cache[symbol]
     try:
-        df = ak.stock_financial_us_analysis_indicator_em(symbol=symbol)
+        raw = symbol.replace("US.","").replace(".","")
+        df = ak.stock_financial_us_analysis_indicator_em(symbol=raw)
         if df is None or len(df) == 0:
             return None
         row = df.iloc[0]
