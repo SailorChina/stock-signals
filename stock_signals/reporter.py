@@ -285,6 +285,12 @@ def _print_stock(r, index: int, watch: bool = False):
     if warnings:
         print(f"      风险提示: {' | '.join(warnings)}")
 
+    trade_plan = _gen_trading_plan(r)
+    if trade_plan:
+        print("      交易计划:")
+        for pl in trade_plan:
+            print("      " + pl)
+
     if r.reasons:
         reasons_display = ", ".join(r.reasons[:5])
         print(f"      指标: {reasons_display}")
