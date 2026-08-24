@@ -1,6 +1,6 @@
 # stock-signals Skill
 
-> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.14.1
+> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.14.2
 
 基于技术指标（MA/MACD/RSI/KDJ/BOLL/ATR/OBV/ADX）+ 高级形态识别（VCP/事件驱动拐点/TD序列/多周期共振），自动生成评级、入场点、止损位和目标价。
 
@@ -88,3 +88,8 @@ plan = generate_trade_plan(ind, sr)
 - akshare >= 1.18
 - pandas >= 2.0
 - numpy >= 1.24
+
+## BUG 修复 (v2.14.2)
+- 修复 screener.py:330 格式化字符串 BUG（.1f 被当作字符串拼接）
+- 修复 fundamental.py symbol 前缀 BUG（akshare 需要纯代码）
+- 全面扫描验证所有过滤规则正确工作

@@ -320,6 +320,18 @@ python -m unittest tests.test_stock_signals
   - 服务类公司（V/MA/SPGI等毛利率100%）自动豁免
 - **筛选效果**: 过滤更多低质量股票，推荐质量提升
 
+## v2.14.2 (2026-08-24)
+- **BUG 修复 - 格式化字符串**: 修复 screener.py 第330行 .1f 被当作字符串拼接的 BUG
+  - 修复前: 日志输出 价格低于MA200 .1f%（.1f 被当作文本）
+  - 修复后: 日志正确输出 价格低于MA200 -4.3%
+- **BUG 修复 - 基本面过滤 Symbol 前缀**: 修复 fundamental.py 中 akshare 接口调用参数格式错误
+  - akshare 需要纯代码（如 AAPL），不接受 US.AAPL 格式
+  - 修复: 添加 symbol.replace('US.', '').replace('.', '')
+- **全面 BUG 扫描**: 对所有 Python 文件进行静态分析和运行时测试
+  - 发现并修复 2 个关键 BUG
+  - 验证所有过滤规则（MA200/RR/基本面/RSI/phase）正确工作
+
+
 ## 详细使用文档
 
 参见 [USAGE.md](USAGE.md) 获取完整的命令参考、参数说明和常见问题。
@@ -358,6 +370,14 @@ python -m stock_signals.cli sector
 
 1. **硬过滤**（直接排除）: 黑名单、市值<50B、价格<MA200、phase=decline、strong_down共振、RSI<30超卖、RR<2.0、基本面不达标、追高(距高点<8%)、VCP无量、TD卖出确认、MACD顶背离、看跌K线形态
 2. **软过滤**（扣分/警告）: RSI>75超买警告、MA5/MA20偏离>8%
+
+## BUG 扫描报告 (v2.14.2)
+
+| 问题 | 文件 | 行号 | 状态 |
+|------|------|------|------|
+| 格式化字符串 .1f 被拼接 | screener.py | 330 | 已修复 |
+| 基本面过滤 symbol 前缀 | fundamental.py | 37 | 已修复 |
+| bare except (低优先级) | meme_tracker.py | 53 | 已知，不影响核心 |
 
 ## 免责声明
 
