@@ -494,7 +494,7 @@ def analyze(code, timeframe="1d", output_json=False):
 
     trend_phase = compute_trend_phase(df, ind)
 
-    trade_plan = generate_trade_plan(ind, sr, trend_phase)
+    trade_plan = generate_trade_plan(code, ind, sr, trend_phase)
 
 
     result = {
