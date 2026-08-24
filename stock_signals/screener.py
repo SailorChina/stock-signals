@@ -327,7 +327,7 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0
         if ind.ma200 > 0:
             dist_ma200 = (ind.last_close - ind.ma200) / ind.ma200 * 100
             if dist_ma200 < 0:
-                logger.warning(f"  " + code + " 价格低于MA200 " + ".1f" + "%，趋势过弱，过滤")
+                logger.warning(f"  {code} 价格低于MA200 {dist_ma200:.1f}%，趋势过弱，过滤")
                 return None
         # v2.14.1: 基本面过滤 - 排除财务质量差的股票
         fund_ok, fund_msg = check_fundamental(code)
@@ -636,3 +636,4 @@ def _serialize(obj):
     if isinstance(obj, list):
         return [_serialize(v) for v in obj]
     return obj
+
