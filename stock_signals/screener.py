@@ -329,6 +329,11 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0
             if dist_ma200 < 0:
                 logger.warning(f"  " + code + " 价格低于MA200 " + ".1f" + "%，趋势过弱，过滤")
                 return None
+        # v2.14.1: 基本面过滤 - 排除财务质量差的股票
+        fund_ok, fund_msg = check_fundamental(code)
+        if not fund_ok:
+            logger.warning(f'  {code} 基本面过滤: {fund_msg}')
+            return None
         reasons = []
         pullback_score = 0
         # v2.4: RSI极端超买硬过滤
