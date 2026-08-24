@@ -185,6 +185,55 @@ def _gen_risk_warnings(r) -> List[str]:
     return warnings
 
 
+
+
+def _gen_trading_plan(r) -> List[str]:
+    lines = []
+    r = _to_obj(r)
+    info = get_stock_info(r.code)
+    cn_name = info.get('name', r.code)
+    
+    if r.entry <= 0:
+        return lines
+    
+    entry_pct = float(_fmt_pct(r.entry, r.last_close).replace('%', ''))
+    dist_t1 = float(_fmt_pct(r.target_1, r.last_close).replace('%', ''))
+    dist_t2 = float(_fmt_pct(r.target_2, r.last_close).replace('%', ''))
+    dist_sl = float(_fmt_pct(r.stop_loss, r.last_close).replace('%', ''))
+    rr = r.risk_reward if hasattr(r, 'risk_reward') else 0
+    pos_pct = r.position_pct if hasattr(r, 'position_pct') else 0
+    
+    if abs(entry_pct) < 2:
+        lines.append('【买入策略】市价直接入场，现价附近可买入')
+    elif entry_pct < 0:
+        lines.append('【买入策略】等待回调至 %.2f (%.1f%%) 附近分批建仓' % (r.entry, entry_pct))
+        lines.append('  建议：首次入场 50%% 仓位，回调到位再加仓 50%%')
+    else:
+        lines.append('【买入策略】突破入场，等待价格突破 %.2f (+%.1f%%) 后跟进' % (r.entry, entry_pct))
+        lines.append('  建议：突破确认后追入，或等回踩突破位附近买入')
+    
+    lines.append('【止损策略】硬性止损 %.2f (%.1f%%)，跌破立即离场' % (r.stop_loss, abs(dist_sl)))
+    lines.append('  如果止损被触发，说明逻辑错误，不扛单')
+    
+    lines.append('【止盈策略】分批止盈：')
+    lines.append('  - 目标1: %.2f (%+.1f%%)，减仓 50%% 锁定利润' % (r.target_1, dist_t1))
+    lines.append('  - 目标2: %.2f (%+.1f%%)，全部离场' % (r.target_2, dist_t2))
+    lines.append('  - 或者使用移动止损：盈利超过 1R 后，止损上移至成本价')
+    
+    lines.append('【仓位管理】建议仓位 %.1f%%，最大不超过总资金 5%%' % pos_pct)
+    lines.append('  风险金额 = 仓位 x 入场价 x |止损距离|')
+    
+    holding = getattr(r, 'holding_period', '')
+    if holding:
+        lines.append('【持仓周期】%s' % holding)
+    
+    lines.append('【交易纪律】')
+    lines.append('  1. 严格执行止损，不扛单、不补仓')
+    lines.append('  2. 达到目标1后上移止损至成本价，确保不亏')
+    lines.append('  3. 如果止损被触发，复盘原因，不急于反向操作')
+    lines.append('  4. 单笔亏损控制在总资金 1-2%% 以内')
+    
+    return lines
 def _print_stock(r, index: int, watch: bool = False):
     r = _to_obj(r)
     rating_cn = RATING_CN.get(r.rating, r.rating)
