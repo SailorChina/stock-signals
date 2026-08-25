@@ -13,7 +13,7 @@
 python -m stock_signals.cli analyze US.NVDA
 python -m stock_signals.cli analyze US.AAPL --timeframe 1w
 
-# 全市场扫描（默认43只精选 + 300只热股 + 板块热度分析）
+# 全市场扫描（默认静态池 + 动态热门池（约166只，10B市值门槛） + 板块热度分析）
 python -m stock_signals.cli scan
 python -m stock_signals.cli scan --min-score 55 --max-picks 5 --parallel
 
@@ -342,6 +342,21 @@ python -m unittest tests.test_stock_signals
 - **回退机制**: Futu 连接失败时自动回退到 akshare，不影响扫描流程
 
 
+
+## v2.16.0 (2026-08-25)
+- **Futu API 批处理优化**: 改用 get_market_snapshot 批量获取实时报价（25只/批，0.3秒间隔）
+  - 300只股票扫描时间从 ~2.5分钟 降至 ~6秒（25倍提速）
+  - 批次间隔 0.3s 避免 Futu OpenD 限流
+- **市值门槛调整**: MIN_MARKET_CAP 从 50B 降至 10B（用户要求），扩大选股范围
+- **股票池扩充**: hot_fetcher.py 静态池从 ~100只扩充至 179只，补充缺失的市值数据
+  - 新增医疗/工业/保险/国际制药等板块市值数据
+  - 静态池 + 动态热门池合并后约 166只（通过10B过滤）
+- **SCAN 性能**: 300只股票扫描估算
+  - 首次连接: 2.0s（连接缓存后不再重复）
+  - 批量获取: 12批 x 0.3s = 3.6s
+  - 总计: ~6秒（cached），~8.6秒（首次）
+- **hot_fetcher.py 清理**: 移除重复的 fetch_hot_stocks 函数定义
+
 ## 详细使用文档
 
 参见 [USAGE.md](USAGE.md) 获取完整的命令参考、参数说明和常见问题。
@@ -378,7 +393,7 @@ python -m stock_signals.cli sector
 
 ### 过滤规则优先级
 
-1. **硬过滤**（直接排除）: 黑名单、市值<50B、价格<MA200、phase=decline、strong_down共振、RSI<30超卖、RR<2.0、基本面不达标、追高(距高点<8%)、VCP无量、TD卖出确认、MACD顶背离、看跌K线形态
+1. **硬过滤**（直接排除）: 黑名单、市值<10B、价格<MA200、phase=decline、strong_down共振、RSI<30超卖、RR<2.0、基本面不达标、追高(距高点<8%)、VCP无量、TD卖出确认、MACD顶背离、看跌K线形态
 2. **软过滤**（扣分/警告）: RSI>75超买警告、MA5/MA20偏离>8%
 
 ## BUG 扫描报告 (v2.14.2)

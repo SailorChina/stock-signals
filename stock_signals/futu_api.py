@@ -1,24 +1,21 @@
-"""Futu OpenD real-time quote module with rate limiting.
-Uses Futu OpenD to get real-time US stock prices.
-"""
+# -*- coding: utf-8 -*-
+"""Futu OpenD real-time quote module with rate limiting and batch processing."""
 from __future__ import annotations
 import logging
 import threading
 import time
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 logger = logging.getLogger('stock-signals')
-
-
-# 全局连接池
 _quote_ctx = None
 _ctx_lock = threading.Lock()
 _last_connect_time = 0
 _MIN_CONNECT_INTERVAL = 2.0
+_BATCH_SIZE = 25
+_BATCH_INTERVAL = 0.3
 
 
 def _get_ctx():
-    """获取 Futu OpenD 连接（带限流）"""
     global _quote_ctx, _last_connect_time
     with _ctx_lock:
         now = time.time()
@@ -41,39 +38,43 @@ def _get_ctx():
             logger.info('Futu OpenD connected')
             _last_connect_time = time.time()
         except Exception as e:
-            logger.warning(f'Futu OpenD connection failed: {e}')
+            logger.warning('Futu OpenD connection failed: ' + str(e))
             _quote_ctx = None
         return _quote_ctx
 
-
 def fetch_realtime_prices(codes):
-    """批量获取实时报价（带限流保护）"""
     result = {}
+    if not codes:
+        return result
     ctx = _get_ctx()
     if ctx is None:
         return result
     try:
         from futu import SubType
-        ctx.subscribe(codes, [SubType.QUOTE])
-        ret, data = ctx.get_stock_quote(codes)
-        if ret != 0:
-            logger.warning(f'Futu get_stock_quote error code={ret}')
-            return result
-        for _, row in data.iterrows():
-            code = row['code']
-            last = float(row['last_price']) if row['last_price'] else 0.0
-            prev = float(row['prev_close_price']) if row['prev_close_price'] else last
-            result[code] = {
-                'last_price': last,
-                'open': float(row['open_price']) if row['open_price'] else 0.0,
-                'high': float(row['high_price']) if row['high_price'] else 0.0,
-                'low': float(row['low_price']) if row['low_price'] else 0.0,
-                'prev_close': prev,
-                'volume': int(row['volume']) if row['volume'] else 0,
-                'change_pct': (last - prev) / prev * 100 if prev > 0 else 0.0,
-            }
+        for i in range(0, len(codes), _BATCH_SIZE):
+            batch = codes[i:i + _BATCH_SIZE]
+            ctx.subscribe(batch, [SubType.QUOTE])
+            ret, data = ctx.get_market_snapshot(batch)
+            if ret != 0:
+                logger.warning('Futu error code=' + str(ret))
+                continue
+            for _, row in data.iterrows():
+                code = row.get('code', '')
+                last = float(row.get('last_price', 0) or 0)
+                prev = float(row.get('prev_close_price', 0) or last)
+                result[code] = {
+                    'last_price': last,
+                    'open': float(row.get('open_price', 0) or 0),
+                    'high': float(row.get('high_price', 0) or 0),
+                    'low': float(row.get('low_price', 0) or 0),
+                    'prev_close': prev,
+                    'volume': int(row.get('volume', 0) or 0),
+                    'change_pct': (last - prev) / prev * 100 if prev > 0 else 0.0,
+                }
+            time.sleep(_BATCH_INTERVAL)
+        logger.info('Futu batch fetch done: ' + str(len(result)) + '/' + str(len(codes)) + ' stocks')
     except Exception as e:
-        logger.warning(f'Futu realtime error: {e}')
+        logger.warning('Futu realtime error: ' + str(e))
         global _quote_ctx
         with _ctx_lock:
             _quote_ctx = None
@@ -81,13 +82,10 @@ def fetch_realtime_prices(codes):
 
 
 def fetch_realtime_price(code):
-    """获取单只股票实时报价"""
     results = fetch_realtime_prices([code])
     return results.get(code)
 
-
 def refresh_indicators_with_realtime(ind, code):
-    """用 Futu 实时价格覆盖 indicators 对象"""
     realtime = fetch_realtime_price(code)
     if realtime is None:
         return False
@@ -114,16 +112,19 @@ def refresh_indicators_with_realtime(ind, code):
                 ind.distance_from_52w_high = (high_52w - new_price) / high_52w * 100
             if low_52w > 0:
                 ind.distance_from_52w_low = (new_price - low_52w) / low_52w * 100
-            _recent_high = high_52w
-            _recent_low = low_52w
-            ind.rs_percentile = round((new_price - _recent_low) / (_recent_high - _recent_low) * 100, 1) if _recent_high > _recent_low else 50.0
+            ind.rs_percentile = round((new_price - low_52w) / (high_52w - low_52w) * 100, 1) if high_52w > low_52w else 50.0
             ind.rs_rating = int(ind.rs_percentile)
     _passed = True
     if ind.ma200 > 0:
-        if new_price <= ind.ma20: _passed = False
-        if new_price <= ind.ma60: _passed = False
-        if new_price <= ind.ma200: _passed = False
-        if ind.ma60 <= ind.ma200: _passed = False
+        if new_price <= ind.ma20:
+            _passed = False
+        if new_price <= ind.ma60:
+            _passed = False
+        if new_price <= ind.ma200:
+            _passed = False
+        if ind.ma60 <= ind.ma200:
+            _passed = False
     ind.trend_template_pass = _passed
-    logger.info(f'  {code} realtime overlay: {old_price:.2f} -> {new_price:.2f} (dist MA200: {ind.price_vs_ma200:+.1f}%)')
+    dist = (new_price - ind.ma200) / ind.ma200 * 100 if ind.ma200 > 0 else 0
+    logger.info('  ' + code + ' realtime: ' + str(round(old_price, 2)) + ' -> ' + str(round(new_price, 2)) + ' (MA200: ' + format(dist, '+.1f') + '%)')
     return True
