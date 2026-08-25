@@ -1,6 +1,6 @@
 # stock-signals Skill
 
-> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.14.2
+> 美股技术分析 & 买卖信号生成器 | Codex Skill v2.14.3
 
 基于技术指标（MA/MACD/RSI/KDJ/BOLL/ATR/OBV/ADX）+ 高级形态识别（VCP/事件驱动拐点/TD序列/多周期共振），自动生成评级、入场点、止损位和目标价。
 
@@ -29,7 +29,7 @@ python -m stock_signals.cli meme scan
 ## 数据源
 
 - **K 线**: akshare `stock_us_daily`
-- **热门股**: Sina 成交量排序，静态池 300 只蓝筹
+- **热门股**: Sina 成交量排序，静态池 335 只蓝筹 (>=10B市值)
 - **卖空比例**: futu-api（可选）
 
 ## 使用方式
@@ -74,7 +74,7 @@ plan = generate_trade_plan(ind, sr)
 
 ## 过滤规则 (v2.14.1)
 
-- 市值 >= 500亿美金（排除小盘股）
+- 市值 >= 100亿美金 (10B)（排除小盘股）
 - 价格 > MA200（排除下跌趋势）
 - RR >= 2.0（风险回报比）
 - 基本面：毛利率>=20% 或 服务类公司，净利率>=5%，营收增长>=-10%
@@ -89,7 +89,13 @@ plan = generate_trade_plan(ind, sr)
 - pandas >= 2.0
 - numpy >= 1.24
 
-## BUG 修复 (v2.14.2)
+## BUG 修复 (v2.14.3)
 - 修复 screener.py:330 格式化字符串 BUG（.1f 被当作字符串拼接）
 - 修复 fundamental.py symbol 前缀 BUG（akshare 需要纯代码）
 - 全面扫描验证所有过滤规则正确工作
+
+## v2.14.3 更新
+- 静态池从166扩充到335只，覆盖更多行业（房地产、公用事业、材料）
+- 移除 screener.py 中的假ticker（US.AAB-UEF）
+- 市值门槛统一为100亿美元（>=10B）
+- 热门池从190扩充到279只真实大市值股票

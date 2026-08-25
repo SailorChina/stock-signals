@@ -13,7 +13,7 @@
 python -m stock_signals.cli analyze US.NVDA
 python -m stock_signals.cli analyze US.AAPL --timeframe 1w
 
-# 全市场扫描（默认静态池 + 动态热门池（约166只，10B市值门槛） + 板块热度分析）
+# 全市场扫描（默认静态池 + 动态热门池（335只，10B市值门槛） + 板块热度分析）
 python -m stock_signals.cli scan
 python -m stock_signals.cli scan --min-score 55 --max-picks 5 --parallel
 
@@ -395,6 +395,12 @@ python -m stock_signals.cli sector
 
 1. **硬过滤**（直接排除）: 黑名单、市值<10B、价格<MA200、phase=decline、strong_down共振、RSI<30超卖、RR<2.0、基本面不达标、追高(距高点<8%)、VCP无量、TD卖出确认、MACD顶背离、看跌K线形态
 2. **软过滤**（扣分/警告）: RSI>75超买警告、MA5/MA20偏离>8%
+
+## v2.14.3 更新
+- 静态池从166扩充到335只，覆盖更多行业（房地产、公用事业、材料）
+- 移除 screener.py 中的假ticker（US.AAB-UEF）
+- 热门池从190扩充到279只真实大市值股票
+- 市值门槛统一为100亿美元（>=10B）
 
 ## BUG 扫描报告 (v2.14.2)
 
