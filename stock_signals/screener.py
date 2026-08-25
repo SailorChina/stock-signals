@@ -22,6 +22,7 @@ from ._episodic_pivot import detect_episodic_pivot
 from .config import config
 from .hot_fetcher import fetch_hot_stocks as _fetch_hot_stocks_live, MKT_CAP, MIN_MARKET_CAP
 from .fundamental import check_fundamental
+from .futu_api import refresh_indicators_with_realtime
 from .sector import get_sector_ranking, get_sector_bonus
 
 
@@ -263,6 +264,11 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0
         if df is None or df.empty or len(df) < 60:
             return None
         ind = compute_indicators(df, code, "1d")
+        # v2.15: Futu realtime price overlay
+        try:
+            refresh_indicators_with_realtime(ind, code)
+        except Exception as _e:
+            logger.debug(f"  {code} realtime refresh failed: {_e}")
         rating = compute_rating(ind, capital, short_pct)
         time.sleep(0.2)
         score = rating["score"]
