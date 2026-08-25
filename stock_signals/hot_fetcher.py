@@ -83,6 +83,7 @@ MKT_CAP = {
     # Intl pharma
     'GSK': 70000000000.0, 'AZN': 180000000000.0, 'NVO': 350000000000.0,
     'SNY': 80000000000.0,
+    'AVAV': 5000000000.0,
 }
 _US_STATIC_POOL = [
     'AAPL', 'MSFT', 'GOOG', 'GOOGL', 'AMZN', 'META', 'NVDA', 'TSLA',
@@ -106,6 +107,25 @@ _US_STATIC_POOL = [
     'J', 'HII', 'KTOS', 'AVAV', 'EW', 'HOLX', 'SYK', 'BDX', 'BSX',
     'MDT', 'ABC', 'CI', 'HUM', 'CNC', 'ANTM', 'ELV', 'WBA', 'CVS',
     'GSK', 'AZN', 'NVO', 'SNY',
+    'SNPS', 'CDNS', 'ADSK', 'ANSS', 'FTNT', 'NET', 'SNOW', 'CRWD', 'DDOG', 'MDB', 'SHOP', 'SQ', 'PYPL', 'IBM', 'DELL', 'HPE', 'ACN', 'ZBH', 'COO', 'ISRG', 'BR', 'FIS', 'ADP', 'DG', 'DLTR', 'GPS', 'ANF', 'RL', 'TPR', 'M', 'KSS', 'DPZ', 'SWK', 'TM', 'APTV', 'BWA', 'AZO', 'LEA', 'ALK', 'NCLH', 'WYNN', 'MGM', 'DKNG', 'LYV', 'XEL', 'ED', 'WEC', 'ES', 'ARE', 'MAA', 'KIM', 'REG', 'GOLD', 'WPM', 'FNV', 'AA', 'NUE', 'STLD', 'ECL', 'DD', 'DOW', 'EMN', 'CTVA', 'MMM', 'MOS',
+    'SNPS', 'CDNS', 'ADSK', 'ANSS', 'FTNT', 'NET', 'SNOW', 'CRWD', 'DDOG', 'MDB',
+    'SHOP', 'SQ', 'PYPL', 'IBM', 'HPQ', 'DELL', 'HPE', 'ACN',
+    'SYK', 'BDX', 'BSX', 'MDT', 'HOLX', 'ZBH', 'COO', 'EW', 'ISRG', 'ZTS',
+    'BLK', 'SCHW', 'CME', 'ICE', 'BR', 'FIS', 'ADP',
+    'AON', 'AJG', 'WTW', 'MMC', 'AIG', 'MET', 'PRU', 'AFL', 'HIG',
+    'CI', 'HUM', 'CNC', 'ANTM', 'ELV',
+    'DG', 'DLTR', 'GPS', 'ANF', 'RL', 'TPR', 'M', 'KSS',
+    'DPZ', 'SWK',
+    'TM', 'APTV', 'BWA', 'AZO', 'LEA',
+    'ALK', 'NCLH',
+    'WYNN', 'MGM', 'DKNG',
+    'LYV',
+    'XEL', 'ED', 'WEC', 'ES',
+    'ARE', 'MAA', 'KIM', 'REG',
+    'GOLD', 'WPM', 'FNV', 'AA', 'NUE', 'STLD',
+    'ECL', 'DD', 'DOW', 'EMN', 'CTVA',
+    'MMM', 'MOS',
+    'CVS', 'WBA', 'ABC',
 ]
 
 
