@@ -332,6 +332,16 @@ python -m unittest tests.test_stock_signals
   - 验证所有过滤规则（MA200/RR/基本面/RSI/phase）正确工作
 
 
+## v2.15.0 (2026-08-25)
+- **Futu OpenD 实时报价集成**: 新增 utu_api.py 模块，通过 Futu OpenD 获取美股实时价格
+- **修正 akshare 数据滞后问题**: 扫描时自动用实时价格覆盖 akshare 历史收盘价
+  - 解决 MA200 过滤误杀问题（如 PGR 因昨日收盘价低于 MA200 被错误过滤）
+  - 修正 52 周高低点距离计算
+  - 修正 trend_template_pass 判断
+- **Futu API 状态**: OpenD 运行于 127.0.0.1:11111，订阅 QUOTE 类型后获取实时报价
+- **回退机制**: Futu 连接失败时自动回退到 akshare，不影响扫描流程
+
+
 ## 详细使用文档
 
 参见 [USAGE.md](USAGE.md) 获取完整的命令参考、参数说明和常见问题。
