@@ -7,7 +7,7 @@ from typing import List, Optional
 from .indicators_us import fetch_kline_us, compute_indicators_us
 from .scoring_us import compute_rating_us
 
-logger = logging.getLogger("stock-signals")
+logger = logging.getLogger("tech-signal-skill")
 
 US_POOL = [
     "US.AAPL", "US.MSFT", "US.GOOG", "US.AMZN", "US.META",

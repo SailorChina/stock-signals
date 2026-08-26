@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Command-line interface for stock-signals"""
+"""Command-line interface for tech-signal-skill"""
 
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def setup_logging(log_level="INFO", log_file=""):
     logging.basicConfig(level=level, handlers=handlers)
 
 
-logger = logging.getLogger("stock-signals")
+logger = logging.getLogger("tech-signal-skill")
 if sys.platform == "win32":
     try: sys.stdout.reconfigure(encoding="utf-8")
     except Exception: pass
@@ -919,7 +919,7 @@ def main():
 
     setup_logging(getattr(args, "log_level", "INFO"), getattr(args, "log_file", ""))
 
-    logger.info("stock-signals v2.14.1 启动")
+    logger.info("tech-signal-skill v2.14.1 启动")
 
 
     if args.cmd == "sector":

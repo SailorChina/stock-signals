@@ -12,7 +12,7 @@ try:
 except ImportError:
     HAS_AKSHARE = False
 
-logger = logging.getLogger("stock-signals")
+logger = logging.getLogger("tech-signal-skill")
 
 # 基本面过滤阈值（宽松版）
 MIN_GROSS_MARGIN = 20.0

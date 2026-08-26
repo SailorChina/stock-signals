@@ -6,7 +6,7 @@ import logging
 from typing import Dict, List
 from ._info import get_stock_info
 
-logger = logging.getLogger("stock-signals")
+logger = logging.getLogger("tech-signal-skill")
 
 
 def _to_obj(d):

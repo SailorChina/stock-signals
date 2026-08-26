@@ -9,7 +9,7 @@ from dataclasses import dataclass, field
 from typing import List, Optional
 import pandas as pd
 import numpy as np
-logger = logging.getLogger("stock-signals")
+logger = logging.getLogger("tech-signal-skill")
 _kline_cache = {}
 for _k in list(os.environ.keys()):
     if 'proxy' in _k.lower():

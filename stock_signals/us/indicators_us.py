@@ -11,7 +11,7 @@ from typing import Optional
 import pandas as pd
 import numpy as np
 
-logger = logging.getLogger("stock-signals")
+logger = logging.getLogger("tech-signal-skill")
 _kline_cache_us: dict = {}
 
 

@@ -1,4 +1,4 @@
-# stock-signals Skill
+# tech-signal-skill Skill
 
 > 美股技术分析 & 买卖信号生成器 | Codex Skill v2.14.3
 

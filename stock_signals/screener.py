@@ -56,7 +56,7 @@ from .sector import get_sector_ranking, get_sector_bonus
 
 
 
-logger = logging.getLogger("stock-signals")
+logger = logging.getLogger("tech-signal-skill")
 
 
 

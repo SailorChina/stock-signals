@@ -2,7 +2,7 @@
 
 import logging, time, os, urllib.request
 from typing import List
-logger = logging.getLogger("stock-signals")
+logger = logging.getLogger("tech-signal-skill")
 for _k in list(os.environ.keys()):
     if "proxy" in _k.lower(): os.environ.pop(_k, None)
 os.environ.setdefault("no_proxy", "*")

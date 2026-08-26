@@ -6,7 +6,7 @@ import threading
 import time
 from typing import Dict, Optional, List
 
-logger = logging.getLogger('stock-signals')
+logger = logging.getLogger('tech-signal-skill')
 _quote_ctx = None
 _ctx_lock = threading.Lock()
 _last_connect_time = 0

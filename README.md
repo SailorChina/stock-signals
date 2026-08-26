@@ -1,4 +1,4 @@
-# stock-signals
+# tech-signal-skill
 
 > **Codex Skill: 美股技术分析 & 买卖信号生成器**
 

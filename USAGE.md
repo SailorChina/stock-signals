@@ -1,4 +1,4 @@
-﻿# stock-signals 使用文档
+# tech-signal-skill 使用文档
 
 ## 快速开始
 
@@ -9,8 +9,8 @@
 
 ### 安装
 ```bash
-git clone https://github.com/SailorChina/stock-signals.git
-cd stock-signals
+git clone https://github.com/SailorChina/tech-signal-skill.git
+cd tech-signal-skill
 pip install -e ".[dev]"
 ```
 
