@@ -3,7 +3,7 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tech-signal-skill"
+name = "tech-signal-FUTU-skill"
 version = "2.16.1"
 description = "US stock technical analysis and buy/sell signal generator"
 readme = "README.md"
@@ -34,7 +34,7 @@ dev = [
 ]
 
 [project.scripts]
-tech-signal-skill = "stock_signals.cli:main"
+tech-signal-FUTU-skill = "stock_signals.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["stock_signals*"]

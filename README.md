@@ -11,7 +11,7 @@
 ### 方式一：pip 安装（推荐）
 
 ```bash
-pip install tech-signal-skill
+pip install tech-signal-FUTU-skill
 ```
 
 ### 方式二：从源码安装
