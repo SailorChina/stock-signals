@@ -122,7 +122,7 @@ with tab4:
         fp = os.path.join(os.path.expanduser('~'), 'Desktop', 'trading_journal.csv')
         result = export_csv(fp)
         if result:
-            st.success(f'导出ed to: {result}')
+            st.success(f'已导出到: {result}')
             with open(result, 'rb') as ff:
                 st.download_button('下载 CSV', data=ff, file_name='trading_journal.csv', mime='text/csv')
         else:
