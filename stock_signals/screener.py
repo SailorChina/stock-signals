@@ -146,6 +146,18 @@ ALIGN_CN = {"strong_up": "强共振看多", "aligned": "共振看多", "mixed": 
 
 
 
+def _entry_type_str(entry_zone: float, last_close: float) -> str:
+    if last_close <= 0 or entry_zone <= 0:
+        return ""
+    diff_pct = (entry_zone - last_close) / last_close * 100
+    if abs(diff_pct) < 2:
+        return "现价入场"
+    elif diff_pct < 0:
+        return "回调入场"
+    else:
+        return "突破入场"
+
+
 def _is_blacklisted(code: str) -> bool:
 
     # v2.7 黑名单过滤：银行/ETF
@@ -446,6 +458,8 @@ class ScanResult:
 
     holding_period: str = ""
 
+    entry_type: str = ""
+
 
 
 
@@ -739,6 +753,8 @@ def _analyze_one(code, capital=None, short_pct=None, delay=1.0, sector_bonus=1.0
             position_pct=tp.position_size_pct if tp else 0.0,
 
             last_close=ind.last_close, reasons=reasons,
+
+            entry_type=_entry_type_str(tp.entry_zone, ind.last_close) if tp else "",
 
             trade_plan={
 
@@ -1251,6 +1267,8 @@ def _serialize(obj):
             "alignment_cn": ALIGN_CN.get(obj.alignment, obj.alignment),
 
             "holding_period": obj.holding_period,
+
+            "entry_type": obj.entry_type,
 
         }
 

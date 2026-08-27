@@ -204,9 +204,9 @@ def _gen_trading_plan(r) -> List[str]:
     pos_pct = r.position_pct if hasattr(r, 'position_pct') else 0
     
     if abs(entry_pct) < 2:
-        lines.append('【买入策略】市价直接入场，现价附近可买入')
+        lines.append('【买入策略】市价直接入场（现价附近，偏离 %.1f%%）' % abs(entry_pct))
     elif entry_pct < 0:
-        lines.append('【买入策略】等待回调至 %.2f (%.1f%%) 附近分批建仓' % (r.entry, entry_pct))
+        lines.append('【买入策略】回调入场，等待价格回落至 %.2f (%+.1f%%) 附近分批建仓' % (r.entry, entry_pct))
         lines.append('  建议：首次入场 50%% 仓位，回调到位再加仓 50%%')
     else:
         lines.append('【买入策略】突破入场，等待价格突破 %.2f (+%.1f%%) 后跟进' % (r.entry, entry_pct))
@@ -259,13 +259,15 @@ def _print_stock(r, index: int, watch: bool = False):
         dist_sl = _fmt_pct(r.stop_loss, r.last_close)
         # 入场类型说明
         entry_pct = float(dist_entry.replace("%","").replace("+","").replace("-",""))
-        if abs(entry_pct) < 2:
-            entry_type = " [现价附近入场]"
-        elif entry_pct < 0:
-            entry_type = " [等待回调入场]"
-        else:
-            entry_type = " [突破入场]"
-        print(f"      入场: {r.entry:.2f} ({dist_entry}){entry_type}  止损: {r.stop_loss:.2f} ({dist_sl})")
+        entry_type = getattr(r, "entry_type", "")
+        if not entry_type:
+            if abs(entry_pct) < 2:
+                entry_type = "现价入场"
+            elif entry_pct < 0:
+                entry_type = "回调入场"
+            else:
+                entry_type = "突破入场"
+        print(f"      入场: {r.entry:.2f} ({dist_entry}) ({entry_type})  止损: {r.stop_loss:.2f} ({dist_sl})")
         print(f"      目标1: {r.target_1:.2f} ({dist_t1})  目标2: {r.target_2:.2f} ({dist_t2})")
         print(f"      风险回报: {r.risk_reward:.1f}:1  仓位建议: {r.position_pct:.1f}%")
         if getattr(r, "holding_period", ""):
