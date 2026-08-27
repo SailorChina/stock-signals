@@ -17,7 +17,7 @@ pip install tech-signal-skill
 ### 方式二：从源码安装
 
 ```bash
-git clone https://github.com/SailorChina/tech-signal-skill.git
+git clone https://github.com/SailorChina/tech-signal-FUTU-skill.git
 cd tech-signal-skill
 pip install -e .
 ```

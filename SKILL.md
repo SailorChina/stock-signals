@@ -1,5 +1,5 @@
 ---
-name: tech-signal-skill
+name: tech-signal-FUTU-skill
 description: >-
   Multi-market stock technical analysis and buy/sell signal generator.
   Supports US (US.XXXX) stocks. Produces a 5-tier rating (Buy / Overweight / Hold / Underweight / Sell) with
@@ -19,7 +19,7 @@ metadata:
 allowed-tools: Bash
 ---
 
-# tech-signal-skill
+# tech-signal-FUTU-skill
 
 > 美股技术分析 & 买卖信号生成器 | Codex Skill v2.16.1
 
