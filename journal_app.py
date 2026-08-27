@@ -28,7 +28,7 @@ with tab1:
         watches = df_today[df_today['outcome'] == 'watch']
         col1, col2 = st.columns(2)
         with col1:
-            st.markdown(f'**推荐 ({len(recs)} stocks)**')
+            st.markdown(f'**推荐 ({len(recs)} 只)**')
             for _, r in recs.iterrows():
                 sym = r['symbol']
                 rat = r['rating']
@@ -40,8 +40,8 @@ with tab1:
                     st.metric('目标1', f"{r['target1']:.2f}")
                     st.metric('目标2', f"{r['target2']:.2f}")
                     rr = f"{r['rr_ratio']:.1f}:1" if r['rr_ratio'] else 'N/A'
-                    st.metric('RR', rr)
-                    st.markdown(f"**入场价 type:** {r['entry_type']}")
+                    st.metric('风险回报', rr)
+                    st.markdown(f"**入场方式:** {r['entry_type']}")
                     st.markdown(f"**交易计划:** {r['buy_strategy']}")
                     st.markdown(f"**止损策略:** {r['sell_strategy']}")
                     st.markdown(f"**趋势:** {r['trend_phase']} | **共振:** {r['resonance']}")
@@ -50,9 +50,9 @@ with tab1:
                     pnl = st.number_input('盈亏%', min_value=-100.0, max_value=1000.0, format='%.2f', key=f"pnl_{r['id']}", value=0.0)
                     if st.button('保存', key=f"save_{r['id']}"):
                         update_outcome(r['id'], res, op if op > 0 else None, pnl if pnl != 0.0 else None)
-                        st.success('保存d')
+                        st.success('已保存')
         with col2:
-            st.markdown(f'**观察 ({len(watches)} stocks)**')
+            st.markdown(f'**观察 ({len(watches)} 只)**')
             for _, r in watches.iterrows():
                 sym = r['symbol']
                 rat = r['rating']
@@ -63,15 +63,15 @@ with tab1:
                     st.metric('目标1', f"{r['target1']:.2f}")
                     st.metric('目标2', f"{r['target2']:.2f}")
                     rr = f"{r['rr_ratio']:.1f}:1" if r['rr_ratio'] else 'N/A'
-                    st.metric('RR', rr)
-                    st.markdown(f"**入场价 type:** {r['entry_type']}")
+                    st.metric('风险回报', rr)
+                    st.markdown(f"**入场方式:** {r['entry_type']}")
                     st.markdown(f"**交易计划:** {r['buy_strategy']}")
                     res = st.selectbox('结果', ['--', 'win', 'loss', 'hold'], key=f"res_w_{r['id']}")
                     op = st.number_input('平仓价', min_value=0.0, format='%.2f', key=f"price_w_{r['id']}", value=0.0)
                     pnl = st.number_input('盈亏%', min_value=-100.0, max_value=1000.0, format='%.2f', key=f"pnl_w_{r['id']}", value=0.0)
                     if st.button('保存', key=f"save_w_{r['id']}"):
                         update_outcome(r['id'], res, op if op > 0 else None, pnl if pnl != 0.0 else None)
-                        st.success('保存d')
+                        st.success('已保存')
     else:
         st.info('今日暂无记录。运行 scan 后自动保存。')
 
@@ -85,7 +85,7 @@ with tab2:
             df = pd.DataFrame(recs)
             cols = ['symbol','rating','score','current_price','entry_price','entry_type','stop_loss','target1','target2','rr_ratio','position_pct','outcome']
             df_d = df[cols].copy()
-            df_d.columns = ['代码','评级','分数','现价','入场价','入场价 Type','止损','目标1','目标2','RR','Pos%','结果']
+            df_d.columns = ['代码','评级','分数','现价','入场价','入场类型','止损','目标1','目标2','RR','仓位%','结果']
             st.dataframe(df_d, use_container_width=True)
     else:
         st.info('暂无历史记录')
@@ -106,14 +106,14 @@ with tab3:
             {'结果': 'loss', 'Count': stats['losses']},
             {'结果': 'hold', 'Count': stats['holds']}
         ])
-        fig = px.pie(df_s, values='Count', names='结果', title='结果 Distribution')
+        fig = px.pie(df_s, values='Count', names='结果', title='结果分布')
         st.plotly_chart(fig, use_container_width=True)
     if stats['recent_days']:
-        df_d = pd.DataFrame(stats['recent_days'], columns=['Date', 'Count'])
+        df_d = pd.DataFrame(stats['recent_days'], columns=['日期', '记录数'])
         fig2 = px.bar(df_d, x='Date', y='Count', title='每日推荐数量')
         st.plotly_chart(fig2, use_container_width=True)
     if stats['top_stocks']:
-        df_t = pd.DataFrame(stats['top_stocks'], columns=['代码', 'Appearances', 'Avg 分数'])
+        df_t = pd.DataFrame(stats['top_stocks'], columns=['代码', '出现次数', '平均评分'])
         st.dataframe(df_t, use_container_width=True)
 
 with tab4:
