@@ -4,7 +4,7 @@ import os, json, logging
 from dataclasses import dataclass
 from datetime import date
 from typing import Dict, List
-logger = logging.getLogger('tech-signal-skill')
+logger = logging.getLogger('tech-signal-FUTU-skill')
 _WATCHLIST_PATH = os.path.join(os.path.dirname(__file__), '.meme_watchlist.json')
 
 @dataclass

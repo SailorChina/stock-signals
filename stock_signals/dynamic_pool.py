@@ -7,7 +7,7 @@ import json
 import os
 from typing import List, Optional
 
-logger = logging.getLogger("tech-signal-skill")
+logger = logging.getLogger("tech-signal-FUTU-skill")
 _CACHE_DIR = os.path.join(os.path.dirname(__file__), ".pool_cache")
 _CACHE_TTL = 86400
 os.makedirs(_CACHE_DIR, exist_ok=True)

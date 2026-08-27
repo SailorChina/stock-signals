@@ -1,4 +1,4 @@
-# tech-signal-skill
+# tech-signal-FUTU-skill
 
 > **Codex Skill: 美股技术分析 & 买卖信号生成器**
 
@@ -18,7 +18,7 @@ pip install tech-signal-FUTU-skill
 
 ```bash
 git clone https://github.com/SailorChina/tech-signal-FUTU-skill.git
-cd tech-signal-skill
+cd tech-signal-FUTU-skill
 pip install -e .
 ```
 
@@ -206,3 +206,7 @@ pyproject.toml             # 项目配置
 ## 免责声明
 
 本工具仅供技术分析参考，不构成投资建议。股市投资有风险，请根据自身风险承受能力综合判断，独立决策。
+
+
+
+

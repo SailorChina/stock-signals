@@ -3,7 +3,7 @@
 import numpy as np
 import logging
 
-logger = logging.getLogger("tech-signal-skill")
+logger = logging.getLogger("tech-signal-FUTU-skill")
 from dataclasses import dataclass
 from typing import Optional
 

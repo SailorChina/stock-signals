@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging, urllib.request, time
 from dataclasses import dataclass
 from typing import Dict, List, Optional
-logger = logging.getLogger('tech-signal-skill')
+logger = logging.getLogger('tech-signal-FUTU-skill')
 SECTOR_ETFS = [('XLK','Technology','Tech'),('VGT','Technology Vanguard','Tech'),('QQQ','Nasdaq 100','Tech'),('TQQQ','Nasdaq 100 Leveraged','Tech'),('SMH','Semiconductors','Semi'),('SOXX','Semiconductors PHLX','Semi'),('IBB','Biotechnology','Biotech'),('XBI','Biotech SPDR','Biotech'),('VHT','Healthcare','Healthcare'),('XLV','Health Care','Healthcare'),('XLE','Energy','Energy'),('XOP','Oil and Gas E and P','Energy'),('XME','Materials SPDR','Materials'),('XLF','Financial','Financial'),('XLY','Consumer Discretionary','Consumer'),('XLP','Consumer Staples','Consumer'),('XLU','Utilities','Utilities'),('ARKK','Innovation','Innovation'),('UNG','Natural Gas','Gas'),('SPY','S P 500','SPY'),('IWM','Russell 2000','IWM')]
 _STOCK_SECTOR_MAP: Dict[str,str] = {
 'US.AAPL':'Tech','US.MSFT':'Tech','US.GOOG':'Tech','US.AMZN':'Tech',

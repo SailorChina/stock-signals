@@ -31,7 +31,7 @@ def load_config(path=None):
     if path is None:
         import os
         for p in [
-            os.path.join(os.path.expanduser("~"), ".tech-signal-skill", "config.json"),
+            os.path.join(os.path.expanduser("~"), ".tech-signal-FUTU-skill", "config.json"),
             os.path.join(os.getcwd(), "config.json"),
         ]:
             if os.path.exists(p):
