@@ -919,7 +919,7 @@ def main():
 
     setup_logging(getattr(args, "log_level", "INFO"), getattr(args, "log_file", ""))
 
-    logger.info("tech-signal-skill v2.14.1 启动")
+    logger.info("tech-signal-skill v2.16.1 启动")
 
 
     if args.cmd == "sector":
