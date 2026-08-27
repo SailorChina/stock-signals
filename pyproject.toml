@@ -24,6 +24,7 @@ dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
     "akshare>=1.18",
+    "streamlit>=1.30",
 ]
 
 [project.optional-dependencies]
@@ -35,6 +36,7 @@ dev = [
 
 [project.scripts]
 tech-signal-FUTU-skill = "stock_signals.cli:main"
+journal = "stock_signals.journal_cli:main"
 
 [tool.setuptools.packages.find]
 include = ["stock_signals*"]
