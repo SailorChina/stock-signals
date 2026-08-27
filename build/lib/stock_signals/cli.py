@@ -47,7 +47,6 @@ try:
     from stock_signals.reporter import print_scan_report
     from stock_signals.sector import get_sector_ranking, get_sector_ranking_for_display
     from stock_signals.meme_tracker import get_meme_stocks, get_meme_codes, get_meme_bonus, add_meme_stock, remove_meme_stock, list_meme_watchlist
-    from stock_signals.tracker import save_scan, init_db as journal_init_db
 
 except ImportError:
 
@@ -984,67 +983,6 @@ def main():
 
             print_scan_report(result)
 
-        # 自动保存到交易日志
-        try:
-            today = result.get("date", __import__("datetime").datetime.now().strftime("%Y-%m-%d"))
-            picks = result.get("picks", {})
-            watchlist = result.get("watchlist", {})
-            mapped_recs = []
-            for market, items in picks.items():
-                for r in items:
-                    mapped_recs.append({
-                        "symbol": r.get("code"),
-                        "rating": r.get("rating"),
-                        "score": r.get("score"),
-                        "resonance": r.get("alignment_cn", r.get("alignment")),
-                        "trend_phase": r.get("trend_phase_cn", r.get("trend_phase")),
-                        "current_price": r.get("last_close"),
-                        "entry_price": r.get("entry"),
-                        "entry_type": r.get("entry_type", ""),
-                        "stop_loss": r.get("stop_loss"),
-                        "target1": r.get("target_1"),
-                        "target2": r.get("target_2"),
-                        "rr_ratio": r.get("risk_reward"),
-                        "position_pct": r.get("position_pct"),
-                        "hold_period": r.get("holding_period", ""),
-                        "buy_strategy": "",
-                        "sell_strategy": "",
-                        "sector": "",
-                        "note": "; ".join(r.get("reasons", [])),
-                    })
-            mapped_watches = []
-            for market, items in watchlist.items():
-                for r in items:
-                    mapped_watches.append({
-                        "symbol": r.get("code"),
-                        "rating": r.get("rating"),
-                        "score": r.get("score"),
-                        "resonance": r.get("alignment_cn", r.get("alignment")),
-                        "trend_phase": r.get("trend_phase_cn", r.get("trend_phase")),
-                        "current_price": r.get("last_close"),
-                        "entry_price": r.get("entry"),
-                        "entry_type": r.get("entry_type", ""),
-                        "stop_loss": r.get("stop_loss"),
-                        "target1": r.get("target_1"),
-                        "target2": r.get("target_2"),
-                        "rr_ratio": r.get("risk_reward"),
-                        "position_pct": r.get("position_pct"),
-                        "hold_period": r.get("holding_period", ""),
-                        "buy_strategy": "",
-                        "sell_strategy": "",
-                        "sector": "",
-                        "note": "; ".join(r.get("reasons", [])),
-                    })
-            journal_init_db()
-            if mapped_recs:
-                save_scan(today, mapped_recs, "recommended")
-                logger.info(f"已保存 {len(mapped_recs)} 条推荐到交易日志")
-            if mapped_watches:
-                save_scan(today, mapped_watches, "watch")
-                logger.info(f"已保存 {len(mapped_watches)} 条观察到交易日志")
-        except Exception as e:
-            logger.warning(f"保存交易日志失败: {e}")
-
         sys.exit(0)
 
 
@@ -1071,6 +1009,5 @@ def main():
 if __name__ == "__main__":
 
     main()
-
 
 
