@@ -1,0 +1,5 @@
+akshare==1.18.84
+numpy==2.5.2
+pandas==3.0.5
+plotly==7.0.0
+streamlit==1.62.0
