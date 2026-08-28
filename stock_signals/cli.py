@@ -53,6 +53,12 @@ except ImportError:
 
     pass
 
+def _get(obj, key, default=None):
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
 
 def setup_logging(log_level="INFO", log_file=""):
 
@@ -986,54 +992,54 @@ def main():
 
         # 自动保存到交易日志
         try:
-            today = result.get("date", __import__("datetime").datetime.now().strftime("%Y-%m-%d"))
-            picks = result.get("picks", {})
-            watchlist = result.get("watchlist", {})
+            today = _get(result, "date", __import__("datetime").datetime.now().strftime("%Y-%m-%d"))
+            picks = _get(result, "picks", {})
+            watchlist = _get(result, "watchlist", {})
             mapped_recs = []
             for market, items in picks.items():
                 for r in items:
                     mapped_recs.append({
-                        "symbol": r.get("code"),
-                        "rating": r.get("rating"),
-                        "score": r.get("score"),
-                        "resonance": r.get("alignment_cn", r.get("alignment")),
-                        "trend_phase": r.get("trend_phase_cn", r.get("trend_phase")),
-                        "current_price": r.get("last_close"),
-                        "entry_price": r.get("entry"),
-                        "entry_type": r.get("entry_type", ""),
-                        "stop_loss": r.get("stop_loss"),
-                        "target1": r.get("target_1"),
-                        "target2": r.get("target_2"),
-                        "rr_ratio": r.get("risk_reward"),
-                        "position_pct": r.get("position_pct"),
-                        "hold_period": r.get("holding_period", ""),
+                        "symbol": _get(r, "code"),
+                        "rating": _get(r, "rating"),
+                        "score": _get(r, "score"),
+                        "resonance": _get(r, "alignment_cn", _get(r, "alignment")),
+                        "trend_phase": _get(r, "trend_phase_cn", _get(r, "trend_phase")),
+                        "current_price": _get(r, "last_close"),
+                        "entry_price": _get(r, "entry"),
+                        "entry_type": _get(r, "entry_type", ""),
+                        "stop_loss": _get(r, "stop_loss"),
+                        "target1": _get(r, "target_1"),
+                        "target2": _get(r, "target_2"),
+                        "rr_ratio": _get(r, "risk_reward"),
+                        "position_pct": _get(r, "position_pct"),
+                        "hold_period": _get(r, "holding_period", ""),
                         "buy_strategy": "",
                         "sell_strategy": "",
                         "sector": "",
-                        "note": "; ".join(r.get("reasons", [])),
+                        "note": "; ".join(_get(r, "reasons", []) or []),
                     })
             mapped_watches = []
             for market, items in watchlist.items():
                 for r in items:
                     mapped_watches.append({
-                        "symbol": r.get("code"),
-                        "rating": r.get("rating"),
-                        "score": r.get("score"),
-                        "resonance": r.get("alignment_cn", r.get("alignment")),
-                        "trend_phase": r.get("trend_phase_cn", r.get("trend_phase")),
-                        "current_price": r.get("last_close"),
-                        "entry_price": r.get("entry"),
-                        "entry_type": r.get("entry_type", ""),
-                        "stop_loss": r.get("stop_loss"),
-                        "target1": r.get("target_1"),
-                        "target2": r.get("target_2"),
-                        "rr_ratio": r.get("risk_reward"),
-                        "position_pct": r.get("position_pct"),
-                        "hold_period": r.get("holding_period", ""),
+                        "symbol": _get(r, "code"),
+                        "rating": _get(r, "rating"),
+                        "score": _get(r, "score"),
+                        "resonance": _get(r, "alignment_cn", _get(r, "alignment")),
+                        "trend_phase": _get(r, "trend_phase_cn", _get(r, "trend_phase")),
+                        "current_price": _get(r, "last_close"),
+                        "entry_price": _get(r, "entry"),
+                        "entry_type": _get(r, "entry_type", ""),
+                        "stop_loss": _get(r, "stop_loss"),
+                        "target1": _get(r, "target_1"),
+                        "target2": _get(r, "target_2"),
+                        "rr_ratio": _get(r, "risk_reward"),
+                        "position_pct": _get(r, "position_pct"),
+                        "hold_period": _get(r, "holding_period", ""),
                         "buy_strategy": "",
                         "sell_strategy": "",
                         "sector": "",
-                        "note": "; ".join(r.get("reasons", [])),
+                        "note": "; ".join(_get(r, "reasons", []) or []),
                     })
             journal_init_db()
             if mapped_recs:

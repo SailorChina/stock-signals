@@ -113,3 +113,12 @@ def export_csv(filepath):
         w = csv.DictWriter(f, fieldnames=keys); w.writeheader()
         for row in rows: w.writerow(dict(row))
     return filepath
+
+
+def get_best_worst():
+    conn = _get_conn(); c = conn.cursor(); result = {'best': [], 'worst': []}
+    c.execute("SELECT symbol, rating, outcome_pnl_pct, scan_date FROM recommendations WHERE outcome_pnl_pct IS NOT NULL ORDER BY outcome_pnl_pct DESC LIMIT 5")
+    result['best'] = [dict(r) for r in c.fetchall()]
+    c.execute("SELECT symbol, rating, outcome_pnl_pct, scan_date FROM recommendations WHERE outcome_pnl_pct IS NOT NULL ORDER BY outcome_pnl_pct ASC LIMIT 5")
+    result['worst'] = [dict(r) for r in c.fetchall()]
+    conn.close(); return result
