@@ -25,7 +25,7 @@ def export_to_json(filepath=None):
 
 def sync_to_github():
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    result = {'success': False, 'message': '', 'file': ''}
+    result = {success': False, 'message': '', 'file': ''}
     json_path = export_to_json()
     result['file'] = json_path
     result['message'] += '已导出: ' + json_path + chr(10)
@@ -37,6 +37,7 @@ def sync_to_github():
         success, stdout, stderr = _git(['git', 'checkout', '-b', DATA_BRANCH, 'main'], repo_root)
         if not success:
             result['message'] += '创建分支失败: ' + stderr + chr(10)
+_git(['git', 'stash', 'pop'], repo_root)
             return result
     else:
         success, stdout, stderr = _git(['git', 'checkout', DATA_BRANCH], repo_root)
@@ -86,7 +87,7 @@ def sync_status():
 
 def pull_from_github():
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    result = {'success': False, 'message': '', 'imported': 0}
+    result = {'success': False, 'message': ', 'imported': 0}
     success, stdout, stderr = _git(['git', 'ls-remote', 'origin', 'refs/heads/data'], repo_root)
     if not success or not stdout.strip():
         result['message'] = 'GitHub 上没有 data 分支'
