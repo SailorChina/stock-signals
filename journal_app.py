@@ -18,6 +18,18 @@ from stock_signals.sync_data import sync_to_github, pull_from_github, sync_statu
 st.set_page_config(page_title='交易记录', layout='wide', initial_sidebar_state='expanded')
 init_db()
 
+# 自动云端同步
+if not st.session_state.get('_synced'):
+    try:
+        _sr = sync_to_github()
+        if _sr.get('success'):
+            st.session_state['_sync_msg'] = '已自动同步到云端'
+        else:
+            st.session_state['_sync_msg'] = ''
+    except Exception:
+        pass
+    st.session_state['_synced'] = True
+
 @st.cache_data(ttl=60)
 def get_all_data():
     return get_recommendations()
