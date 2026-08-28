@@ -24,7 +24,7 @@ dependencies = [
     "pandas>=2.0",
     "numpy>=1.24",
     "akshare>=1.18",
-    "streamlit>=1.30",,
+    "streamlit>=1.30",
     "plotly>=5.0",
 ]
 
