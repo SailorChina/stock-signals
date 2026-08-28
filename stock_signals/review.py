@@ -28,11 +28,40 @@ def calc_pnl(rec, current_price):
     sl = rec.get('stop_loss') or 0
     t1 = rec.get('target1') or 0
     t2 = rec.get('target2') or 0
-    status = 'holding'
     if current_price <= sl and sl > 0:
-        status = 'stop_loss'
+        status = 'stopped'
     elif current_price >= t1 and t1 > 0:
-        status = 'target1_achieved'
+        status = 'target1_hit'
     elif current_price >= t2 and t2 > 0:
-        status = 'target2_achieved'
+        status = 'target2_hit'
+    elif pnl_pct > 5:
+        status = 'profit'
+    elif pnl_pct < -5:
+        status = 'loss'
+    else:
+        status = 'holding'
     return {'pnl_pct': round(pnl_pct, 2), 'status': status}
+
+def auto_review(yesterday_date=None):
+    from datetime import datetime, timedelta
+    if yesterday_date is None:
+        yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+    from stock_signals.tracker import get_recommendations
+    recs = get_recommendations(date=yesterday_date, outcome='recommended')
+    if not recs:
+        recs = get_recommendations(date=yesterday_date, outcome='watch')
+    if not recs:
+        return {'message': f'没有找到 {yesterday_date} 的推荐记录', 'recs': []}
+    symbols = [r['symbol'] for r in recs]
+    live_prices = {}
+    try:
+        live_prices = fetch_current_prices(symbols)
+    except Exception:
+        pass
+    results = []
+    for r in recs:
+        sym = r['symbol']
+        cur = live_prices.get(sym) or r.get('current_price') or 0
+        pnl = calc_pnl(r, cur)
+        results.append({**r, 'current_price': cur, 'pnl_pct': pnl['pnl_pct'], 'status': pnl['status'], 'live_price': sym in live_prices})
+    return {'date': yesterday_date, 'recs': results, 'prices': live_prices}
