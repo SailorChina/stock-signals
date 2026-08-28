@@ -13,6 +13,7 @@ from stock_signals.tracker import (
     update_outcome, export_csv, get_best_worst
 )
 from stock_signals.review import auto_review
+from stock_signals.sync_data import sync_to_github, pull_from_github, sync_status
 
 st.set_page_config(page_title='交易记录', layout='wide', initial_sidebar_state='expanded')
 init_db()
@@ -108,8 +109,8 @@ with st.sidebar:
 st.markdown('**📈 Tech-Signal 交易记录**')
 st.caption('美股技术分析推荐记录与绩效分析')
 
-tab_dash, tab_daily, tab_history, tab_stats, tab_export = st.tabs([
-    '📊 仪表盘', '📅 每日记录', '🔍 历史记录', '📈 统计分析', '📮 导出'
+tab_dash, tab_daily, tab_history, tab_stats, tab_sync, tab_export = st.tabs([
+    '📊 仪表盘', '📅 每日记录', '🔍 历史记录', '📈 统计分析', '📮 云端同步', '📮 导出'
 ])
 
 with tab_dash:
@@ -303,6 +304,43 @@ with st.container():
             st.info(_res.get("message", "暂无复盘数据"))
     st.markdown("---")
 
+
+with tab_sync:
+    st.markdown("---")
+    st.markdown("**云端同步**")
+    st.caption("将交易记录同步到 GitHub，实现多设备数据共享")
+    st.markdown("---")
+    _st = sync_status()
+    col_s1, col_s2, col_s3 = st.columns(3)
+    with col_s1:
+        st.metric("本地记录", _st["record_count"])
+    with col_s2:
+        st.metric("GitHub", "已同步" if _st["last_sync"] else "未同步")
+    with col_s3:
+        last = _st["last_sync"] or "从未"
+        st.metric("上次同步", last[:16] if len(last) > 16 else last)
+    st.markdown("---")
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("同步到云端", type="primary", use_container_width=True):
+            with st.spinner("正在同步..."):
+                _r = sync_to_github()
+                st.session_state["_sync_result"] = _r
+            st.rerun()
+    with col_btn2:
+        if st.button("从云端拉取", use_container_width=True):
+            with st.spinner("正在拉取..."):
+                _r = pull_from_github()
+                st.session_state["_sync_result"] = _r
+            st.rerun()
+    if st.session_state.get("_sync_result"):
+        _r = st.session_state["_sync_result"]
+        if _r.get("success"):
+            st.success(_r.get("message", "操作成功"))
+        else:
+            st.error(_r.get("message", "操作失败"))
+    st.markdown("---")
+    st.caption("说明：数据以 JSON 格式备份到 GitHub 仓库的 data 分支，代码在 main 分支。其他设备恢复数据时点击从云端拉取。")
 with tab_export:
     st.markdown('---')
     st.markdown('**📮 导出数据**')

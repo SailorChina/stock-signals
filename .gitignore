@@ -8,3 +8,6 @@ venv/
 __pycache__/
 *.json
 create_release.py
+
+# Allow data/ JSON files for cloud sync
+!data/*.json
