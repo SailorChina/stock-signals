@@ -32,6 +32,8 @@ def sync_to_github():
     today = datetime.now().strftime('%Y%m%d')
     latest_path = os.path.join(DATA_DIR, 'journal_latest_' + today + '.json')
     shutil.copy2(json_path, latest_path)
+    # discard local changes to data/ files before branch switch
+    _git(['git', 'checkout', '--', 'data/'], repo_root)
     success, stdout, stderr = _git(['git', 'branch', '--list', DATA_BRANCH], repo_root)
     if not success or DATA_BRANCH not in stdout:
         success, stdout, stderr = _git(['git', 'checkout', '-b', DATA_BRANCH, 'main'], repo_root)
