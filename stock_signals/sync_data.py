@@ -11,6 +11,10 @@ def _git(cmd, cwd=None):
     r = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
     return (r.returncode == 0, r.stdout.strip(), r.stderr.strip())
 
+def _is_git_repo():
+    ok, _, _ = _git(['git', 'rev-parse', '--git-dir'])
+    return ok
+
 def export_to_json(filepath=None):
     if filepath is None:
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -26,6 +30,9 @@ def export_to_json(filepath=None):
 def sync_to_github():
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     result = {'success': False, 'message': '', 'file': ''}
+    if not _is_git_repo():
+        result['message'] = '当前目录不是 Git 仓库，跳过云端同步'
+        return result
     json_path = export_to_json()
     result['file'] = json_path
     result['message'] += '已导出: ' + json_path + chr(10)
@@ -65,30 +72,12 @@ def sync_to_github():
     _cleanup_old_backups(repo_root)
     return result
 
-def _cleanup_old_backups(repo_root):
-    try:
-        files = sorted([f for f in os.listdir(DATA_DIR) if f.startswith('journal_') and f.endswith('.json')], reverse=True)
-        for old_file in files[5:]:
-            os.remove(os.path.join(DATA_DIR, old_file))
-    except Exception:
-        pass
-
-def sync_status():
-    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    status = {'has_db': False, 'record_count': 0, 'last_sync': None}
-    db_path = os.path.join(os.path.expanduser('~'), '.tech-signal-FUTU-skill', 'journal.db')
-    status['has_db'] = os.path.exists(db_path)
-    if status['has_db']:
-        from stock_signals.tracker import get_recommendations
-        status['record_count'] = len(get_recommendations())
-    success, stdout, stderr = _git(['git', 'log', 'origin/data', '-1', '--format=%ci'], repo_root)
-    if success and stdout:
-        status['last_sync'] = stdout.strip()
-    return status
-
 def pull_from_github():
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     result = {'success': False, 'message': '', 'imported': 0}
+    if not _is_git_repo():
+        result['message'] = '当前目录不是 Git 仓库，无法从云端拉取'
+        return result
     success, stdout, stderr = _git(['git', 'ls-remote', 'origin', 'refs/heads/data'], repo_root)
     if not success or not stdout.strip():
         result['message'] = 'GitHub 上没有 data 分支'
@@ -126,6 +115,28 @@ def pull_from_github():
     result['message'] = '已从 GitHub 导入 ' + str(imported) + ' 条新记录（共 ' + str(total) + ' 条）'
     result['imported'] = imported
     return result
+
+def sync_status():
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    status = {'has_db': False, 'record_count': 0, 'last_sync': None, 'is_git_repo': _is_git_repo()}
+    db_path = os.path.join(os.path.expanduser('~'), '.tech-signal-FUTU-skill', 'journal.db')
+    status['has_db'] = os.path.exists(db_path)
+    if status['has_db']:
+        from stock_signals.tracker import get_recommendations
+        status['record_count'] = len(get_recommendations())
+    if status['is_git_repo']:
+        success, stdout, stderr = _git(['git', 'log', 'origin/data', '-1', '--format=%ci'], repo_root)
+        if success and stdout:
+            status['last_sync'] = stdout.strip()
+    return status
+
+def _cleanup_old_backups(repo_root):
+    try:
+        files = sorted([f for f in os.listdir(DATA_DIR) if f.startswith('journal_') and f.endswith('.json')], reverse=True)
+        for old_file in files[5:]:
+            os.remove(os.path.join(DATA_DIR, old_file))
+    except Exception:
+        pass
 
 if __name__ == '__main__':
     if len(sys.argv) > 1 and sys.argv[1] == 'pull':

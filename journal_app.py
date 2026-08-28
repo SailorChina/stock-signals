@@ -18,14 +18,20 @@ from stock_signals.sync_data import sync_to_github, pull_from_github, sync_statu
 st.set_page_config(page_title='交易记录', layout='wide', initial_sidebar_state='expanded')
 init_db()
 
-# 自动云端同步
+# 自动云端同步（启动时先拉取后推送）
 if not st.session_state.get('_synced'):
+    try:
+        _ps = pull_from_github()
+        if _ps.get('success') and _ps.get('imported', 0) > 0:
+            st.session_state['_sync_msg'] = '已自动从云端拉取 ' + str(_ps['imported']) + ' 条记录'
+        else:
+            st.session_state['_sync_msg'] = ''
+    except Exception:
+        pass
     try:
         _sr = sync_to_github()
         if _sr.get('success'):
-            st.session_state['_sync_msg'] = '已自动同步到云端'
-        else:
-            st.session_state['_sync_msg'] = ''
+            st.session_state['_sync_msg'] = '自动同步完成'
     except Exception:
         pass
     st.session_state['_synced'] = True
@@ -320,7 +326,7 @@ with st.container():
 with tab_sync:
     st.markdown("---")
     st.markdown("**云端同步**")
-    st.caption("将交易记录同步到 GitHub，实现多设备数据共享")
+    st.caption("自动双向同步：启动时先拉取云端最新数据，再推送本地数据到 GitHub，实现多设备数据共享")
     st.markdown("---")
     _st = sync_status()
     col_s1, col_s2, col_s3 = st.columns(3)
@@ -352,7 +358,7 @@ with tab_sync:
         else:
             st.error(_r.get("message", "操作失败"))
     st.markdown("---")
-    st.caption("说明：数据以 JSON 格式备份到 GitHub 仓库的 data 分支，代码在 main 分支。其他设备恢复数据时点击从云端拉取。")
+    st.caption("说明：数据以 JSON 格式备份到 GitHub 仓库的 data 分支，代码在 main 分支。启动时自动双向同步，其他设备也可手动拉取恢复数据。")
 with tab_export:
     st.markdown('---')
     st.markdown('**📮 导出数据**')
